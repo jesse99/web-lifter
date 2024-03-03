@@ -1,0 +1,15 @@
+[package]
+name = "web-lifter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.7"                                                        # web backend
+chrono = { version = "0.4", features = ["serde"] }                  # date and time
+serde = { version = "1.0", features = ["derive"] }                  # serialization
+serde_json = "1.0"                                                  # json serialization
+tokio = { version = "1.0", features = ["full"] }                    # asynchronous runtime
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.5", features = ["add-extension"] }
+tracing = "0.1"                                                     # structured logging
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
