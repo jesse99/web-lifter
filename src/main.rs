@@ -5,9 +5,9 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use chrono::Weekday;
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use std::sync::{Arc, RwLock};
 use tower::ServiceBuilder;
 use tower_http::add_extension::AddExtensionLayer;
@@ -27,7 +27,7 @@ use workout::*;
 struct State {
     engine: Handlebars<'static>,
     program: Program,
-    exercises: Exercises,
+    // exercises: Exercises,
 }
 
 type SharedState = Arc<RwLock<State>>;
@@ -35,6 +35,10 @@ type SharedState = Arc<RwLock<State>>;
 fn make_program() -> State {
     let mut workout1 = Workout::new("Full Body".to_owned(), Schedule::Every(2));
     let workout2 = Workout::new("Cardio".to_owned(), Schedule::AnyDay);
+    let workout3 = Workout::new(
+        "Strong Lifts".to_owned(),
+        Schedule::Days(vec![Weekday::Mon, Weekday::Wed, Weekday::Fri]),
+    );
 
     let name1 = ExerciseName("Quad Stretch".to_owned());
     workout1.apply(WorkoutOp::Add(name1.clone()));
@@ -45,6 +49,7 @@ fn make_program() -> State {
     let mut program = Program::new("My".to_owned());
     program.apply(ProgramOp::Add(workout1));
     program.apply(ProgramOp::Add(workout2));
+    program.apply(ProgramOp::Add(workout3));
 
     let mut exercises = Exercises::new();
     exercises.apply(ExercisesOp::Add(
@@ -59,7 +64,7 @@ fn make_program() -> State {
     State {
         engine: Handlebars::new(),
         program,
-        exercises,
+        // exercises,
     }
 }
 
@@ -159,9 +164,6 @@ impl ProgramData {
     }
 }
 
-// TODO:
-// do a commit
-// add routes for workouts
 async fn get_program(Extension(state): Extension<SharedState>) -> impl IntoResponse {
     let engine = &state.read().unwrap().engine;
     let program = &state.read().unwrap().program;

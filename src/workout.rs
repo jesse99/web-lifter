@@ -1,6 +1,6 @@
 use super::*;
-use chrono::{DateTime, Datelike, Duration, Utc, Weekday};
-use std::{collections::HashMap, iter};
+use chrono::{DateTime, Datelike, Duration, Utc};
+use std::collections::HashMap;
 
 pub enum WorkoutOp {
     Add(ExerciseName),
@@ -95,13 +95,13 @@ impl Workout {
         }
     }
 
-    pub fn set_completed(&mut self, name: ExerciseName) {
-        // TODO: check that this is one of our exercises
-        // We use the Utc timezone instead of Local mostly because users can move across
-        // timezones. Also may be handy if we, for some reason, start comparing datetime's
-        // across users.
-        self.completed.insert(name, Utc::now());
-    }
+    // pub fn set_completed(&mut self, name: ExerciseName) {
+    //     // TODO: check that this is one of our exercises
+    //     // We use the Utc timezone instead of Local mostly because users can move across
+    //     // timezones. Also may be handy if we, for some reason, start comparing datetime's
+    //     // across users.
+    //     self.completed.insert(name, Utc::now());
+    // }
 
     pub fn status(&self) -> Status {
         self.status_from(Utc::now())
@@ -243,7 +243,6 @@ impl Workout {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::format::parse;
 
     #[test]
     fn empty() {

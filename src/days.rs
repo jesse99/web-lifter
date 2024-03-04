@@ -10,15 +10,15 @@ pub struct Days {
 }
 
 impl Days {
-    /// Rounds the current date to the nearest day.
-    pub fn now() -> Days {
-        Days {
-            value: Utc::now()
-                .duration_round(TimeDelta::days(1))
-                .unwrap()
-                .num_days_from_ce(),
-        }
-    }
+    // /// Rounds the current date to the nearest day.
+    // pub fn now() -> Days {
+    //     Days {
+    //         value: Utc::now()
+    //             .duration_round(TimeDelta::days(1))
+    //             .unwrap()
+    //             .num_days_from_ce(),
+    //     }
+    // }
 
     /// Rounds the date to the nearest day.
     pub fn new(date: DateTime<Utc>) -> Days {
