@@ -40,4 +40,8 @@ impl Exercises {
             }
         }
     }
+
+    pub fn find(&self, name: &ExerciseName) -> Option<&Exercise> {
+        self.exercises.get(&name)
+    }
 }

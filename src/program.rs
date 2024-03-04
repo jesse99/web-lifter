@@ -47,4 +47,8 @@ impl Program {
     pub fn workouts(&self) -> impl Iterator<Item = &Workout> + '_ {
         self.workouts.iter()
     }
+
+    pub fn find(&self, workout: &str) -> Option<&Workout> {
+        self.workouts.iter().find(|w| w.name == workout)
+    }
 }

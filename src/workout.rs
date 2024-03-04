@@ -95,6 +95,10 @@ impl Workout {
         }
     }
 
+    pub fn exercises(&self) -> impl Iterator<Item = &ExerciseName> + '_ {
+        self.exercises.iter()
+    }
+
     // pub fn set_completed(&mut self, name: ExerciseName) {
     //     // TODO: check that this is one of our exercises
     //     // We use the Utc timezone instead of Local mostly because users can move across

@@ -16,4 +16,12 @@ impl Exercise {
     pub fn new(formal_name: String) -> Exercise {
         Exercise { formal_name }
     }
+
+    /// Returns stuff like:
+    /// "4x20s"
+    /// "3x5 reps @ 135 lbs"
+    /// "2x3-5 reps, 1-5 reps @ 135 lbs"
+    pub fn summary(&self) -> String {
+        "4x20s".to_owned()
+    }
 }

@@ -1,6 +1,9 @@
 use crate::*;
 
 pub fn get_program_page(state: SharedState) -> String {
+    // TODO: It'd be nice if handlers could call render_template outside the State lock.
+    // Could call Handlebars::new() inside each handler though that looks fairly expensive.
+    // Maybe use TLS?
     let engine = &state.read().unwrap().engine;
     let program = &state.read().unwrap().program;
 

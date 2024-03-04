@@ -1,5 +1,5 @@
 use axum::{
-    extract::Extension,
+    extract::{Extension, Path},
     http::{header, StatusCode},
     response::IntoResponse,
     routing::{get, post},
@@ -58,7 +58,7 @@ fn make_program() -> pages::State {
     State {
         engine: Handlebars::new(),
         program,
-        // exercises,
+        exercises,
     }
 }
 
@@ -71,6 +71,7 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .route("/", get(get_program))
+        .route("/workout/:name", get(get_workout))
         .route("/styles/style.css", get(get_styles))
         // `POST /users` goes to `create_user`
         .route("/users", post(create_user))
@@ -97,6 +98,14 @@ async fn get_styles(Extension(_state): Extension<SharedState>) -> impl IntoRespo
 
 async fn get_program(Extension(state): Extension<SharedState>) -> impl IntoResponse {
     let contents = get_program_page(state);
+    axum::response::Html(contents)
+}
+
+async fn get_workout(
+    Path(name): Path<String>,
+    Extension(state): Extension<SharedState>,
+) -> impl IntoResponse {
+    let contents = get_workout_page(state, &name);
     axum::response::Html(contents)
 }
 

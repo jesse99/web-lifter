@@ -11,16 +11,16 @@
 </head>
 
 <body>
-    <h2 id="title">{{name}} Program</h2>
+    <h2 id="title">{{name}} Workout</h2>
 
-    <div class="table-container" role="table" aria-label="Program">
-        {{#each workouts}}
+    <div class="table-container" role="table" aria-label="Workout">
+        {{#each exercises}}
         <div class="flex-table row" role="rowgroup">
             <div class="flex-row" role="cell">
-                <a href="./workout/{{this.name}}">{{this.name}}</a>
+                <a href="./exercise/{{this.name}}">{{this.name}}</a>
             </div>
-            <div class="flex-row {{this.status_class}}" role="cell">
-                <p>{{this.status_label}}</p>
+            <div class="flex-row summary" role="cell">
+                <p>{{this.summary}}</p>
             </div>
         </div>
         {{/each}}
