@@ -1,3 +1,6 @@
+use gear_objects::find_trait;
+use paste::paste;
+
 use crate::*;
 
 pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, InternalError> {
@@ -47,9 +50,10 @@ struct ExerciseData {
 impl ExerciseData {
     fn new(name: &ExerciseName, exercises: &Exercises) -> ExerciseData {
         let exercise = exercises.find(name).unwrap(); // this unwrap should be OK
+        let summary = find_trait!(exercise, ISummary).unwrap();
         ExerciseData {
             name: name.0.clone(),
-            summary: exercise.summary().clone(),
+            summary: summary.summary(),
         }
     }
 }
