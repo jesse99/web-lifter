@@ -1,6 +1,6 @@
 use axum::{
     extract::Extension,
-    http::StatusCode,
+    http::{header, HeaderValue, Response, StatusCode},
     response::{Html, IntoResponse},
     routing::{get, post},
     Json, Router,
@@ -30,16 +30,18 @@ struct State {
 type SharedState = Arc<RwLock<State>>;
 
 fn make_program() -> State {
-    let mut workout = Workout::new("Mine".to_owned(), Schedule::Every(2));
+    let mut workout1 = Workout::new("Full Body".to_owned(), Schedule::Every(2));
+    let workout2 = Workout::new("Cardio".to_owned(), Schedule::AnyDay);
 
     let name1 = ExerciseName("Quad Stretch".to_owned());
-    workout.apply(WorkoutOp::Add(name1.clone()));
+    workout1.apply(WorkoutOp::Add(name1.clone()));
 
     let name2 = ExerciseName("Side Leg Lift".to_owned());
-    workout.apply(WorkoutOp::Add(name2.clone()));
+    workout1.apply(WorkoutOp::Add(name2.clone()));
 
-    let mut program = Program::new("Mine".to_owned());
-    program.apply(ProgramOp::Add(workout));
+    let mut program = Program::new("My".to_owned());
+    program.apply(ProgramOp::Add(workout1));
+    program.apply(ProgramOp::Add(workout2));
 
     let mut exercises = Exercises::new();
     exercises.apply(ExercisesOp::Add(
@@ -63,6 +65,7 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .route("/", get(get_program))
+        .route("/styles/style.css", get(get_styles))
         // `POST /users` goes to `create_user`
         .route("/users", post(create_user))
         .layer(
@@ -77,15 +80,99 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
+static PAGE: &'static str = "<!DOCTYPE html>
+<html lang=\"en\">
+	<head>
+		<meta charset=\"utf-8\">
+		<title>web lifter</title>
+
+        <link rel=\"stylesheet\" href=\"https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css\" integrity=\"sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh\" crossorigin=\"anonymous\">
+        <link href=\"styles/style.css?version=2\" rel=\"stylesheet\">
+	</head>
+	<body>
+		$BODY
+	</body>
+</html>";
+
+// TODO: use a real template engine?
+fn replace(template: &str, key: &str, value: &str) -> String {
+    template.replace(key, value)
+}
+
+async fn get_styles(Extension(_state): Extension<SharedState>) -> impl IntoResponse {
+    let contents = include_str!("../files/styles.css");
+    (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "text/css")],
+        contents,
+    )
+}
+
+impl Status {
+    fn to_label(&self) -> String {
+        match self {
+            Status::Completed => "completed".to_owned(),
+            Status::Due(0) => "today".to_owned(),
+            Status::Due(1) => "tomorrow".to_owned(),
+            Status::Due(n) => format!("in {n} days"),
+            Status::DueAnyTime => "any day".to_owned(),
+            Status::Empty => "no workouts".to_owned(),
+            Status::Overdue(1) => "overdue by 1 day".to_owned(),
+            Status::Overdue(n) => format!("overdue by {n} days"),
+            Status::PartiallyCompleted => "partially completed".to_owned(),
+        }
+    }
+
+    fn to_class(&self) -> &str {
+        match self {
+            Status::Completed => "completed",
+            Status::Due(0) => "due_today",
+            Status::Due(1) => "tomorrow",
+            Status::Due(_) => "due_later",
+            Status::DueAnyTime => "any_time",
+            Status::Empty => "empty",
+            Status::Overdue(_) => "overdue",
+            Status::PartiallyCompleted => "partial",
+        }
+    }
+}
+
+// TODO:
+// can we use something to help build html?
+// do a commit
+// add routes for workouts
 async fn get_program(Extension(state): Extension<SharedState>) -> impl IntoResponse {
     let program = &state.read().unwrap().program;
-    Html(
-        format!(
-            "Hello, you're running the <strong>{}</strong> program!!!",
-            program.name
-        )
-        .to_owned(),
-    )
+
+    // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
+    let mut body = String::new();
+    body += &format!("<h2 id=\"title\">{} Program</h2>\n", program.name);
+    body += "<div class=\"table-container\" role=\"table\" aria-label=\"Program\">\n";
+    for workout in program.workouts() {
+        let link = format!(
+            "<a href=\"./workout/{}\">{}</a>",
+            workout.name, workout.name
+        ); // TODO: what if name has markup symbols?
+
+        body += "   <div class=\"flex-table row\" role=\"rowgroup\">\n";
+        body += &format!(
+            "      <div class=\"flex-row\" role=\"cell\">{}</div>\n",
+            link
+        );
+
+        let status = workout.status();
+        body += &format!(
+            "      <div class=\"flex-row {}\" role=\"cell\">{}</div>\n",
+            status.to_class(),
+            status.to_label()
+        );
+        body += "   </div>\n";
+    }
+    body += "</div>\n";
+
+    let markup = replace(PAGE, "$TITLE", "web-lifter program");
+    let markup = replace(&markup, "$BODY", &body);
+    Html(markup)
 }
 
 // parse json request body and turn it into a CreateUser instance

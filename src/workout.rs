@@ -1,4 +1,3 @@
-#![allow(unused)] // TODO: nuke this
 use super::*;
 use chrono::{DateTime, Datelike, Duration, Utc, Weekday};
 use std::{collections::HashMap, iter};
@@ -76,6 +75,7 @@ impl Workout {
         match op {
             WorkoutOp::Add(name) => {
                 // TODO: check to see if it's in the global exercises?
+                // TODO: should names disallow HTML markup symbols?
                 if name.0.trim().is_empty() {
                     err += "The exercise name cannot be empty. ";
                 } else if self.exercises.iter().find(|&n| *n == *name).is_some() {

@@ -1,0 +1,129 @@
+#title {
+    text-align: center;
+}
+
+/* workout status colors */
+.completed {
+    color: black;
+}
+
+.due_today {
+    color: orange;
+}
+
+.tomorrow {
+    color: lightblue;
+}
+
+.due_later {
+    color: black;
+}
+
+.any_time {
+    color: orange;
+}
+
+.empty {
+    color: red;
+}
+
+.overdue {
+    color: red;
+}
+
+.partial {
+    color: red;
+}
+
+div {
+    box-sizing: border-box;
+}
+
+/* Based on https://medium.com/@snowleo208/how-to-create-responsive-table-d1662cb62075 */
+.table-container {
+    display: block;
+    margin: 2em auto;
+    width: 90%;
+    max-width: 600px;
+}
+
+.flex-table {
+    display: flex;
+    flex-flow: row wrap;
+    border-left: solid 1px #d9d9d9;
+    border-right: solid 1px #d9d9d9;
+    border-top: solid 1px #d9d9d9;
+    border-bottom: solid 1px #d9d9d9;
+    transition: 0.5s;
+}
+
+.flex-table:hover {
+    background: #F5F5F5;
+    transition: 500ms;
+}
+
+.flex-row {
+    width: calc(100% / 4);
+    text-align: center;
+    padding: 0.5em 0.5em;
+}
+
+.rowspan {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.column {
+    display: flex;
+    flex-flow: column wrap;
+    width: 75%;
+    padding: 0;
+}
+
+.column .flex-row {
+    display: flex;
+    flex-flow: row wrap;
+    width: 100%;
+    padding: 0;
+}
+
+.column .flex-row:hover {
+    background: #F5F5F5;
+    transition: 500ms;
+}
+
+.flex-cell {
+    width: calc(100% / 3);
+    text-align: center;
+    padding: 0.5em 0.5em;
+}
+
+@media all and (max-width: 767px) {
+    .flex-row {
+        width: calc(100% / 3);
+    }
+
+    .flex-row.first {
+        width: 100%;
+    }
+
+    .column {
+        width: 100%;
+    }
+}
+
+@media all and (max-width: 430px) {
+    .flex-row {
+        width: 100%;
+    }
+
+    .column {
+        width: 100%;
+    }
+
+    .flex-cell {
+        width: 100%;
+    }
+}
