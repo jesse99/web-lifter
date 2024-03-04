@@ -96,17 +96,19 @@ async fn get_styles(Extension(_state): Extension<SharedState>) -> impl IntoRespo
     )
 }
 
-async fn get_program(Extension(state): Extension<SharedState>) -> impl IntoResponse {
-    let contents = get_program_page(state);
-    axum::response::Html(contents)
+async fn get_program(
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, InternalError> {
+    let contents = get_program_page(state)?;
+    Ok(axum::response::Html(contents))
 }
 
 async fn get_workout(
     Path(name): Path<String>,
     Extension(state): Extension<SharedState>,
-) -> impl IntoResponse {
-    let contents = get_workout_page(state, &name);
-    axum::response::Html(contents)
+) -> Result<impl IntoResponse, InternalError> {
+    let contents = get_workout_page(state, &name)?;
+    Ok(axum::response::Html(contents))
 }
 
 // parse json request body and turn it into a CreateUser instance

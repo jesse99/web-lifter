@@ -1,14 +1,14 @@
 use crate::*;
 
-pub fn get_workout_page(state: SharedState, workout: &str) -> String {
+pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, InternalError> {
     let engine = &state.read().unwrap().engine;
     let program = &state.read().unwrap().program;
     let exercises = &state.read().unwrap().exercises;
 
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
     let template = include_str!("../../files/workout.html");
-    let data = WorkoutData::new(program, exercises, workout);
-    engine.render_template(template, &data).unwrap()
+    let data = WorkoutData::new(program, exercises, workout)?;
+    Ok(engine.render_template(template, &data).unwrap())
 }
 
 #[derive(Serialize, Deserialize)]
@@ -18,15 +18,22 @@ struct WorkoutData {
 }
 
 impl WorkoutData {
-    fn new(program: &Program, exercises: &Exercises, name: &str) -> WorkoutData {
-        let workout = program.find(name).unwrap(); // TODO: don't use unwrap
-        let exercises = workout
-            .exercises()
-            .map(|n| ExerciseData::new(n, exercises))
-            .collect();
-        WorkoutData {
-            name: name.to_owned(),
-            exercises,
+    fn new(
+        program: &Program,
+        exercises: &Exercises,
+        name: &str,
+    ) -> Result<WorkoutData, anyhow::Error> {
+        if let Some(workout) = program.find(name) {
+            let exercises = workout
+                .exercises()
+                .map(|n| ExerciseData::new(n, exercises))
+                .collect();
+            Ok(WorkoutData {
+                name: name.to_owned(),
+                exercises,
+            })
+        } else {
+            anyhow::bail!("Failed to find a workout named '{}'", name);
         }
     }
 }
