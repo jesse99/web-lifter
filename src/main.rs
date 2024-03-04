@@ -1,11 +1,13 @@
 use axum::{
     extract::Extension,
-    http::{header, HeaderValue, Response, StatusCode},
-    response::{Html, IntoResponse},
+    http::{header, StatusCode},
+    response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
+use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::sync::{Arc, RwLock};
 use tower::ServiceBuilder;
 use tower_http::add_extension::AddExtensionLayer;
@@ -23,6 +25,7 @@ use program::*;
 use workout::*;
 
 struct State {
+    engine: Handlebars<'static>,
     program: Program,
     exercises: Exercises,
 }
@@ -53,7 +56,11 @@ fn make_program() -> State {
         Exercise::new("Side Lying Abduction".to_owned()),
     ));
 
-    State { program, exercises }
+    State {
+        engine: Handlebars::new(),
+        program,
+        exercises,
+    }
 }
 
 #[tokio::main]
@@ -78,25 +85,6 @@ async fn main() {
     // let listener = tokio::net::TcpListener::bind("10.0.0.75:80").await.unwrap(); // run with sudo
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
-}
-
-static PAGE: &'static str = "<!DOCTYPE html>
-<html lang=\"en\">
-	<head>
-		<meta charset=\"utf-8\">
-		<title>web lifter</title>
-
-        <link rel=\"stylesheet\" href=\"https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css\" integrity=\"sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh\" crossorigin=\"anonymous\">
-        <link href=\"styles/style.css?version=2\" rel=\"stylesheet\">
-	</head>
-	<body>
-		$BODY
-	</body>
-</html>";
-
-// TODO: use a real template engine?
-fn replace(template: &str, key: &str, value: &str) -> String {
-    template.replace(key, value)
 }
 
 async fn get_styles(Extension(_state): Extension<SharedState>) -> impl IntoResponse {
@@ -137,42 +125,53 @@ impl Status {
     }
 }
 
+#[derive(Serialize, Deserialize)]
+struct WorkoutData {
+    name: String,
+    status_label: String,
+    status_class: String,
+}
+
+impl WorkoutData {
+    fn new(workout: &Workout) -> WorkoutData {
+        let status = workout.status();
+        WorkoutData {
+            name: workout.name.clone(),
+            status_class: status.to_class().to_owned(),
+            status_label: status.to_label(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct ProgramData {
+    name: String,
+    workouts: Vec<WorkoutData>,
+}
+
+impl ProgramData {
+    fn new(program: &Program) -> ProgramData {
+        let workouts = program.workouts().map(|w| WorkoutData::new(w)).collect();
+        ProgramData {
+            name: program.name.clone(),
+            workouts,
+        }
+    }
+}
+
 // TODO:
-// can we use something to help build html?
 // do a commit
 // add routes for workouts
 async fn get_program(Extension(state): Extension<SharedState>) -> impl IntoResponse {
+    let engine = &state.read().unwrap().engine;
     let program = &state.read().unwrap().program;
 
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
-    let mut body = String::new();
-    body += &format!("<h2 id=\"title\">{} Program</h2>\n", program.name);
-    body += "<div class=\"table-container\" role=\"table\" aria-label=\"Program\">\n";
-    for workout in program.workouts() {
-        let link = format!(
-            "<a href=\"./workout/{}\">{}</a>",
-            workout.name, workout.name
-        ); // TODO: what if name has markup symbols?
+    let template = include_str!("../files/program.html");
+    let data = ProgramData::new(program);
+    let result = engine.render_template(template, &data).unwrap();
 
-        body += "   <div class=\"flex-table row\" role=\"rowgroup\">\n";
-        body += &format!(
-            "      <div class=\"flex-row\" role=\"cell\">{}</div>\n",
-            link
-        );
-
-        let status = workout.status();
-        body += &format!(
-            "      <div class=\"flex-row {}\" role=\"cell\">{}</div>\n",
-            status.to_class(),
-            status.to_label()
-        );
-        body += "   </div>\n";
-    }
-    body += "</div>\n";
-
-    let markup = replace(PAGE, "$TITLE", "web-lifter program");
-    let markup = replace(&markup, "$BODY", &body);
-    Html(markup)
+    axum::response::Html(result)
 }
 
 // parse json request body and turn it into a CreateUser instance

@@ -6,10 +6,11 @@ edition = "2021"
 [dependencies]
 axum = "0.7"                                                        # web backend
 chrono = { version = "0.4", features = ["serde"] }                  # date and time
+handlebars = "5.1"                                                  # template implementation
 serde = { version = "1.0", features = ["derive"] }                  # serialization
 serde_json = "1.0"                                                  # json serialization
 tokio = { version = "1.0", features = ["full"] }                    # asynchronous runtime
-tower = { version = "0.4", features = ["util"] }
-tower-http = { version = "0.5", features = ["add-extension"] }
+tower = { version = "0.4", features = ["util"] }                    # web server components
+tower-http = { version = "0.5", features = ["add-extension"] }      # http components
 tracing = "0.1"                                                     # structured logging
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] } # logging

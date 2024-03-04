@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>web lifter</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="styles/style.css?version=2" rel="stylesheet">
+</head>
+
+<body>
+    <h2 id="title">{{name}} Program</h2>
+
+    <div class="table-container" role="table" aria-label="Program">
+        {{#each workouts}}
+        <div class="flex-table row" role="rowgroup">
+            <div class="flex-row" role="cell"><a href="./workout/{{this.name}}">{{this.name}}</a></div>
+            <div class="flex-row {{this.status_class}}" role="cell">
+                <p>{{this.status_label}}</p>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</body>
+
+</html>
