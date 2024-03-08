@@ -52,25 +52,11 @@ fn make_program() -> pages::State {
     let mut exercises = Exercises::new();
     exercises.apply(ExercisesOp::Add(
         name1,
-        make_durations(
-            "Standing Quad Stretch".to_owned(),
-            vec![
-                Set::new(20, 0), // TODO: annoying (and Sets will conflict later)
-                Set::new(20, 0),
-                Set::new(20, 0),
-                Set::new(20, 0),
-            ],
-            0, // TODO: lame to have to include this
-        ),
+        build_durations("Standing Quad Stretch".to_owned(), vec![20; 4]).finalize(),
     ));
     exercises.apply(ExercisesOp::Add(
         name2,
-        make_durations(
-            // TODO: should be fixed reps
-            "Side Lying Abduction".to_owned(),
-            vec![Set::new(30, 0), Set::new(30, 0)],
-            0,
-        ),
+        build_fixed_reps("Side Lying Abduction".to_owned(), vec![10; 2]).finalize(),
     ));
 
     State {
@@ -86,7 +72,6 @@ async fn main() {
 
     tracing_subscriber::fmt::init();
 
-    // build our application with a route
     let app = Router::new()
         .route("/", get(get_program))
         .route("/workout/:name", get(get_workout))
@@ -99,7 +84,6 @@ async fn main() {
                 .into_inner(),
         );
 
-    // run our app with hyper
     // let listener = tokio::net::TcpListener::bind("10.0.0.75:80").await.unwrap(); // run with sudo
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();

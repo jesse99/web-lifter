@@ -1,4 +1,3 @@
-use core::sync::atomic::Ordering;
 use gear_objects::*;
 use paste::paste;
 
