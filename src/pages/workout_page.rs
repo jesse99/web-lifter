@@ -1,7 +1,6 @@
+use crate::*;
 use gear_objects::find_trait;
 use paste::paste;
-
-use crate::*;
 
 pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, InternalError> {
     let engine = &state.read().unwrap().engine;
@@ -16,7 +15,7 @@ pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, Int
 
 #[derive(Serialize, Deserialize)]
 struct WorkoutData {
-    name: String,
+    workout_name: String,
     exercises: Vec<ExerciseData>,
 }
 
@@ -27,33 +26,88 @@ impl WorkoutData {
         name: &str,
     ) -> Result<WorkoutData, anyhow::Error> {
         if let Some(workout) = program.find(name) {
-            let exercises = workout
-                .exercises()
-                .map(|n| ExerciseData::new(n, exercises))
+            let exercises: Result<Vec<ExerciseData>, anyhow::Error> = workout
+                .instances()
+                .map(|n| ExerciseData::new(name.to_owned(), n, exercises))
                 .collect();
             Ok(WorkoutData {
-                name: name.to_owned(),
-                exercises,
+                workout_name: name.to_owned(),
+                exercises: exercises?,
             })
         } else {
-            anyhow::bail!("Failed to find a workout named '{}'", name);
+            anyhow::bail!("Failed to find a workout named '{name}'");
         }
     }
 }
 
 #[derive(Serialize, Deserialize)]
 struct ExerciseData {
+    workout_name: String,
     name: String,
     summary: String,
 }
 
 impl ExerciseData {
-    fn new(name: &ExerciseName, exercises: &Exercises) -> ExerciseData {
-        let exercise = exercises.find(name).unwrap(); // this unwrap should be OK
-        let summary = find_trait!(exercise, ISummary).unwrap();
-        ExerciseData {
+    fn new(
+        workout_name: String,
+        name: &ExerciseName,
+        exercises: &Exercises,
+    ) -> Result<ExerciseData, anyhow::Error> {
+        Ok(ExerciseData {
+            workout_name,
             name: name.0.clone(),
-            summary: summary.summary(),
+            summary: summarize(exercises, name)?,
+        })
+    }
+}
+
+fn summarize(exercises: &Exercises, name: &ExerciseName) -> Result<String, anyhow::Error> {
+    if let Some(exercise) = exercises.find(name) {
+        let sets = if let Some(durations) = find_trait!(exercise, IDurations) {
+            durations
+                .expected()
+                .iter()
+                .map(|d| format!("{d}s"))
+                .collect() // TODO: convert to a short time, eg secs or mins
+        } else if let Some(reps) = find_trait!(exercise, IFixedReps) {
+            reps.expected()
+                .iter()
+                .map(|d| format!("{d} reps"))
+                .collect()
+        } else {
+            anyhow::bail!("couldn't find sets for {name}")
+        };
+        Ok(join_labels(sets))
+    } else {
+        anyhow::bail!("couldn't find execise {name}")
+    }
+}
+
+/// Takes strings like "10s 10s 30s" and converts them into "2x10s, 30s"
+fn join_labels(labels: Vec<String>) -> String {
+    let mut parts: Vec<(i32, String)> = Vec::new();
+
+    for label in labels {
+        if let Some(last) = parts.last_mut() {
+            if last.1 == *label {
+                last.0 = last.0 + 1;
+            } else {
+                parts.push((1, label));
+            }
+        } else {
+            parts.push((1, label));
         }
     }
+
+    let parts: Vec<String> = parts
+        .iter()
+        .map(|p| {
+            if p.0 > 1 {
+                format!("{}x{}", p.0, p.1)
+            } else {
+                p.1.clone()
+            }
+        })
+        .collect();
+    parts.join(" ")
 }

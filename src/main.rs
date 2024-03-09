@@ -31,33 +31,35 @@ use program::*;
 use workout::*;
 
 fn make_program() -> pages::State {
+    // exercises
+    let mut exercises = Exercises::new();
+
+    let (exercise1, oworkout1) =
+        build_durations("Standing Quad Stretch".to_owned(), vec![20; 4]).finalize();
+    let name1 = ExerciseName("Quad Stretch".to_owned());
+    exercises.apply(ExercisesOp::Add(name1.clone(), exercise1));
+
+    let (exercise2, oworkout2) =
+        build_fixed_reps("Side Lying Abduction".to_owned(), vec![10; 2]).finalize();
+    let name2 = ExerciseName("Side Leg Lift".to_owned());
+    exercises.apply(ExercisesOp::Add(name2.clone(), exercise2));
+
+    // workouts
     let mut workout1 = Workout::new("Full Body".to_owned(), Schedule::Every(2));
+    workout1.apply(WorkoutOp::Add(name1, oworkout1));
+    workout1.apply(WorkoutOp::Add(name2, oworkout2));
+
     let workout2 = Workout::new("Cardio".to_owned(), Schedule::AnyDay);
     let workout3 = Workout::new(
         "Strong Lifts".to_owned(),
         Schedule::Days(vec![Weekday::Mon, Weekday::Wed, Weekday::Fri]),
     );
 
-    let name1 = ExerciseName("Quad Stretch".to_owned());
-    workout1.apply(WorkoutOp::Add(name1.clone()));
-
-    let name2 = ExerciseName("Side Leg Lift".to_owned());
-    workout1.apply(WorkoutOp::Add(name2.clone()));
-
+    // program
     let mut program = Program::new("My".to_owned());
     program.apply(ProgramOp::Add(workout1));
     program.apply(ProgramOp::Add(workout2));
     program.apply(ProgramOp::Add(workout3));
-
-    let mut exercises = Exercises::new();
-    exercises.apply(ExercisesOp::Add(
-        name1,
-        build_durations("Standing Quad Stretch".to_owned(), vec![20; 4]).finalize(),
-    ));
-    exercises.apply(ExercisesOp::Add(
-        name2,
-        build_fixed_reps("Side Lying Abduction".to_owned(), vec![10; 2]).finalize(),
-    ));
 
     State {
         engine: Handlebars::new(),
@@ -75,6 +77,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(get_program))
         .route("/workout/:name", get(get_workout))
+        .route("/exercise/:workout/:exercise", get(get_exercise))
         .route("/styles/style.css", get(get_styles))
         // `POST /users` goes to `create_user`
         .route("/users", post(create_user))
@@ -110,6 +113,14 @@ async fn get_workout(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
     let contents = get_workout_page(state, &name)?;
+    Ok(axum::response::Html(contents))
+}
+
+async fn get_exercise(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, InternalError> {
+    let contents = get_exercise_page(state, &workout, &exercise)?;
     Ok(axum::response::Html(contents))
 }
 

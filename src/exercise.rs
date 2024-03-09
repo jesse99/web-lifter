@@ -5,24 +5,20 @@
 //! e.g. [`ISummary`]`. This is quite a bit nicer than using some sort of exercise enum
 //! because it's easier to add new exercise types and it's easier to customize exercises.
 //! For example, some [`Durations'] instance may use weights.
-mod durations;
-mod fixed_reps;
-mod formal_name;
-mod isummary;
-mod last_rest;
-mod rest;
-mod target_secs;
-
+use core::fmt;
 use gear_objects::*;
 use paste::paste;
+use std::fmt::Formatter;
 
-pub use durations::*;
-pub use fixed_reps::*;
-pub use formal_name::*;
-pub use isummary::*;
-pub use last_rest::*;
-pub use rest::*;
-pub use target_secs::*;
+mod exercise_interfaces;
+mod exercise_objects;
+mod workout_interfaces;
+mod workout_objects;
+
+pub use exercise_interfaces::*;
+pub use exercise_objects::*;
+pub use workout_interfaces::*;
+pub use workout_objects::*;
 
 /// Uniquely identifies an exercise. This is assigned by the user and will be something
 /// like "Light Squat".
@@ -30,56 +26,73 @@ pub use target_secs::*;
 pub struct ExerciseName(pub String);
 
 pub struct BuildExercise {
-    component: Component,
+    exercise: Component,
+    workout: Component,
 }
 
 impl BuildExercise {
     pub fn with_target_secs(self, target: i32) -> BuildExercise {
-        let mut component = self.component;
+        let mut exercise = self.exercise;
         let target = TargetSecs::new(target);
-        add_object!(component, TargetSecs, target, [ITargetSecs]);
-        BuildExercise { component }
+        add_object!(exercise, TargetSecs, target, [ITargetSecs]);
+        BuildExercise { exercise, ..self }
     }
 
     pub fn with_rest(self, secs: i32) -> BuildExercise {
-        let mut component = self.component;
+        let mut exercise = self.exercise;
         let rest = Rest::new(secs);
-        add_object!(component, Rest, rest, [IRest]);
-        BuildExercise { component }
+        add_object!(exercise, Rest, rest, [IRest]);
+        BuildExercise { exercise, ..self }
     }
 
     pub fn with_last_rest(self, secs: i32) -> BuildExercise {
-        let mut component = self.component;
+        let mut exercise = self.exercise;
         let rest = LastRest::new(secs);
-        add_object!(component, LastRest, rest, [ILastRest]);
-        BuildExercise { component }
+        add_object!(exercise, LastRest, rest, [ILastRest]);
+        BuildExercise { exercise, ..self }
     }
 
-    pub fn finalize(self) -> Component {
-        self.component
+    pub fn finalize(self) -> (Component, Component) {
+        (self.exercise, self.workout)
     }
 }
 
 pub fn build_durations(formal_name: String, secs: Vec<i32>) -> BuildExercise {
-    let mut component = Component::new("durations");
+    let mut exercise = Component::new("durations");
+    let mut workout = Component::new("durations");
 
-    let exercise = Durations::new(secs);
-    add_object!(component, Durations, exercise, [ISummary]);
+    let num_sets = secs.len();
+    let durations = Durations::new(secs);
+    add_object!(exercise, Durations, durations, [IDurations]);
 
     let formal_name = FormalName::new(formal_name);
-    add_object!(component, FormalName, formal_name, [IFormalName]);
+    add_object!(exercise, FormalName, formal_name, [IFormalName]);
 
-    BuildExercise { component }
+    let set = Set::new(num_sets as i32);
+    add_object!(workout, Set, set, [ISetDetails]);
+
+    BuildExercise { exercise, workout }
 }
 
 pub fn build_fixed_reps(formal_name: String, reps: Vec<i32>) -> BuildExercise {
-    let mut component = Component::new("fixed reps");
+    let mut exercise = Component::new("fixed reps");
+    let mut workout = Component::new("fixed reps");
 
-    let exercise = FixedReps::new(reps);
-    add_object!(component, FixedReps, exercise, [ISummary]);
+    let num_sets = reps.len();
+    let freps = FixedReps::new(reps);
+    add_object!(exercise, FixedReps, freps, [IFixedReps]);
 
     let formal_name = FormalName::new(formal_name);
-    add_object!(component, FormalName, formal_name, [IFormalName]);
+    add_object!(exercise, FormalName, formal_name, [IFormalName]);
 
-    BuildExercise { component }
+    let set = Set::new(num_sets as i32);
+    add_object!(workout, Set, set, [ISetDetails]);
+
+    BuildExercise { exercise, workout }
+}
+
+impl fmt::Display for ExerciseName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }

@@ -1,9 +1,10 @@
 use super::*;
 use chrono::{DateTime, Datelike, Duration, Utc};
+use gear_objects::Component;
 use std::collections::HashMap;
 
 pub enum WorkoutOp {
-    Add(ExerciseName),
+    Add(ExerciseName, Component),
 }
 
 #[derive(Clone, Debug)]
@@ -26,7 +27,7 @@ pub enum Schedule {
 /// Reports whether the workout is in progress, overdue, due in 3 days, etc.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Status {
-    /// All of the exercises in the workout were completed recently.
+    /// All of the instances in the workout were completed recently.
     Completed,
 
     /// Workout is scheduled for N days where 0 is today, 1 is tomorrow, etc.
@@ -35,18 +36,18 @@ pub enum Status {
     /// Workout can be done whenever.
     DueAnyTime,
 
-    /// There are no exercises in the workout.
+    /// There are no instances in the workout.
     Empty,
 
     // /// An exercise has been started recently but not completed.
     // InProgress,
 
-    // /// All the exercises are disabled.
+    // /// All the instances are disabled.
     // NothingEnabled,
     /// Workout was scheduled in the past but was last executed N days before that.
     Overdue(i32),
 
-    /// Some of the exercises in the workout were completed recently.
+    /// Some of the instances in the workout were completed recently.
     PartiallyCompleted,
 }
 
@@ -56,7 +57,7 @@ pub enum Status {
 pub struct Workout {
     pub name: String,
     pub schedule: Schedule,
-    exercises: Vec<ExerciseName>, // exercise names must be unique within a workout
+    instances: HashMap<ExerciseName, Component>,
     completed: HashMap<ExerciseName, DateTime<Utc>>, // when the user last did an exercise, for this workout
 }
 
@@ -65,7 +66,7 @@ impl Workout {
         Workout {
             name,
             schedule,
-            exercises: Vec::new(),
+            instances: HashMap::new(),
             completed: HashMap::new(),
         }
     }
@@ -73,12 +74,12 @@ impl Workout {
     pub fn validate(&mut self, op: &WorkoutOp) -> String {
         let mut err = String::new();
         match op {
-            WorkoutOp::Add(name) => {
+            WorkoutOp::Add(name, _) => {
                 // TODO: check to see if it's in the global exercises?
                 // TODO: should names disallow HTML markup symbols?
                 if name.0.trim().is_empty() {
                     err += "The exercise name cannot be empty. ";
-                } else if self.exercises.iter().find(|&n| *n == *name).is_some() {
+                } else if self.instances.get(name).is_some() {
                     err += "The exercise name must be unique. ";
                 }
             }
@@ -89,18 +90,22 @@ impl Workout {
     pub fn apply(&mut self, op: WorkoutOp) {
         assert_eq!(self.validate(&op), "");
         match op {
-            WorkoutOp::Add(name) => {
-                self.exercises.push(name);
+            WorkoutOp::Add(name, component) => {
+                self.instances.insert(name, component);
             }
         }
     }
 
-    pub fn exercises(&self) -> impl Iterator<Item = &ExerciseName> + '_ {
-        self.exercises.iter()
+    pub fn instances(&self) -> impl Iterator<Item = &ExerciseName> + '_ {
+        self.instances.keys()
+    }
+
+    pub fn find(&self, name: &ExerciseName) -> Option<&Component> {
+        self.instances.get(name)
     }
 
     // pub fn set_completed(&mut self, name: ExerciseName) {
-    //     // TODO: check that this is one of our exercises
+    //     // TODO: check that this is one of our instances
     //     // We use the Utc timezone instead of Local mostly because users can move across
     //     // timezones. Also may be handy if we, for some reason, start comparing datetime's
     //     // across users.
@@ -112,7 +117,7 @@ impl Workout {
     }
 
     fn status_from(&self, now: DateTime<Utc>) -> Status {
-        if self.exercises.is_empty() {
+        if self.instances.is_empty() {
             return Status::Empty;
         }
 
@@ -178,7 +183,7 @@ impl Workout {
     }
 
     fn all_completed(&self, on: Days) -> bool {
-        for name in self.exercises.iter() {
+        for name in self.instances.keys() {
             if let Some(last) = self.completed.get(&name) {
                 if Days::new(*last) != on {
                     return false;
@@ -259,7 +264,7 @@ mod tests {
     fn any_day() {
         let mut workout = Workout::new("test".to_owned(), Schedule::AnyDay);
         let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone()));
+        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
 
         // not completed
         assert_eq!(workout.status(), Status::DueAnyTime);
@@ -284,7 +289,7 @@ mod tests {
     fn every_1_days() {
         let mut workout = Workout::new("test".to_owned(), Schedule::Every(1)); // bit silly
         let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone()));
+        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
 
         // not completed
         assert_eq!(workout.status(), Status::Due(1));
@@ -309,7 +314,7 @@ mod tests {
     fn every_2_days() {
         let mut workout = Workout::new("test".to_owned(), Schedule::Every(2));
         let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone()));
+        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
 
         // not completed
         let now = date_from_day_hour(Weekday::Mon, 20);
@@ -364,7 +369,7 @@ mod tests {
         let days = vec![Weekday::Mon];
         let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
         let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone()));
+        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
 
         let now = date_from_day(Weekday::Mon);
         assert_eq!(workout.status_from(now), Status::Due(0));
@@ -379,7 +384,7 @@ mod tests {
         let days = vec![Weekday::Fri];
         let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
         let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone()));
+        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
 
         let now = date_from_day(Weekday::Mon);
         assert_eq!(workout.status_from(now), Status::Due(4));
@@ -399,7 +404,7 @@ mod tests {
         let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
         let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
         let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone()));
+        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
 
         let now = date_from_day(Weekday::Mon);
         assert_eq!(workout.status_from(now), Status::Due(0));
@@ -422,7 +427,7 @@ mod tests {
         let days = vec![Weekday::Mon];
         let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
         let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone()));
+        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
 
         // completed Monday but two weeks ago
         let date = date_from_day(Weekday::Mon) - Duration::days(14);
@@ -464,7 +469,7 @@ mod tests {
         let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
         let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
         let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone()));
+        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
 
         // completed Monday but two weeks ago
         let date = date_from_day(Weekday::Mon) - Duration::days(14);
@@ -540,9 +545,9 @@ mod tests {
         let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
         let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
         let name1 = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name1.clone()));
+        workout.apply(WorkoutOp::Add(name1.clone(), Component::new("test")));
         let name2 = ExerciseName("Bench".to_owned());
-        workout.apply(WorkoutOp::Add(name2.clone()));
+        workout.apply(WorkoutOp::Add(name2.clone(), Component::new("test")));
 
         // not completed
         let now = date_from_day(Weekday::Mon);

@@ -18,26 +18,23 @@ http://localhost:3000/
 \f0\fs48 \cf2 https://squatuniversity.com/2017/05/30/how-to-fix-it-band-pain/\kerning1\expnd0\expndtw0 \
 foam roll \
 \
-\pard\pardeftab720\partightenfactor0
-
-\f1\fs32 \cf3 \expnd0\expndtw0\kerning0
-make_durations("Crunches", 30.secs() * 3)		// might have to use `secs(30)`\
-	.with_rest(vec!(10.secs(), 10.secs(), 0.secs())\
-	.with_target(30.secs)\
-	.with_weight(135.lbs())\
+\'95\'a0Not sure gear is worth it\
+	- especially given that it\'92s pretty much just dumb data\
+	- could have enum of structs\
+	- structs could have options for stuff like weight\
+	- instead of switching off interfaces we\'92d match enums\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-
-\f0\fs48 \cf2 \kerning1\expnd0\expndtw0 \
-\'95\'a0Work on exercises:\
+\cf2 \'95 Start adding exercise screens\
+	- would be nice to put these into workout page using\
+	  disclosure widgets\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf2 	- add optional weight support to both exercise types\
-		` probably with an optional interface\
-	- produce better summaries\
+\cf2 \'95\'a0Work on exercises:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf2 	- produce better summaries\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 \cf2 	- history could go into exercises\
 		` be sure to persist program and workout names\
 		` should history use components?\
-\'95 Start adding \cf2 exercise\cf2  screens\
 \'95\'a0Should all mutates go through an enum op?\
 	- could persist those instead of struct instances\
 	- how messy would that get, e.g. modify\

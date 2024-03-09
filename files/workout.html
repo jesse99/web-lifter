@@ -11,13 +11,13 @@
 </head>
 
 <body>
-    <h2 id="title">{{name}} Workout</h2>
+    <h2 id="title">{{workout_name}} Workout</h2>
 
     <div class="table-container" role="table" aria-label="Workout">
         {{#each exercises}}
         <div class="flex-table row" role="rowgroup">
             <div class="flex-row" role="cell">
-                <a href="./exercise/{{this.name}}">{{this.name}}</a>
+                <a href="/exercise/{{workout_name}}/{{this.name}}">{{this.name}}</a>
             </div>
             <div class="flex-row summary" role="cell">
                 <p>{{this.summary}}</p>
