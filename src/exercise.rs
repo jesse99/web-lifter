@@ -3,12 +3,13 @@
 use core::fmt;
 use std::fmt::Formatter;
 
-mod exercise_objects;
-mod workout_interfaces;
-mod workout_objects;
+mod durations_exercise;
+mod exercise_instance;
+mod fixed_reps_exercise;
 
-pub use exercise_objects::*;
-pub use workout_objects::*;
+pub use durations_exercise::*;
+pub use exercise_instance::*;
+pub use fixed_reps_exercise::*;
 
 /// Uniquely identifies an exercise. This is assigned by the user and will be something
 /// like "Light Squat".
