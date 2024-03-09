@@ -1,6 +1,3 @@
-use gear_objects::find_trait;
-use paste::paste;
-
 use crate::*;
 
 pub fn get_exercise_page(
@@ -40,26 +37,19 @@ impl ExerciseData {
     ) -> Result<ExerciseData, anyhow::Error> {
         let name = ExerciseName(exercise_name.clone());
         let (exercise_set, index) = if let Some(instance) = workout.find(&name) {
-            if let Some(set) = find_trait!(instance, ISetDetails) {
-                let details = set.expected();
-                (
-                    format!("Set {} of {}", details.index + 1, details.count),
-                    details.index as usize,
-                )
-            } else {
-                anyhow::bail!("Failed to find ISetDetails for instance '{exercise_name}'")
-            }
+            let set = instance.current_set();
+            (
+                format!("Set {} of {}", set.current_set + 1, set.num_sets),
+                set.current_set as usize,
+            )
         } else {
             anyhow::bail!("Failed to find a instance named '{exercise_name}'")
         };
 
         let exercise_set_details = if let Some(exercise) = exercises.find(&name) {
-            if let Some(durations) = find_trait!(exercise, IDurations) {
-                format!("{}s", durations.expected()[index])
-            } else if let Some(reps) = find_trait!(exercise, IFixedReps) {
-                format!("{} reps", reps.expected()[index])
-            } else {
-                anyhow::bail!("couldn't find sets for {name}")
+            match exercise {
+                Exercise::Durations(exercise) => format!("{}s", exercise.sets()[index]),
+                Exercise::FixedReps(exercise) => format!("{} reps", exercise.sets()[index]),
             }
         } else {
             anyhow::bail!("Failed to find a exercise named '{exercise_name}'")

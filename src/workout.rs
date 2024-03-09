@@ -1,10 +1,9 @@
 use super::*;
 use chrono::{DateTime, Datelike, Duration, Utc};
-use gear_objects::Component;
 use std::collections::HashMap;
 
 pub enum WorkoutOp {
-    Add(ExerciseName, Component),
+    Add(ExerciseName),
 }
 
 #[derive(Clone, Debug)]
@@ -57,7 +56,7 @@ pub enum Status {
 pub struct Workout {
     pub name: String,
     pub schedule: Schedule,
-    instances: HashMap<ExerciseName, Component>,
+    instances: HashMap<ExerciseName, ExerciseInstance>,
     completed: HashMap<ExerciseName, DateTime<Utc>>, // when the user last did an exercise, for this workout
 }
 
@@ -74,7 +73,7 @@ impl Workout {
     pub fn validate(&mut self, op: &WorkoutOp) -> String {
         let mut err = String::new();
         match op {
-            WorkoutOp::Add(name, _) => {
+            WorkoutOp::Add(name) => {
                 // TODO: check to see if it's in the global exercises?
                 // TODO: should names disallow HTML markup symbols?
                 if name.0.trim().is_empty() {
@@ -87,11 +86,14 @@ impl Workout {
         err
     }
 
-    pub fn apply(&mut self, op: WorkoutOp) {
+    pub fn apply(&mut self, exercises: &Exercises, op: WorkoutOp) {
         assert_eq!(self.validate(&op), "");
         match op {
-            WorkoutOp::Add(name, component) => {
-                self.instances.insert(name, component);
+            WorkoutOp::Add(name) => {
+                let exercise = exercises.find(&name).unwrap();
+                let num_sets = exercise.num_sets();
+                let instance = ExerciseInstance::new(num_sets);
+                self.instances.insert(name, instance);
             }
         }
     }
@@ -100,7 +102,7 @@ impl Workout {
         self.instances.keys()
     }
 
-    pub fn find(&self, name: &ExerciseName) -> Option<&Component> {
+    pub fn find(&self, name: &ExerciseName) -> Option<&ExerciseInstance> {
         self.instances.get(name)
     }
 
@@ -262,9 +264,7 @@ mod tests {
 
     #[test]
     fn any_day() {
-        let mut workout = Workout::new("test".to_owned(), Schedule::AnyDay);
-        let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
+        let (mut workout, name) = build_squat(Schedule::AnyDay);
 
         // not completed
         assert_eq!(workout.status(), Status::DueAnyTime);
@@ -287,9 +287,7 @@ mod tests {
 
     #[test]
     fn every_1_days() {
-        let mut workout = Workout::new("test".to_owned(), Schedule::Every(1)); // bit silly
-        let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
+        let (mut workout, name) = build_squat(Schedule::Every(1)); // bit silly
 
         // not completed
         assert_eq!(workout.status(), Status::Due(1));
@@ -312,9 +310,7 @@ mod tests {
 
     #[test]
     fn every_2_days() {
-        let mut workout = Workout::new("test".to_owned(), Schedule::Every(2));
-        let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
+        let (mut workout, name) = build_squat(Schedule::Every(2));
 
         // not completed
         let now = date_from_day_hour(Weekday::Mon, 20);
@@ -367,9 +363,7 @@ mod tests {
     fn days_not_completed1() {
         // due Monday
         let days = vec![Weekday::Mon];
-        let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
-        let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
+        let (workout, _) = build_squat(Schedule::Days(days));
 
         let now = date_from_day(Weekday::Mon);
         assert_eq!(workout.status_from(now), Status::Due(0));
@@ -382,9 +376,7 @@ mod tests {
 
         // due Friday
         let days = vec![Weekday::Fri];
-        let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
-        let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
+        let (workout, _) = build_squat(Schedule::Days(days));
 
         let now = date_from_day(Weekday::Mon);
         assert_eq!(workout.status_from(now), Status::Due(4));
@@ -402,9 +394,7 @@ mod tests {
     #[test]
     fn days_not_completed3() {
         let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
-        let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
-        let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
+        let (workout, _) = build_squat(Schedule::Days(days));
 
         let now = date_from_day(Weekday::Mon);
         assert_eq!(workout.status_from(now), Status::Due(0));
@@ -425,9 +415,7 @@ mod tests {
     #[test]
     fn days1() {
         let days = vec![Weekday::Mon];
-        let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
-        let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
+        let (mut workout, name) = build_squat(Schedule::Days(days));
 
         // completed Monday but two weeks ago
         let date = date_from_day(Weekday::Mon) - Duration::days(14);
@@ -467,9 +455,7 @@ mod tests {
     #[test]
     fn days3() {
         let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
-        let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
-        let name = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name.clone(), Component::new("test")));
+        let (mut workout, name) = build_squat(Schedule::Days(days));
 
         // completed Monday but two weeks ago
         let date = date_from_day(Weekday::Mon) - Duration::days(14);
@@ -543,11 +529,7 @@ mod tests {
     #[test]
     fn multiple() {
         let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
-        let mut workout = Workout::new("test".to_owned(), Schedule::Days(days));
-        let name1 = ExerciseName("Squat".to_owned());
-        workout.apply(WorkoutOp::Add(name1.clone(), Component::new("test")));
-        let name2 = ExerciseName("Bench".to_owned());
-        workout.apply(WorkoutOp::Add(name2.clone(), Component::new("test")));
+        let (mut workout, name1, name2) = build_squat_bench(Schedule::Days(days));
 
         // not completed
         let now = date_from_day(Weekday::Mon);
@@ -562,5 +544,45 @@ mod tests {
         let date = date_from_day_hour(Weekday::Mon, 9);
         workout.completed.insert(name2.clone(), date);
         assert_eq!(workout.status_from(now), Status::Completed);
+    }
+
+    fn build_squat(schedule: Schedule) -> (Workout, ExerciseName) {
+        let mut exercises = Exercises::new();
+
+        let exercise = FixedRepsExercise::new("Low-bar Squat".to_owned(), vec![5; 3]);
+        let name = ExerciseName("Squat".to_owned());
+        exercises.apply(ExercisesOp::Add(
+            name.clone(),
+            Exercise::FixedReps(exercise),
+        ));
+
+        let mut workout = Workout::new("Full Body".to_owned(), schedule);
+        workout.apply(&exercises, WorkoutOp::Add(name.clone()));
+
+        (workout, name)
+    }
+
+    fn build_squat_bench(schedule: Schedule) -> (Workout, ExerciseName, ExerciseName) {
+        let mut exercises = Exercises::new();
+
+        let exercise1 = FixedRepsExercise::new("Low-bar Squat".to_owned(), vec![5; 3]);
+        let name1 = ExerciseName("Squat".to_owned());
+        exercises.apply(ExercisesOp::Add(
+            name1.clone(),
+            Exercise::FixedReps(exercise1),
+        ));
+
+        let exercise2 = FixedRepsExercise::new("Bench Press".to_owned(), vec![5; 3]);
+        let name2 = ExerciseName("Bench".to_owned());
+        exercises.apply(ExercisesOp::Add(
+            name2.clone(),
+            Exercise::FixedReps(exercise2),
+        ));
+
+        let mut workout = Workout::new("Full Body".to_owned(), schedule);
+        workout.apply(&exercises, WorkoutOp::Add(name1.clone()));
+        workout.apply(&exercises, WorkoutOp::Add(name2.clone()));
+
+        (workout, name1, name2)
     }
 }

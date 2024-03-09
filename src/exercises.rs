@@ -1,15 +1,14 @@
 use super::*;
-use gear_objects::Component;
 use std::collections::HashMap;
 
 pub enum ExercisesOp {
-    Add(ExerciseName, Component),
+    Add(ExerciseName, Exercise),
 }
 
 /// A movement for the user to perform, e.g. a barbell squat. Part of a [`Workout`].
 #[derive(Debug)]
 pub struct Exercises {
-    pub exercises: HashMap<ExerciseName, Component>, // the actual name, used for stuff like help, e.g. "Low-bar Squat"
+    pub exercises: HashMap<ExerciseName, Exercise>, // the actual name, used for stuff like help, e.g. "Low-bar Squat"
 }
 
 impl Exercises {
@@ -42,7 +41,7 @@ impl Exercises {
         }
     }
 
-    pub fn find(&self, name: &ExerciseName) -> Option<&Component> {
+    pub fn find(&self, name: &ExerciseName) -> Option<&Exercise> {
         self.exercises.get(&name)
     }
 }

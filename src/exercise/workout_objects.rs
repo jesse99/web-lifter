@@ -1,27 +1,63 @@
-use crate::*;
-use gear_objects::*;
-use paste::paste;
+//! Workout specific data associated with an [`Exercise`]. This is for state which changes
+//! as the user performs an exercise or is affected by exercise ordering.
 
-pub struct Set {
-    current_set: i32,
-    num_sets: i32, // TODO make sure this stays in sync when exercise is edited
+/// Part of a [`Workout`] and associated with an [`Exercise`].
+pub struct ExerciseInstance {
+    // TOODO: should have optional expected reps array (for non-fixed reps and maybe even FixedReps)
+    set: SetDetails,
+    weight: Option<Vec<f32>>, // weight to use for each set
+    rest: Option<i32>,
+    last_rest: Option<i32>, // overrides rest
 }
-register_type!(Set);
 
-impl Set {
-    pub fn new(num_sets: i32) -> Set {
-        Set {
-            current_set: 0,
-            num_sets,
+impl ExerciseInstance {
+    pub fn new(num_sets: i32) -> ExerciseInstance {
+        ExerciseInstance {
+            set: SetDetails::new(num_sets),
+            weight: None,
+            rest: None,
+            last_rest: None,
         }
     }
+
+    pub fn with_weight(self, weight: Vec<f32>) -> ExerciseInstance {
+        ExerciseInstance {
+            weight: Some(weight),
+            ..self
+        }
+    }
+
+    pub fn with_rest(self, rest: i32) -> ExerciseInstance {
+        ExerciseInstance {
+            rest: Some(rest),
+            ..self
+        }
+    }
+
+    pub fn with_last_rest(self, last: i32) -> ExerciseInstance {
+        ExerciseInstance {
+            last_rest: Some(last),
+            ..self
+        }
+    }
+
+    pub fn current_set(&self) -> SetDetails {
+        self.set
+    }
+}
+// =======================================================================================
+
+#[derive(Clone, Copy)]
+pub struct SetDetails {
+    pub current_set: i32,
+    pub num_sets: i32, // TODO make sure this stays in sync when exercise is edited
 }
 
-impl ISetDetails for Set {
-    fn expected(&self) -> SetDetails {
+impl SetDetails {
+    pub fn new(num_sets: i32) -> SetDetails {
         SetDetails {
-            index: self.current_set,
-            count: self.num_sets,
+            current_set: 0,
+            num_sets,
         }
     }
 }

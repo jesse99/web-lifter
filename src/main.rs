@@ -1,7 +1,3 @@
-#![feature(lazy_cell)]
-#![feature(ptr_metadata)]
-#![feature(unsize)]
-
 use axum::{
     extract::{Extension, Path},
     http::{header, StatusCode},
@@ -34,20 +30,24 @@ fn make_program() -> pages::State {
     // exercises
     let mut exercises = Exercises::new();
 
-    let (exercise1, oworkout1) =
-        build_durations("Standing Quad Stretch".to_owned(), vec![20; 4]).finalize();
+    let exercise1 = DurationsExercise::new("Standing Quad Stretch".to_owned(), vec![20; 4]);
     let name1 = ExerciseName("Quad Stretch".to_owned());
-    exercises.apply(ExercisesOp::Add(name1.clone(), exercise1));
+    exercises.apply(ExercisesOp::Add(
+        name1.clone(),
+        Exercise::Durations(exercise1),
+    ));
 
-    let (exercise2, oworkout2) =
-        build_fixed_reps("Side Lying Abduction".to_owned(), vec![10; 2]).finalize();
+    let exercise2 = FixedRepsExercise::new("Side Lying Abduction".to_owned(), vec![10; 2]);
     let name2 = ExerciseName("Side Leg Lift".to_owned());
-    exercises.apply(ExercisesOp::Add(name2.clone(), exercise2));
+    exercises.apply(ExercisesOp::Add(
+        name2.clone(),
+        Exercise::FixedReps(exercise2),
+    ));
 
     // workouts
     let mut workout1 = Workout::new("Full Body".to_owned(), Schedule::Every(2));
-    workout1.apply(WorkoutOp::Add(name1, oworkout1));
-    workout1.apply(WorkoutOp::Add(name2, oworkout2));
+    workout1.apply(&exercises, WorkoutOp::Add(name1));
+    workout1.apply(&exercises, WorkoutOp::Add(name2));
 
     let workout2 = Workout::new("Cardio".to_owned(), Schedule::AnyDay);
     let workout3 = Workout::new(

@@ -1,6 +1,4 @@
 use crate::*;
-use gear_objects::find_trait;
-use paste::paste;
 
 pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, InternalError> {
     let engine = &state.read().unwrap().engine;
@@ -63,19 +61,15 @@ impl ExerciseData {
 
 fn summarize(exercises: &Exercises, name: &ExerciseName) -> Result<String, anyhow::Error> {
     if let Some(exercise) = exercises.find(name) {
-        let sets = if let Some(durations) = find_trait!(exercise, IDurations) {
-            durations
-                .expected()
-                .iter()
-                .map(|d| format!("{d}s"))
-                .collect() // TODO: convert to a short time, eg secs or mins
-        } else if let Some(reps) = find_trait!(exercise, IFixedReps) {
-            reps.expected()
+        let sets = match exercise {
+            Exercise::Durations(exercise) => {
+                exercise.sets().iter().map(|d| format!("{d}s")).collect()
+            } // TODO: convert to a short time, eg secs or mins,
+            Exercise::FixedReps(exercise) => exercise
+                .sets()
                 .iter()
                 .map(|d| format!("{d} reps"))
-                .collect()
-        } else {
-            anyhow::bail!("couldn't find sets for {name}")
+                .collect(),
         };
         Ok(join_labels(sets))
     } else {

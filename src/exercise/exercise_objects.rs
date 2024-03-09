@@ -1,118 +1,53 @@
-use crate::*;
-use gear_objects::*;
-use paste::paste;
+//! These are the different types of exercises. They are wrapped up in an [`Exercise`]
+//! enum and are part of the global [`Exercises`].
 
-/// Used for stuff like 3x60s planks.
-pub struct Durations {
+/// Used for stuff like 3x60s planks. Target is used to signal the user to increase
+/// difficulty (typically by switching to a harder variant of the exercise or adding
+/// weight).
+#[derive(Debug)]
+pub struct DurationsExercise {
+    formal_name: String, // the actual name, used for stuff like help, e.g. "Low-bar Squat"
     secs: Vec<i32>,
+    target_secs: Option<i32>,
 }
-register_type!(Durations);
 
-impl Durations {
+impl DurationsExercise {
     // TODO: do we want a validator here?
-    pub fn new(secs: Vec<i32>) -> Durations {
-        Durations { secs }
+    pub fn new(formal_name: String, secs: Vec<i32>) -> DurationsExercise {
+        DurationsExercise {
+            formal_name,
+            secs,
+            target_secs: None,
+        }
     }
-}
 
-impl IDurations for Durations {
-    fn expected(&self) -> &Vec<i32> {
+    pub fn with_target_secs(self, secs: i32) -> DurationsExercise {
+        DurationsExercise {
+            target_secs: Some(secs),
+            ..self
+        }
+    }
+
+    pub fn sets(&self) -> &Vec<i32> {
         &self.secs
     }
 }
 // =======================================================================================
 
-/// Used for stuff like 3x60s planks. Target is used to signal the user to increase
-/// difficulty (typically by switching to a harder variant of the exercise or adding
-/// weight).
-pub struct FixedReps {
+/// Used for stuff like 3x12 crunches.
+#[derive(Debug)]
+pub struct FixedRepsExercise {
+    formal_name: String,
     reps: Vec<i32>,
 }
-register_type!(FixedReps);
 
-impl FixedReps {
+impl FixedRepsExercise {
     // TODO: do we want a validator here?
-    pub fn new(reps: Vec<i32>) -> FixedReps {
-        FixedReps { reps }
+    pub fn new(formal_name: String, reps: Vec<i32>) -> FixedRepsExercise {
+        FixedRepsExercise { formal_name, reps }
     }
-}
 
-impl IFixedReps for FixedReps {
-    fn expected(&self) -> &Vec<i32> {
+    pub fn sets(&self) -> &Vec<i32> {
         &self.reps
     }
 }
-// =======================================================================================
-
-pub struct FormalName {
-    name: String, // the actual name, used for stuff like help, e.g. "Low-bar Squat"
-}
-register_type!(FormalName);
-
-impl FormalName {
-    // TODO: do we want a validator here?
-    pub fn new(formal_name: String) -> FormalName {
-        FormalName { name: formal_name }
-    }
-}
-
-impl IFormalName for FormalName {
-    fn formal_name(&self) -> &str {
-        &self.name
-    }
-}
-// =======================================================================================
-
-pub struct LastRest {
-    secs: i32,
-}
-register_type!(LastRest);
-
-impl LastRest {
-    pub fn new(secs: i32) -> LastRest {
-        LastRest { secs }
-    }
-}
-
-impl ILastRest for LastRest {
-    fn rest(&self) -> i32 {
-        self.secs
-    }
-}
-// =======================================================================================
-
-pub struct Rest {
-    secs: i32,
-}
-register_type!(Rest);
-
-impl Rest {
-    pub fn new(secs: i32) -> Rest {
-        Rest { secs }
-    }
-}
-
-impl IRest for Rest {
-    fn rest(&self) -> i32 {
-        self.secs
-    }
-}
-// =======================================================================================
-
-pub struct TargetSecs {
-    secs: i32,
-}
-register_type!(TargetSecs);
-
-impl TargetSecs {
-    pub fn new(secs: i32) -> TargetSecs {
-        TargetSecs { secs }
-    }
-}
-
-impl ITargetSecs for TargetSecs {
-    fn target(&self) -> i32 {
-        self.secs
-    }
-}
-// =======================================================================================
