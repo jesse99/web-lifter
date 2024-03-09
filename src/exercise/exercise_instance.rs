@@ -1,9 +1,11 @@
 //! Workout specific data associated with an [`Exercise`]. This is for state which changes
 //! as the user performs an exercise or is affected by exercise ordering.
+use crate::*;
 
 /// Part of a [`Workout`] and associated with an [`Exercise`].
 pub struct ExerciseInstance {
     // TOODO: should have optional expected reps array (for non-fixed reps and maybe even FixedReps)
+    name: ExerciseName,
     set: SetDetails,
     weight: Option<Vec<f32>>, // weight to use for each set
     rest: Option<i32>,
@@ -11,8 +13,9 @@ pub struct ExerciseInstance {
 }
 
 impl ExerciseInstance {
-    pub fn new(num_sets: i32) -> ExerciseInstance {
+    pub fn new(name: ExerciseName, num_sets: i32) -> ExerciseInstance {
         ExerciseInstance {
+            name,
             set: SetDetails::new(num_sets),
             weight: None,
             rest: None,
@@ -41,6 +44,10 @@ impl ExerciseInstance {
         }
     }
 
+    pub fn name(&self) -> &ExerciseName {
+        &self.name
+    }
+
     pub fn current_set(&self) -> SetDetails {
         self.set
     }
@@ -61,3 +68,10 @@ impl SetDetails {
         }
     }
 }
+
+impl PartialEq for ExerciseInstance {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+impl Eq for ExerciseInstance {}

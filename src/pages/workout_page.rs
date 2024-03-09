@@ -26,7 +26,7 @@ impl WorkoutData {
         if let Some(workout) = program.find(name) {
             let exercises: Result<Vec<ExerciseData>, anyhow::Error> = workout
                 .instances()
-                .map(|n| ExerciseData::new(name.to_owned(), n, exercises))
+                .map(|i| ExerciseData::new(name.to_owned(), i.name(), exercises))
                 .collect();
             Ok(WorkoutData {
                 workout_name: name.to_owned(),

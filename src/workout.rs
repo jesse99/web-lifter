@@ -56,7 +56,7 @@ pub enum Status {
 pub struct Workout {
     pub name: String,
     pub schedule: Schedule,
-    instances: HashMap<ExerciseName, ExerciseInstance>,
+    instances: Vec<ExerciseInstance>,
     completed: HashMap<ExerciseName, DateTime<Utc>>, // when the user last did an exercise, for this workout
 }
 
@@ -65,7 +65,7 @@ impl Workout {
         Workout {
             name,
             schedule,
-            instances: HashMap::new(),
+            instances: Vec::new(),
             completed: HashMap::new(),
         }
     }
@@ -78,7 +78,7 @@ impl Workout {
                 // TODO: should names disallow HTML markup symbols?
                 if name.0.trim().is_empty() {
                     err += "The exercise name cannot be empty. ";
-                } else if self.instances.get(name).is_some() {
+                } else if self.instances.iter().find(|i| i.name() == name).is_some() {
                     err += "The exercise name must be unique. ";
                 }
             }
@@ -92,18 +92,18 @@ impl Workout {
             WorkoutOp::Add(name) => {
                 let exercise = exercises.find(&name).unwrap();
                 let num_sets = exercise.num_sets();
-                let instance = ExerciseInstance::new(num_sets);
-                self.instances.insert(name, instance);
+                let instance = ExerciseInstance::new(name, num_sets);
+                self.instances.push(instance);
             }
         }
     }
 
-    pub fn instances(&self) -> impl Iterator<Item = &ExerciseName> + '_ {
-        self.instances.keys()
+    pub fn instances(&self) -> impl Iterator<Item = &ExerciseInstance> + '_ {
+        self.instances.iter()
     }
 
     pub fn find(&self, name: &ExerciseName) -> Option<&ExerciseInstance> {
-        self.instances.get(name)
+        self.instances.iter().find(|i| i.name() == name)
     }
 
     // pub fn set_completed(&mut self, name: ExerciseName) {
@@ -185,8 +185,8 @@ impl Workout {
     }
 
     fn all_completed(&self, on: Days) -> bool {
-        for name in self.instances.keys() {
-            if let Some(last) = self.completed.get(&name) {
+        for instance in self.instances.iter() {
+            if let Some(last) = self.completed.get(instance.name()) {
                 if Days::new(*last) != on {
                     return false;
                 }
