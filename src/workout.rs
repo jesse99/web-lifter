@@ -3,7 +3,7 @@ use chrono::{DateTime, Datelike, Duration, Utc};
 use std::collections::HashMap;
 
 pub enum WorkoutOp {
-    Add(ExerciseName),
+    Add(Exercise),
 }
 
 #[derive(Clone, Debug)]
@@ -26,7 +26,7 @@ pub enum Schedule {
 /// Reports whether the workout is in progress, overdue, due in 3 days, etc.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Status {
-    /// All of the instances in the workout were completed recently.
+    /// All of the exercises in the workout were completed recently.
     Completed,
 
     /// Workout is scheduled for N days where 0 is today, 1 is tomorrow, etc.
@@ -35,18 +35,18 @@ pub enum Status {
     /// Workout can be done whenever.
     DueAnyTime,
 
-    /// There are no instances in the workout.
+    /// There are no exercises in the workout.
     Empty,
 
     // /// An exercise has been started recently but not completed.
     // InProgress,
 
-    // /// All the instances are disabled.
+    // /// All the exercises are disabled.
     // NothingEnabled,
     /// Workout was scheduled in the past but was last executed N days before that.
     Overdue(i32),
 
-    /// Some of the instances in the workout were completed recently.
+    /// Some of the exercises in the workout were completed recently.
     PartiallyCompleted,
 }
 
@@ -56,7 +56,7 @@ pub enum Status {
 pub struct Workout {
     pub name: String,
     pub schedule: Schedule,
-    instances: Vec<ExerciseInstance>,
+    exercises: Vec<Exercise>,
     completed: HashMap<ExerciseName, DateTime<Utc>>, // when the user last did an exercise, for this workout
 }
 
@@ -65,7 +65,7 @@ impl Workout {
         Workout {
             name,
             schedule,
-            instances: Vec::new(),
+            exercises: Vec::new(),
             completed: HashMap::new(),
         }
     }
@@ -73,12 +73,12 @@ impl Workout {
     pub fn validate(&mut self, op: &WorkoutOp) -> String {
         let mut err = String::new();
         match op {
-            WorkoutOp::Add(name) => {
-                // TODO: check to see if it's in the global exercises?
+            WorkoutOp::Add(exercise) => {
                 // TODO: should names disallow HTML markup symbols?
+                let name = exercise.name();
                 if name.0.trim().is_empty() {
                     err += "The exercise name cannot be empty. ";
-                } else if self.instances.iter().find(|i| i.name() == name).is_some() {
+                } else if self.exercises.iter().find(|e| e.name() == name).is_some() {
                     err += "The exercise name must be unique. ";
                 }
             }
@@ -86,28 +86,25 @@ impl Workout {
         err
     }
 
-    pub fn apply(&mut self, exercises: &Exercises, op: WorkoutOp) {
+    pub fn apply(&mut self, op: WorkoutOp) {
         assert_eq!(self.validate(&op), "");
         match op {
-            WorkoutOp::Add(name) => {
-                let exercise = exercises.find(&name).unwrap();
-                let num_sets = exercise.num_sets();
-                let instance = ExerciseInstance::new(name, num_sets);
-                self.instances.push(instance);
+            WorkoutOp::Add(exercise) => {
+                self.exercises.push(exercise);
             }
         }
     }
 
-    pub fn instances(&self) -> impl Iterator<Item = &ExerciseInstance> + '_ {
-        self.instances.iter()
+    pub fn exercises(&self) -> impl Iterator<Item = &Exercise> + '_ {
+        self.exercises.iter()
     }
 
-    pub fn find(&self, name: &ExerciseName) -> Option<&ExerciseInstance> {
-        self.instances.iter().find(|i| i.name() == name)
+    pub fn find(&self, name: &ExerciseName) -> Option<&Exercise> {
+        self.exercises.iter().find(|e| e.name() == name)
     }
 
     // pub fn set_completed(&mut self, name: ExerciseName) {
-    //     // TODO: check that this is one of our instances
+    //     // TODO: check that this is one of our exercises
     //     // We use the Utc timezone instead of Local mostly because users can move across
     //     // timezones. Also may be handy if we, for some reason, start comparing datetime's
     //     // across users.
@@ -119,7 +116,7 @@ impl Workout {
     }
 
     fn status_from(&self, now: DateTime<Utc>) -> Status {
-        if self.instances.is_empty() {
+        if self.exercises.is_empty() {
             return Status::Empty;
         }
 
@@ -185,7 +182,7 @@ impl Workout {
     }
 
     fn all_completed(&self, on: Days) -> bool {
-        for instance in self.instances.iter() {
+        for instance in self.exercises.iter() {
             if let Some(last) = self.completed.get(instance.name()) {
                 if Days::new(*last) != on {
                     return false;
@@ -547,41 +544,31 @@ mod tests {
     }
 
     fn build_squat(schedule: Schedule) -> (Workout, ExerciseName) {
-        let mut exercises = Exercises::new();
-
-        let exercise = FixedRepsExercise::new("Low-bar Squat".to_owned(), vec![5; 3]);
         let name = ExerciseName("Squat".to_owned());
-        exercises.apply(ExercisesOp::Add(
-            name.clone(),
-            Exercise::FixedReps(exercise),
-        ));
+        let formal_name = FormalName("Low-bar Squat".to_owned());
+        let exercise = FixedRepsExercise::new(vec![5; 3]);
+        let exercise = SetsExercise::fixed_reps(name.clone(), formal_name, exercise).finalize();
 
         let mut workout = Workout::new("Full Body".to_owned(), schedule);
-        workout.apply(&exercises, WorkoutOp::Add(name.clone()));
+        workout.apply(WorkoutOp::Add(exercise));
 
         (workout, name)
     }
 
     fn build_squat_bench(schedule: Schedule) -> (Workout, ExerciseName, ExerciseName) {
-        let mut exercises = Exercises::new();
-
-        let exercise1 = FixedRepsExercise::new("Low-bar Squat".to_owned(), vec![5; 3]);
         let name1 = ExerciseName("Squat".to_owned());
-        exercises.apply(ExercisesOp::Add(
-            name1.clone(),
-            Exercise::FixedReps(exercise1),
-        ));
+        let formal_name = FormalName("Low-bar Squat".to_owned());
+        let exercise = FixedRepsExercise::new(vec![5; 3]);
+        let exercise1 = SetsExercise::fixed_reps(name1.clone(), formal_name, exercise).finalize();
 
-        let exercise2 = FixedRepsExercise::new("Bench Press".to_owned(), vec![5; 3]);
         let name2 = ExerciseName("Bench".to_owned());
-        exercises.apply(ExercisesOp::Add(
-            name2.clone(),
-            Exercise::FixedReps(exercise2),
-        ));
+        let formal_name = FormalName("Bench Press".to_owned());
+        let exercise = FixedRepsExercise::new(vec![5; 3]);
+        let exercise2 = SetsExercise::fixed_reps(name2.clone(), formal_name, exercise).finalize();
 
         let mut workout = Workout::new("Full Body".to_owned(), schedule);
-        workout.apply(&exercises, WorkoutOp::Add(name1.clone()));
-        workout.apply(&exercises, WorkoutOp::Add(name2.clone()));
+        workout.apply(WorkoutOp::Add(exercise1));
+        workout.apply(WorkoutOp::Add(exercise2));
 
         (workout, name1, name2)
     }

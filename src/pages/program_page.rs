@@ -1,4 +1,5 @@
 use crate::*;
+use anyhow::Context;
 
 pub fn get_program_page(state: SharedState) -> Result<String, InternalError> {
     // TODO: It'd be nice if handlers could call render_template outside the State lock.
@@ -10,7 +11,9 @@ pub fn get_program_page(state: SharedState) -> Result<String, InternalError> {
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
     let template = include_str!("../../files/program.html");
     let data = ProgramData::new(program);
-    Ok(engine.render_template(template, &data).unwrap())
+    Ok(engine
+        .render_template(template, &data)
+        .context("failed to render template")?)
 }
 
 #[derive(Serialize, Deserialize)]

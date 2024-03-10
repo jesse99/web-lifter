@@ -1,4 +1,5 @@
 use crate::*;
+use anyhow::Context;
 
 pub fn get_exercise_page(
     state: SharedState,
@@ -7,17 +8,18 @@ pub fn get_exercise_page(
 ) -> Result<String, InternalError> {
     let engine = &state.read().unwrap().engine;
     let program = &state.read().unwrap().program;
-    let exercises = &state.read().unwrap().exercises;
 
     let template = include_str!("../../files/exercise.html");
-    let workout = program.find(&workout_name).unwrap();
-    let data = ExerciseData::new(
-        workout,
-        exercises,
-        workout_name.to_owned(),
-        exercise_name.to_owned(),
-    )?;
-    Ok(engine.render_template(template, &data).unwrap())
+    let workout = program
+        .find(&workout_name)
+        .context("failed to find workout")?;
+    let exercise = workout
+        .find(&ExerciseName(exercise_name.to_owned()))
+        .context("failed to find exercise")?;
+    let data = ExerciseData::new(workout, exercise);
+    Ok(engine
+        .render_template(template, &data)
+        .context("failed to render template")?)
 }
 
 #[derive(Serialize, Deserialize)]
@@ -29,37 +31,29 @@ struct ExerciseData {
 }
 
 impl ExerciseData {
-    fn new(
-        workout: &Workout,
-        exercises: &Exercises,
-        workout_name: String,
-        exercise_name: String,
-    ) -> Result<ExerciseData, anyhow::Error> {
-        let name = ExerciseName(exercise_name.clone());
-        let (exercise_set, index) = if let Some(instance) = workout.find(&name) {
-            let set = instance.current_set();
-            (
-                format!("Set {} of {}", set.current_set + 1, set.num_sets),
-                set.current_set as usize,
-            )
-        } else {
-            anyhow::bail!("Failed to find a instance named '{exercise_name}'")
-        };
+    fn new(w: &Workout, e: &Exercise) -> ExerciseData {
+        let workout = w.name.clone();
+        let exercise = e.name().0.clone();
+        let (exercise_set, exercise_set_details) =
+            if let Some((current_set, num_sets)) = e.current_set() {
+                let details = match e {
+                    Exercise::Durations(_, _, exercise, _) => {
+                        format!("{}s", exercise.sets()[current_set as usize])
+                    }
+                    Exercise::FixedReps(_, _, exercise, _) => {
+                        format!("{} reps", exercise.sets()[current_set as usize])
+                    }
+                };
+                (format!("Set {} of {}", current_set + 1, num_sets), details)
+            } else {
+                ("".to_owned(), "".to_owned())
+            };
 
-        let exercise_set_details = if let Some(exercise) = exercises.find(&name) {
-            match exercise {
-                Exercise::Durations(exercise) => format!("{}s", exercise.sets()[index]),
-                Exercise::FixedReps(exercise) => format!("{} reps", exercise.sets()[index]),
-            }
-        } else {
-            anyhow::bail!("Failed to find a exercise named '{exercise_name}'")
-        };
-
-        Ok(ExerciseData {
-            workout: workout_name,
-            exercise: exercise_name,
+        ExerciseData {
+            workout,
+            exercise,
             exercise_set,
             exercise_set_details,
-        })
+        }
     }
 }

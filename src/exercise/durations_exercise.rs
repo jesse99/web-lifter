@@ -3,16 +3,14 @@
 /// weight).
 #[derive(Debug)]
 pub struct DurationsExercise {
-    formal_name: String, // the actual name, used for stuff like help, e.g. "Low-bar Squat"
     secs: Vec<i32>,
     target_secs: Option<i32>,
 }
 
 impl DurationsExercise {
     // TODO: do we want a validator here?
-    pub fn new(formal_name: String, secs: Vec<i32>) -> DurationsExercise {
+    pub fn new(secs: Vec<i32>) -> DurationsExercise {
         DurationsExercise {
-            formal_name,
             secs,
             target_secs: None,
         }

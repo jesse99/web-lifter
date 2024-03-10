@@ -1,14 +1,16 @@
 use crate::*;
+use anyhow::Context;
 
 pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, InternalError> {
     let engine = &state.read().unwrap().engine;
     let program = &state.read().unwrap().program;
-    let exercises = &state.read().unwrap().exercises;
 
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
     let template = include_str!("../../files/workout.html");
-    let data = WorkoutData::new(program, exercises, workout)?;
-    Ok(engine.render_template(template, &data).unwrap())
+    let data = WorkoutData::new(program, workout)?;
+    Ok(engine
+        .render_template(template, &data)
+        .context("failed to render template")?)
 }
 
 #[derive(Serialize, Deserialize)]
@@ -18,19 +20,15 @@ struct WorkoutData {
 }
 
 impl WorkoutData {
-    fn new(
-        program: &Program,
-        exercises: &Exercises,
-        name: &str,
-    ) -> Result<WorkoutData, anyhow::Error> {
+    fn new(program: &Program, name: &str) -> Result<WorkoutData, anyhow::Error> {
         if let Some(workout) = program.find(name) {
-            let exercises: Result<Vec<ExerciseData>, anyhow::Error> = workout
-                .instances()
-                .map(|i| ExerciseData::new(name.to_owned(), i.name(), exercises))
+            let exercises: Vec<ExerciseData> = workout
+                .exercises()
+                .map(|e| ExerciseData::new(workout, e))
                 .collect();
             Ok(WorkoutData {
                 workout_name: name.to_owned(),
-                exercises: exercises?,
+                exercises: exercises,
             })
         } else {
             anyhow::bail!("Failed to find a workout named '{name}'");
@@ -46,35 +44,28 @@ struct ExerciseData {
 }
 
 impl ExerciseData {
-    fn new(
-        workout_name: String,
-        name: &ExerciseName,
-        exercises: &Exercises,
-    ) -> Result<ExerciseData, anyhow::Error> {
-        Ok(ExerciseData {
-            workout_name,
-            name: name.0.clone(),
-            summary: summarize(exercises, name)?,
-        })
+    fn new(workout: &Workout, exercise: &Exercise) -> ExerciseData {
+        ExerciseData {
+            workout_name: workout.name.clone(),
+            name: exercise.name().0.clone(),
+            summary: summarize(exercise),
+        }
     }
 }
 
-fn summarize(exercises: &Exercises, name: &ExerciseName) -> Result<String, anyhow::Error> {
-    if let Some(exercise) = exercises.find(name) {
-        let sets = match exercise {
-            Exercise::Durations(exercise) => {
-                exercise.sets().iter().map(|d| format!("{d}s")).collect()
-            } // TODO: convert to a short time, eg secs or mins,
-            Exercise::FixedReps(exercise) => exercise
-                .sets()
-                .iter()
-                .map(|d| format!("{d} reps"))
-                .collect(),
-        };
-        Ok(join_labels(sets))
-    } else {
-        anyhow::bail!("couldn't find execise {name}")
-    }
+fn summarize(exercise: &Exercise) -> String {
+    let sets = match exercise {
+        // TODO: convert to a short time, eg secs or mins
+        Exercise::Durations(_, _, exercise, _) => {
+            exercise.sets().iter().map(|d| format!("{d}s")).collect()
+        }
+        Exercise::FixedReps(_, _, exercise, _) => exercise
+            .sets()
+            .iter()
+            .map(|d| format!("{d} reps"))
+            .collect(),
+    };
+    join_labels(sets)
 }
 
 /// Takes strings like "10s 10s 30s" and converts them into "2x10s, 30s"

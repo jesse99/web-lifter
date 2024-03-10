@@ -14,40 +14,32 @@ use tower_http::add_extension::AddExtensionLayer;
 
 mod days;
 mod exercise;
-mod exercises;
 mod pages;
 mod program;
 mod workout;
 
 use days::*;
 use exercise::*;
-use exercises::*;
 use pages::*;
 use program::*;
 use workout::*;
 
 fn make_program() -> pages::State {
     // exercises
-    let mut exercises = Exercises::new();
+    let exercise = DurationsExercise::new(vec![20; 4]);
+    let name = ExerciseName("Quad Stretch".to_owned());
+    let formal_name = FormalName("Standing Quad Stretch".to_owned());
+    let exercise1 = SetsExercise::durations(name, formal_name, exercise).finalize();
 
-    let exercise1 = DurationsExercise::new("Standing Quad Stretch".to_owned(), vec![20; 4]);
-    let name1 = ExerciseName("Quad Stretch".to_owned());
-    exercises.apply(ExercisesOp::Add(
-        name1.clone(),
-        Exercise::Durations(exercise1),
-    ));
-
-    let exercise2 = FixedRepsExercise::new("Side Lying Abduction".to_owned(), vec![10; 2]);
-    let name2 = ExerciseName("Side Leg Lift".to_owned());
-    exercises.apply(ExercisesOp::Add(
-        name2.clone(),
-        Exercise::FixedReps(exercise2),
-    ));
+    let exercise = FixedRepsExercise::new(vec![10; 2]);
+    let name = ExerciseName("Side Leg Lift".to_owned());
+    let formal_name = FormalName("Side Lying Abduction".to_owned());
+    let exercise2 = SetsExercise::fixed_reps(name, formal_name, exercise).finalize();
 
     // workouts
     let mut workout1 = Workout::new("Full Body".to_owned(), Schedule::Every(2));
-    workout1.apply(&exercises, WorkoutOp::Add(name1));
-    workout1.apply(&exercises, WorkoutOp::Add(name2));
+    workout1.apply(WorkoutOp::Add(exercise1));
+    workout1.apply(WorkoutOp::Add(exercise2));
 
     let workout2 = Workout::new("Cardio".to_owned(), Schedule::AnyDay);
     let workout3 = Workout::new(
@@ -64,7 +56,6 @@ fn make_program() -> pages::State {
     State {
         engine: Handlebars::new(),
         program,
-        exercises,
     }
 }
 
