@@ -11,12 +11,14 @@
 </head>
 
 <body>
-    <p><a href="/workout/{{this.workout}}" id="back_link">{{this.workout}}</a></p>
+    <p id="back_link"><a href="/workout/{{this.workout}}">{{this.workout}} Workout</a></p>
 
     <p id="exercise_title">{{this.exercise}}</p>
 
-    <p id="exercise_set">{{this.exercise_set}}</p>
-    <p id="exercise_set_details">{{this.exercise_set_details}}</p>
+    <span>
+        <p id="exercise_set">{{this.exercise_set}}</p>
+        <p id="exercise_set_details">{{this.exercise_set_details}}</p>
+    </span>
 </body>
 
 </html>

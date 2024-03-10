@@ -39,6 +39,7 @@ div {
     box-sizing: border-box;
 }
 
+/* tables */
 /* Based on https://medium.com/@snowleo208/how-to-create-responsive-table-d1662cb62075 */
 .table-container {
     display: block;
@@ -126,4 +127,31 @@ div {
     .flex-cell {
         width: 100%;
     }
+}
+
+/* exercise page */
+#back_link {
+    text-align: center;
+    margin-top: 2em;
+}
+
+#exercise_title {
+    text-align: center;
+    font-size: x-large;
+}
+
+#back_link {
+    text-align: center;
+}
+
+#exercise_set {
+    text-align: center;
+    font-size: large;
+    margin-bottom: 0em;
+}
+
+#exercise_set_details {
+    text-align: center;
+    font-size: x-small;
+    margin-top: 0em;
 }
