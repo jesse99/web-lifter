@@ -16,6 +16,16 @@ function seconds() {
     return new Date().getTime() / 1000;
 }
 
+function friendly_time(secs) {
+    if (secs > 360) {
+        return (secs / 360).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " hours";
+    } else if (secs > 60) {
+        return (secs / 60).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " mins";
+    } else {
+        return secs.toLocaleString(undefined, { maximumFractionDigits: 0 }) + " secs";
+    }
+}
+
 function on_next(event) {
     const body = document.getElementById('body');
     const rest = parseInt(body.getAttribute("data-rest"));
@@ -77,13 +87,13 @@ function update_label() {
     const remaining = deadline - current;
     if (current < deadline) {
         // console.log(`remaining: ${remaining}`);
-        label.innerHTML = format_int(remaining) + " secs";  // TODO use a friendly_time_units function
+        label.innerHTML = friendly_time(remaining);
         label.style.color = "red";
     } else if (current < deadline + 2) {
         label.innerHTML = "Done";
         label.style.color = "green";
     } else {
-        label.innerHTML = "+" + format_int(-remaining) + " secs";
+        label.innerHTML = "+" + friendly_time(-remaining);
         label.style.color = "green";
     }
 }

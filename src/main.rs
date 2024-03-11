@@ -35,7 +35,7 @@ fn make_program() -> pages::State {
     let name = ExerciseName("Side Leg Lift".to_owned());
     let formal_name = FormalName("Side Lying Abduction".to_owned());
     let exercise2 = SetsExercise::fixed_reps(name, formal_name, exercise)
-        .with_rest(30)
+        .with_rest(3 * 60)
         .finalize();
 
     // workouts
