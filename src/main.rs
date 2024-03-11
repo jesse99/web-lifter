@@ -34,7 +34,9 @@ fn make_program() -> pages::State {
     let exercise = FixedRepsExercise::new(vec![10; 2]);
     let name = ExerciseName("Side Leg Lift".to_owned());
     let formal_name = FormalName("Side Lying Abduction".to_owned());
-    let exercise2 = SetsExercise::fixed_reps(name, formal_name, exercise).finalize();
+    let exercise2 = SetsExercise::fixed_reps(name, formal_name, exercise)
+        .with_rest(30)
+        .finalize();
 
     // workouts
     let mut workout1 = Workout::new("Full Body".to_owned(), Schedule::Every(2));
