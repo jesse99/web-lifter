@@ -1,5 +1,5 @@
 /// Used for stuff like 3x12 crunches.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct FixedRepsExercise {
     reps: Vec<i32>,
 }

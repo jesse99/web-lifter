@@ -21,7 +21,7 @@ pub struct ExerciseName(pub String);
 pub struct FormalName(pub String);
 
 /// Used for exercises that are done multiple times, often using rest between sets.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Sets {
     pub current_set: i32, // TODO should have optional expected reps array (for non-fixed reps and maybe even FixedReps)
     pub num_sets: i32,
@@ -48,6 +48,19 @@ impl Exercise {
         match self {
             Exercise::Durations(_, _, _, sets) => Some((sets.current_set, sets.num_sets)),
             Exercise::FixedReps(_, _, _, sets) => Some((sets.current_set, sets.num_sets)),
+        }
+    }
+
+    /// For the current set, in seconds.
+    pub fn rest(&self) -> Option<i32> {
+        let sets = match self {
+            Exercise::Durations(_, _, _, sets) => sets,
+            Exercise::FixedReps(_, _, _, sets) => sets,
+        };
+        if sets.current_set + 1 == sets.num_sets && sets.last_rest.is_some() {
+            sets.last_rest
+        } else {
+            sets.rest
         }
     }
 

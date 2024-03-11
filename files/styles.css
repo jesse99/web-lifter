@@ -155,3 +155,12 @@ div {
     font-size: x-small;
     margin-top: 0em;
 }
+
+#timer_text {
+    text-align: center;
+    font-size: large;
+}
+
+#button_span {
+    text-align: center;
+}

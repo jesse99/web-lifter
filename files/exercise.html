@@ -10,7 +10,9 @@
     <link href="/styles/style.css?version=2" rel="stylesheet">
 </head>
 
-<body>
+<body id="body" data-workout="{{this.workout}}" data-exercise="{{this.exercise}}" data-rest="{{rest}}">
+    <script src="/scripts/exercise.js"></script>
+
     <p id="back_link"><a href="/workout/{{this.workout}}">{{this.workout}} Workout</a></p>
 
     <p id="exercise_title">{{this.exercise}}</p>
@@ -19,6 +21,14 @@
         <p id="exercise_set">{{this.exercise_set}}</p>
         <p id="exercise_set_details">{{this.exercise_set_details}}</p>
     </span>
+
+    <span>
+        <p id="timer_text"></p>
+    </span>
+
+    <div id="button_span">
+        <button type="button" onclick="on_next()" id="next_button">Next</button>
+    </div>
 </body>
 
 </html>

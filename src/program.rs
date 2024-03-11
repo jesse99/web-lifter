@@ -51,4 +51,8 @@ impl Program {
     pub fn find(&self, workout: &str) -> Option<&Workout> {
         self.workouts.iter().find(|w| w.name == workout)
     }
+
+    pub fn find_mut(&mut self, workout: &str) -> Option<&mut Workout> {
+        self.workouts.iter_mut().find(|w| w.name == workout)
+    }
 }

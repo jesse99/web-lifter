@@ -103,6 +103,15 @@ impl Workout {
         self.exercises.iter().find(|e| e.name() == name)
     }
 
+    pub fn update(&mut self, exercise: Exercise) {
+        let index = self
+            .exercises
+            .iter()
+            .position(|e| e.name() == exercise.name())
+            .unwrap();
+        self.exercises[index] = exercise;
+    }
+
     // pub fn set_completed(&mut self, name: ExerciseName) {
     //     // TODO: check that this is one of our exercises
     //     // We use the Utc timezone instead of Local mostly because users can move across

@@ -69,6 +69,8 @@ async fn main() {
         .route("/", get(get_program))
         .route("/workout/:name", get(get_workout))
         .route("/exercise/:workout/:exercise", get(get_exercise))
+        .route("/exercise/:workout/:exercise/next-set", post(next_set))
+        .route("/scripts/exercise.js", get(get_exercise_js))
         .route("/styles/style.css", get(get_styles))
         // `POST /users` goes to `create_user`
         .route("/users", post(create_user))
@@ -88,6 +90,15 @@ async fn get_styles(Extension(_state): Extension<SharedState>) -> impl IntoRespo
     (
         StatusCode::OK,
         [(header::CONTENT_TYPE, "text/css")],
+        contents,
+    )
+}
+
+async fn get_exercise_js(Extension(_state): Extension<SharedState>) -> impl IntoResponse {
+    let contents = include_str!("../files/exercise.js");
+    (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "text/javascript")],
         contents,
     )
 }
@@ -112,6 +123,14 @@ async fn get_exercise(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
     let contents = get_exercise_page(state, &workout, &exercise)?;
+    Ok(axum::response::Html(contents))
+}
+
+async fn next_set(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, InternalError> {
+    let contents = get_next_exercise_page(state, &workout, &exercise)?;
     Ok(axum::response::Html(contents))
 }
 

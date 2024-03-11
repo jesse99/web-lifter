@@ -1,7 +1,7 @@
 /// Used for stuff like 3x60s planks. Target is used to signal the user to increase
 /// difficulty (typically by switching to a harder variant of the exercise or adding
 /// weight).
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct DurationsExercise {
     secs: Vec<i32>,
     target_secs: Option<i32>,
