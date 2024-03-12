@@ -69,7 +69,7 @@ fn summarize(exercise: &Exercise) -> String {
 }
 
 /// Takes strings like "10s 10s 30s" and converts them into "2x10s, 30s"
-fn join_labels(labels: Vec<String>) -> String {
+pub fn join_labels(labels: Vec<String>) -> String {
     let mut parts: Vec<(i32, String)> = Vec::new();
 
     for label in labels {

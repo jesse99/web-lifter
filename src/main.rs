@@ -14,12 +14,14 @@ use tower_http::add_extension::AddExtensionLayer;
 
 mod days;
 mod exercise;
+mod history;
 mod pages;
 mod program;
 mod workout;
 
 use days::*;
 use exercise::*;
+use history::*;
 use pages::*;
 use program::*;
 use workout::*;
@@ -57,6 +59,7 @@ fn make_program() -> pages::State {
 
     State {
         engine: Handlebars::new(),
+        history: History::new(),
         program,
     }
 }

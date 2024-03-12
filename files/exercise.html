@@ -29,6 +29,13 @@
     <div id="button_span">
         <button type="button" onclick="on_next()" id="next_button">Next</button>
     </div>
+
+    <p id="history">History</p>
+    <ul>
+        {{#each records}}
+        <li>{{this}}</li>
+        {{/each}}
+    </ul>
 </body>
 
 </html>
