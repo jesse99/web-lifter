@@ -56,18 +56,14 @@ fn advance_set(state: &mut SharedState, workout_name: &str, exercise_name: &str)
     let program = &mut state.write().unwrap().program;
     let workout = program.find_mut(&workout_name).unwrap();
     let exercise = workout
-        .find(&ExerciseName(exercise_name.to_owned()))
+        .find_mut(&ExerciseName(exercise_name.to_owned()))
         .unwrap();
     match exercise {
-        Exercise::Durations(n, f, e, s) => {
-            let mut s = s.clone(); // TODO kinda inefficient, maybe we can do something with swap?
+        Exercise::Durations(_, _, _, s) => {
             s.current_set += 1;
-            workout.update(Exercise::Durations(n.clone(), f.clone(), e.clone(), s));
         }
-        Exercise::FixedReps(n, f, e, s) => {
-            let mut s = s.clone();
+        Exercise::FixedReps(_, _, _, s) => {
             s.current_set += 1;
-            workout.update(Exercise::FixedReps(n.clone(), f.clone(), e.clone(), s));
         }
     }
 }

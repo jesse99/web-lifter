@@ -23,8 +23,6 @@ You don\'92t know JavaScript\
 \
 \
 \'95\'a0Work on exercises:\
-	- get next button working\
-		` likely will need javascript to render time remaining\
 	- support rest\
 	- support last_rest\
 	- save off history, should probably go into Exercises\
@@ -36,23 +34,7 @@ You don\'92t know JavaScript\
 	- how messy would that get, e.g. modify\
 		reps in a set in an exercise\
 	- would this be brittle?\
-\'95 Or persist some representation of Component that we know\
-  how to restore?\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf2 \'95 Add persistence to gear\
-	- support text and binary persistence\
-	- register a function that takes object type id and creates\
-	  default version of that object, and adds it to a component\
-	- probably have to add a method to component to get all object type ids\
-	- should be OK if not all objects have the special serialize trait\
-	  (they might be logic only)\
-	- may want a persist example\
-	  or maybe just unit tests\
-	  test both text and binary versions\
-	- document why this is annoying\
-	- feature gate this\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf2 \'95\'a0Need a setting to configure font sizes. Maybe font name too.\
+\'95\'a0Need a setting to configure font sizes. Maybe font name too.\
 \'95\'a0Should log ops.\
 \'95\'a0May want a way to replay ops.\
 \'95\'a0Need to restart the server if it dies due to a panic. Or maybe\
