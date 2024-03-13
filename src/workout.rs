@@ -1,5 +1,5 @@
 use super::*;
-use chrono::{DateTime, Datelike, Duration, Utc};
+use chrono::{DateTime, Datelike, Duration};
 use std::collections::HashMap;
 
 pub enum WorkoutOp {

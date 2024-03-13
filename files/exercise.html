@@ -30,10 +30,12 @@
         <button type="button" onclick="on_next()" id="next_button">Next</button>
     </div>
 
-    <p id="history">History</p>
     <ul>
         {{#each records}}
-        <li>{{this}}</li>
+        <li>
+            <span id="{{this.id}}">{{this.indicator}}</span>
+            <span>{{this.text}}</span>
+        </li>
         {{/each}}
     </ul>
 </body>

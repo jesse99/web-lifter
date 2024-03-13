@@ -158,13 +158,20 @@ fn complete_non_set(state: &mut SharedState, workout_name: &str, exercise_name: 
 }
 
 #[derive(Serialize, Deserialize)]
+struct ExerciseDataRecord {
+    pub indicator: String,
+    pub text: String,
+    pub id: String,
+}
+
+#[derive(Serialize, Deserialize)]
 struct ExerciseData {
     workout: String,              // "Full Body Exercises"
     exercise: String,             // "RDL"
     exercise_set: String,         // "Set 1 of 3"
     exercise_set_details: String, // "8 reps @ 135 lbs"
     rest: String,                 // "" or "30" (seconds)
-    records: Vec<String>,
+    records: Vec<ExerciseDataRecord>,
 }
 
 impl ExerciseData {
@@ -187,12 +194,17 @@ impl ExerciseData {
             };
         let rest = e.rest().map_or("".to_owned(), |r| format!("{r}"));
 
-        let records = history
+        let records0: Vec<&Record> = history
             .records(e.name())
             .rev()
             .filter(|r| r.program == program.name && r.workout == workout) // TODO add a way to disable this?
             .take(100) // TODO add a button to pull down another 100 of history?
-            .map(|r| record_to_str(r))
+            .collect();
+        let records = records0
+            .iter()
+            .enumerate()
+            .map(|(i, r)| (get_delta(&records0, i), r))
+            .map(|(d, r)| record_to_record(d, r))
             .collect();
 
         ExerciseData {
@@ -206,29 +218,101 @@ impl ExerciseData {
     }
 }
 
-fn record_to_str(record: &Record) -> String {
-    let mut result = String::new();
+// Note that here records goes from newest to oldest.
+fn get_delta(records: &Vec<&Record>, i: usize) -> i32 {
+    if i + 1 < records.len() {
+        let older = records[i + 1];
+        let newer = records[i];
+        let values = match newer.sets {
+            Some(CompletedSets::Durations(ref new_sets)) => match older.sets {
+                Some(CompletedSets::Durations(ref old_sets)) => {
+                    let new_durations = aggregate_durations(new_sets);
+                    let old_durations = aggregate_durations(old_sets);
+                    Some((new_durations, old_durations))
+                }
+                Some(CompletedSets::Reps(_)) => None,
+                None => None, // in theory we can get a mismatch if the user keeps an exercise name but changes the exercise type
+            },
+            Some(CompletedSets::Reps(ref new_sets)) => match older.sets {
+                Some(CompletedSets::Durations(_)) => None,
+                Some(CompletedSets::Reps(ref old_sets)) => {
+                    let new_durations = aggregate_reps(new_sets);
+                    let old_durations = aggregate_reps(old_sets);
+                    Some((new_durations, old_durations))
+                }
+                None => None,
+            },
+            None => None,
+        };
+        if let Some((new_value, old_value)) = values {
+            if new_value > old_value {
+                return 1;
+            } else if new_value < old_value {
+                return -1;
+            }
+        }
+    }
+    0
+}
+
+fn aggregate_durations(sets: &Vec<(i32, Option<f32>)>) -> f32 {
+    sets.iter().fold(0.0, |sum, x| match x {
+        (duration, Some(weight)) => sum + (*duration as f32) * weight,
+        (duration, None) => sum + (*duration as f32),
+    })
+}
+
+fn aggregate_reps(sets: &Vec<(i32, Option<f32>)>) -> f32 {
+    sets.iter().fold(0.0, |sum, x| match x {
+        (reps, Some(weight)) => sum + (*reps as f32) * weight,
+        (reps, None) => sum + (*reps as f32),
+    })
+}
+
+fn record_to_record(delta: i32, record: &Record) -> ExerciseDataRecord {
+    let mut text = String::new();
+
+    let indicator = if delta > 0 {
+        "▲ ".to_owned() // BLACK UP-POINTING TRIANGLE
+    } else if delta < 0 {
+        "▼ ".to_owned() // BLACK DOWN-POINTING TRIANGLE
+    } else {
+        "✸ ".to_owned() // HEAVY EIGHT POINTED RECTILINEAR BLACK STAR
+    };
 
     // TODO
     // do we want to use stuff like "today", "yesterday", "3 days ago"?
     // wouldn't that get weird for stuff further back?
     // make this a setting?
-    result += &record.date.format("%-d %b %Y").to_string();
+    text += &record.date.format("%-d %b %Y").to_string();
 
     if let Some(ref sets) = record.sets {
         let labels: Vec<String> = match sets {
             CompletedSets::Durations(s) => s.iter().map(|x| durations_to_str(x)).collect(),
             CompletedSets::Reps(s) => s.iter().map(|x| reps_to_str(x)).collect(),
         };
-        result += ", ";
-        result += &join_labels(labels);
+        text += ", ";
+        text += &join_labels(labels);
     }
 
     if let Some(ref comment) = record.comment {
-        result += ", ";
-        result += comment;
+        text += ", ";
+        text += comment;
     }
-    result
+
+    let id = if delta > 0 {
+        "better_record".to_owned()
+    } else if delta < 0 {
+        "worse_record".to_owned()
+    } else {
+        "same_record".to_owned()
+    };
+
+    ExerciseDataRecord {
+        indicator,
+        text,
+        id,
+    }
 }
 
 fn durations_to_str(entry: &(i32, Option<f32>)) -> String {

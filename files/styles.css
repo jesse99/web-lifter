@@ -164,3 +164,15 @@ div {
 #button_span {
     text-align: center;
 }
+
+#better_record {
+    color: green;
+}
+
+#worse_record {
+    color: red;
+}
+
+#same_record {
+    color: blue;
+}

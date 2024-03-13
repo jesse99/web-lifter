@@ -5,10 +5,13 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use chrono::Weekday;
+use chrono::{Utc, Weekday};
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, RwLock};
+use std::{
+    sync::{Arc, RwLock},
+    time::Duration,
+};
 use tower::ServiceBuilder;
 use tower_http::add_extension::AddExtensionLayer;
 
@@ -36,7 +39,7 @@ fn make_program() -> pages::State {
     let exercise = FixedRepsExercise::new(vec![10; 2]);
     let name = ExerciseName("Side Leg Lift".to_owned());
     let formal_name = FormalName("Side Lying Abduction".to_owned());
-    let exercise2 = SetsExercise::fixed_reps(name, formal_name, exercise)
+    let exercise2 = SetsExercise::fixed_reps(name.clone(), formal_name, exercise)
         .with_rest(3 * 60)
         .finalize();
 
@@ -57,9 +60,46 @@ fn make_program() -> pages::State {
     program.apply(ProgramOp::Add(workout2));
     program.apply(ProgramOp::Add(workout3));
 
+    let mut history = History::new();
+    let record = Record {
+        program: program.name.clone(),
+        workout: "Full Body".to_owned(),
+        date: Utc::now() - chrono::Duration::days(12),
+        sets: Some(CompletedSets::Reps(vec![(3, None), (3, None)])),
+        comment: None,
+    };
+    history.add(&name, record);
+
+    let record = Record {
+        program: program.name.clone(),
+        workout: "Full Body".to_owned(),
+        date: Utc::now() - chrono::Duration::days(9),
+        sets: Some(CompletedSets::Reps(vec![(5, None), (5, None)])),
+        comment: None,
+    };
+    history.add(&name, record);
+
+    let record = Record {
+        program: program.name.clone(),
+        workout: "Full Body".to_owned(),
+        date: Utc::now() - chrono::Duration::days(6),
+        sets: Some(CompletedSets::Reps(vec![(5, None), (4, None)])),
+        comment: None,
+    };
+    history.add(&name, record);
+
+    let record = Record {
+        program: program.name.clone(),
+        workout: "Full Body".to_owned(),
+        date: Utc::now() - chrono::Duration::days(3),
+        sets: Some(CompletedSets::Reps(vec![(10, None), (10, None)])),
+        comment: None,
+    };
+    history.add(&name, record);
+
     State {
         engine: Handlebars::new(),
-        history: History::new(),
+        history,
         program,
     }
 }
