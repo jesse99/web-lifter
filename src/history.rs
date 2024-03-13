@@ -16,7 +16,7 @@ pub struct Record {
     pub workout: String,
     pub date: DateTime<Utc>,
     pub sets: Option<CompletedSets>,
-    pub comment: Option<String>,
+    pub comment: Option<String>, // TODO this could be set when user edits a record
 }
 
 /// Records details about the completion of each exercise. Note that this is shared across

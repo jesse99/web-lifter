@@ -1,8 +1,6 @@
-use std::iter;
-
 use crate::*;
 use anyhow::Context;
-use chrono::Utc;
+use std::iter;
 
 pub fn get_exercise_page(
     state: SharedState,
@@ -31,7 +29,7 @@ pub fn get_next_exercise_page(
     workout_name: &str,
     exercise_name: &str,
 ) -> Result<String, InternalError> {
-    let current = {
+    let set_state = {
         let program = &state.read().unwrap().program;
         let workout = program
             .find(&workout_name)
@@ -39,20 +37,18 @@ pub fn get_next_exercise_page(
         let exercise = workout
             .find(&ExerciseName(exercise_name.to_owned()))
             .context("failed to find exercise")?;
-        exercise.current_set()
-    };
-    if let Some((current_set, num_sets)) = current {
-        let next_set = current_set + 1;
-        if next_set < num_sets {
-            advance_set(&mut state, workout_name, exercise_name);
-            get_exercise_page(state, workout_name, exercise_name)
-        } else {
-            complete_set(&mut state, workout_name, exercise_name);
-            get_workout_page(state, workout_name)
+        match exercise {
+            Exercise::Durations(_, _, _, s) => s.state,
+            Exercise::FixedReps(_, _, _, s) => s.state,
         }
-    } else {
-        complete_non_set(&mut state, workout_name, exercise_name);
+    };
+
+    if set_state == SetState::Finished {
+        complete_set(&mut state, workout_name, exercise_name);
         get_workout_page(state, workout_name)
+    } else {
+        advance_set(&mut state, workout_name, exercise_name);
+        get_exercise_page(state, workout_name, exercise_name)
     }
 }
 
@@ -64,10 +60,18 @@ fn advance_set(state: &mut SharedState, workout_name: &str, exercise_name: &str)
         .unwrap();
     match exercise {
         Exercise::Durations(_, _, _, s) => {
-            s.current_set += 1;
+            if s.current_set + 1 == s.num_sets {
+                s.state = SetState::Finished
+            } else {
+                s.current_set += 1;
+            }
         }
         Exercise::FixedReps(_, _, _, s) => {
-            s.current_set += 1;
+            if s.current_set + 1 == s.num_sets {
+                s.state = SetState::Finished
+            } else {
+                s.current_set += 1;
+            }
         }
     }
 }
@@ -128,9 +132,11 @@ fn complete_set(state: &mut SharedState, workout_name: &str, exercise_name: &str
         match exercise {
             Exercise::Durations(_, _, _, s) => {
                 s.current_set = 0;
+                s.state = SetState::Timed;
             }
             Exercise::FixedReps(_, _, _, s) => {
                 s.current_set = 0;
+                s.state = SetState::Implicit;
             }
         }
     }
@@ -171,6 +177,7 @@ struct ExerciseData {
     exercise_set: String,         // "Set 1 of 3"
     exercise_set_details: String, // "8 reps @ 135 lbs"
     rest: String,                 // "" or "30" (seconds)
+    button_title: String,         // "Next", "Start", "Done", "Exit", etc
     records: Vec<ExerciseDataRecord>,
 }
 
@@ -192,8 +199,27 @@ impl ExerciseData {
             } else {
                 ("".to_owned(), "".to_owned())
             };
-        let rest = e.rest().map_or("".to_owned(), |r| format!("{r}"));
 
+        let (state, current_set, num_sets) = match e {
+            Exercise::Durations(_, _, _, s) => (s.state, s.current_set, s.num_sets),
+            Exercise::FixedReps(_, _, _, s) => (s.state, s.current_set, s.num_sets),
+        };
+        let rest = match state {
+            SetState::Finished => "".to_owned(),
+            _ => e.rest().map_or("".to_owned(), |r| format!("{r}")),
+        };
+        // TODO: if current_set + 1 == num_sets then need to show reps stepper (if variable reps)
+        let button_title = match state {
+            SetState::Implicit => {
+                if current_set + 1 < num_sets {
+                    "Next".to_owned()
+                } else {
+                    "Done".to_owned()
+                }
+            }
+            SetState::Timed => "Start".to_owned(),
+            SetState::Finished => "Exit".to_owned(),
+        };
         let records0: Vec<&Record> = history
             .records(e.name())
             .rev()
@@ -214,6 +240,7 @@ impl ExerciseData {
             exercise_set_details,
             rest,
             records,
+            button_title,
         }
     }
 }

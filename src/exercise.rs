@@ -20,9 +20,17 @@ pub struct ExerciseName(pub String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct FormalName(pub String);
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum SetState {
+    Implicit, // user does the exercise then presses Next button
+    Timed,    // user presses Start button (aka Next), waits for timer, then does optional weight
+    Finished, // user has done everything
+}
+
 /// Used for exercises that are done multiple times, often using rest between sets.
 #[derive(Clone, Debug)]
 pub struct Sets {
+    pub state: SetState,
     pub current_set: i32, // TODO should have optional expected reps array (for non-fixed reps and maybe even FixedReps)
     pub num_sets: i32,
     pub weight: Option<Vec<f32>>, // weight to use for each set
@@ -84,10 +92,11 @@ impl SetsExercise {
         formal_name: FormalName,
         exercise: DurationsExercise,
     ) -> SetsExercise {
+        let state = SetState::Timed;
         let num_sets = exercise.sets().len() as i32;
         SetsExercise {
-            exercise: Exercise::Durations(name, formal_name, exercise, Sets::new(0)),
-            sets: Sets::new(num_sets),
+            exercise: Exercise::Durations(name, formal_name, exercise, Sets::new(state, 0)),
+            sets: Sets::new(state, num_sets),
         }
     }
 
@@ -96,10 +105,11 @@ impl SetsExercise {
         formal_name: FormalName,
         exercise: FixedRepsExercise,
     ) -> SetsExercise {
+        let state = SetState::Implicit;
         let num_sets = exercise.sets().len() as i32;
         SetsExercise {
-            exercise: Exercise::FixedReps(name, formal_name, exercise, Sets::new(0)),
-            sets: Sets::new(num_sets),
+            exercise: Exercise::FixedReps(name, formal_name, exercise, Sets::new(state, 0)),
+            sets: Sets::new(state, num_sets),
         }
     }
 
@@ -140,8 +150,9 @@ impl SetsExercise {
 }
 
 impl Sets {
-    fn new(num_sets: i32) -> Sets {
+    fn new(state: SetState, num_sets: i32) -> Sets {
         Sets {
+            state,
             current_set: 0,
             num_sets,
             weight: None,
