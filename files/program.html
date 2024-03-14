@@ -3,28 +3,40 @@
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>web lifter</title>
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="/styles/style.css?version=2" rel="stylesheet">
 </head>
 
 <body>
-    <h2 id="title">{{name}} Program</h2>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <h2 class="text-center">{{name}} Program</h2>
+    <p></p>
+    <p></p>
 
-    <div class="table-container" role="table" aria-label="Program">
-        {{#each workouts}}
-        <div class="flex-table row" role="rowgroup">
-            <div class="flex-row" role="cell">
-                <a href="./workout/{{this.name}}">{{this.name}}</a>
-            </div>
-            <div class="flex-row {{this.status_class}}" role="cell">
-                <p>{{this.status_label}}</p>
-            </div>
-        </div>
-        {{/each}}
-    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Workout</th>
+                <th scope="col">Due</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each workouts}}
+            <tr>
+                <th scope="row"><a href="/workout/{{this.name}}">{{this.name}}</a></th>
+                <td>
+                    <span class="{{this.status_class}}">{{this.status_label}}</span>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
 </body>
 
 </html>
