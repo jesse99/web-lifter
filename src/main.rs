@@ -34,14 +34,14 @@ fn make_program() -> pages::State {
     let exercise = DurationsExercise::new(vec![20; 4]);
     let name = ExerciseName("Quad Stretch".to_owned());
     let formal_name = FormalName("Standing Quad Stretch".to_owned());
-    let exercise1 = SetsExercise::durations(name, formal_name, exercise).finalize();
+    let exercise1 = SetsExercise::durations(name, formal_name, exercise)
+        .with_rest(20)
+        .finalize();
 
     let exercise = FixedRepsExercise::new(vec![10; 2]);
     let name = ExerciseName("Side Leg Lift".to_owned());
     let formal_name = FormalName("Side Lying Abduction".to_owned());
-    let exercise2 = SetsExercise::fixed_reps(name.clone(), formal_name, exercise)
-        .with_rest(3 * 60)
-        .finalize();
+    let exercise2 = SetsExercise::fixed_reps(name.clone(), formal_name, exercise).finalize();
 
     // workouts
     let mut workout1 = Workout::new("Full Body".to_owned(), Schedule::Every(2));

@@ -176,6 +176,7 @@ struct ExerciseData {
     exercise: String,             // "RDL"
     exercise_set: String,         // "Set 1 of 3"
     exercise_set_details: String, // "8 reps @ 135 lbs"
+    wait: String,                 // "" or "30" (seconds), this is for durations type exercises
     rest: String,                 // "" or "30" (seconds)
     button_title: String,         // "Next", "Start", "Done", "Exit", etc
     records: Vec<ExerciseDataRecord>,
@@ -204,8 +205,16 @@ impl ExerciseData {
             Exercise::Durations(_, _, _, s) => (s.state, s.current_set, s.num_sets),
             Exercise::FixedReps(_, _, _, s) => (s.state, s.current_set, s.num_sets),
         };
+        let wait = if let SetState::Finished = state {
+            "0".to_owned()
+        } else {
+            match e {
+                Exercise::Durations(_, _, e, _) => format!("{}", e.sets()[current_set as usize]),
+                Exercise::FixedReps(_, _, _, _) => "0".to_owned(),
+            }
+        };
         let rest = match state {
-            SetState::Finished => "".to_owned(),
+            SetState::Finished => "0".to_owned(),
             _ => e.rest().map_or("".to_owned(), |r| format!("{r}")),
         };
         // TODO: if current_set + 1 == num_sets then need to show reps stepper (if variable reps)
@@ -238,6 +247,7 @@ impl ExerciseData {
             exercise,
             exercise_set,
             exercise_set_details,
+            wait,
             rest,
             records,
             button_title,

@@ -3,17 +3,103 @@
 /* eslint no-console: "warn" */
 "use strict";
 
+let waiting = undefined;
 let start_time = undefined;
 let deadline = undefined;
-let timer_id = undefined;   // can be used with clearInterval
+let timer_id = undefined;
 
-function format_int(x) {
-    return x.toLocaleString(undefined, { maximumFractionDigits: 0 });
+function on_next(event) {
+    const body = document.getElementById('body');
+    const wait = parseInt(body.getAttribute("data-wait"));
+
+    if (deadline === undefined) {
+        if (wait > 0) {
+            // Start waiting
+            let button = document.getElementById('next_button');
+            button.innerHTML = "Stop Waiting";
+
+            start_time = seconds();
+            deadline = start_time + wait;
+            waiting = true;
+            update_wait();
+            timer_id = setInterval(on_timer, 1000); // ms
+        } else {
+            waiting = false;
+            start_resting();
+        }
+    } else if (waiting) {
+        // User said he is done waiting
+        waiting = false;
+        clearInterval(timer_id);
+        timer_id = undefined;
+        start_resting();
+    } else {
+        // User said he is done resting
+        clearInterval(timer_id);
+        timer_id = undefined;
+        post_next_set();
+    }
 }
 
-// since midnight, 1 Jan 1970
-function seconds() {
-    return new Date().getTime() / 1000;
+function start_resting() {
+    const body = document.getElementById('body');
+    const rest = parseInt(body.getAttribute("data-rest"));
+    if (rest > 0) {
+        // Start resting
+        let button = document.getElementById('next_button');
+        button.innerHTML = "Stop Resting";
+
+        start_time = seconds();
+        deadline = start_time + rest;
+        update_rest();
+        timer_id = setInterval(on_timer, 1000); // ms
+    } else {
+        // No need to rest so advance to next set
+        post_next_set();
+    }
+}
+
+function update_wait() {
+    const current = seconds();
+    let label = document.getElementById('timer_text');
+    const remaining = deadline - current;
+    if (current < deadline) {
+        label.innerHTML = friendly_time(remaining);
+        label.style.color = "blue";
+    } else {
+        waiting = false;
+        clearInterval(timer_id);
+        timer_id = undefined;
+        start_resting();
+    }
+}
+
+function update_rest() {
+    const current = seconds();
+    let label = document.getElementById('timer_text');
+    const remaining = deadline - current;
+    if (current < deadline) {
+        // console.log(`remaining: ${remaining}`);
+        label.innerHTML = friendly_time(remaining);
+        label.style.color = "red";
+    } else if (current < deadline + 2) {
+        label.innerHTML = "Done";
+        label.style.color = "green";
+    } else {
+        label.innerHTML = "+" + friendly_time(-remaining);
+        label.style.color = "green";
+    }
+}
+
+// Note that we've told the browser to call us every second but that won't be perfectly
+// reliable and errors will accumulate so we get the current time instead of relying on
+// using a 1s interval.
+function on_timer() {
+    if (waiting) {
+        update_wait();
+    } else {
+        update_rest();
+    }
 }
 
 function friendly_time(secs) {
@@ -26,30 +112,13 @@ function friendly_time(secs) {
     }
 }
 
-function on_next(event) {
-    const body = document.getElementById('body');
-    const rest = parseInt(body.getAttribute("data-rest"));
+function format_int(x) {
+    return x.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
 
-    if (deadline === undefined) {
-        if (rest > 0) {
-            // Start resting
-            let button = document.getElementById('next_button');
-            button.innerHTML = "Stop Resting";
-
-            start_time = seconds();
-            deadline = start_time + rest;
-            update_label();
-            timer_id = setInterval(on_timer, 1000); // ms
-        } else {
-            // No need to rest so advance to next set
-            post_next_set();
-        }
-    } else {
-        // User said he is done resting
-        clearInterval(timer_id);
-        timer_id = undefined;
-        post_next_set();
-    }
+// since midnight, 1 Jan 1970
+function seconds() {
+    return new Date().getTime() / 1000;
 }
 
 // We can send a POST with XMLHttpRequest but that won't load a new page so what we do
@@ -76,28 +145,4 @@ function post_next_set() {
     // }
     document.body.appendChild(form); // forms cannot be submitted outside of body
     form.submit(); // send the payload and navigate
-}
-
-// Note that we've told the browser to call us every second but that won't be perfectly
-// reliable and errors will accumulate so we get the current time instead of relying on
-// that.
-function update_label() {
-    const current = seconds();
-    let label = document.getElementById('timer_text');
-    const remaining = deadline - current;
-    if (current < deadline) {
-        // console.log(`remaining: ${remaining}`);
-        label.innerHTML = friendly_time(remaining);
-        label.style.color = "red";
-    } else if (current < deadline + 2) {
-        label.innerHTML = "Done";
-        label.style.color = "green";
-    } else {
-        label.innerHTML = "+" + friendly_time(-remaining);
-        label.style.color = "green";
-    }
-}
-
-function on_timer() {
-    update_label();
 }
