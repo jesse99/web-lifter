@@ -169,7 +169,7 @@ function post_next_set() {
 
     if (reps === undefined) {
         const dropdown = document.getElementById('reps_button');
-        if (!dropdown.hidden) {
+        if (dropdown.innerText) {
             // user didn't change default
             reps = dropdown.innerText.split(" ")[0];
         }
