@@ -1,3 +1,5 @@
+use crate::*;
+
 #[derive(Clone, Copy, Debug)]
 pub struct VariableReps {
     pub min: i32,
@@ -28,9 +30,8 @@ impl VariableRepsExercise {
         }
     }
 
-    /// Min and max reps for each set.
-    pub fn sets(&self) -> &Vec<VariableReps> {
-        &self.reps
+    pub fn num_sets(&self) -> usize {
+        self.reps.len()
     }
 
     pub fn set_expected(&mut self, expected: Vec<i32>) {
@@ -38,8 +39,8 @@ impl VariableRepsExercise {
     }
 
     /// Minimum the user is currently expected to do.
-    pub fn min_expected(&self) -> &Vec<i32> {
-        &self.expected
+    pub fn min_expected(&self) -> Vec<i32> {
+        self.reps.iter().map(|r| r.min).collect()
     }
 
     /// Maximum the user is expected to do.
@@ -47,29 +48,32 @@ impl VariableRepsExercise {
         self.reps.iter().map(|r| r.max).collect()
     }
 
+    pub fn expected(&self) -> &Vec<i32> {
+        &self.expected
+    }
+
     /// What the user wants to do up to the most the user is expected to do. Can be larger
     /// than what they did last time, or sometimes even smaller.
-    pub fn expected_range(&self, set_index: i32) -> VariableReps {
-        let set_index = set_index as usize;
-        let (min, max, percent) = if set_index < self.expected.len() && set_index < self.reps.len()
-        {
-            (
-                std::cmp::min(self.expected[set_index], self.reps[set_index].max),
-                self.reps[set_index].max,
-                self.reps[set_index].percent,
-            )
-        } else if set_index < self.reps.len() {
-            // Typically this happens if expected is empty. Possibly also number of sets
-            // was changed (although doing that should reset expected).
-            (
-                self.reps[set_index].min,
-                self.reps[set_index].max,
-                self.reps[set_index].percent,
-            )
-        } else {
-            assert!(false);
-            (4, 8, 100)
-        };
-        VariableReps { min, max, percent }
+    pub fn expected_range(&self, index: SetIndex) -> VariableReps {
+        match index {
+            SetIndex::Warmup(_) => todo!(),
+            SetIndex::Workset(i) => {
+                let (min, max, percent) = if i < self.expected.len() && i < self.reps.len() {
+                    (
+                        std::cmp::min(self.expected[i], self.reps[i].max),
+                        self.reps[i].max,
+                        self.reps[i].percent,
+                    )
+                } else if i < self.reps.len() {
+                    // Typically this happens if expected is empty. Possibly also number of sets
+                    // was changed (although doing that should reset expected).
+                    (self.reps[i].min, self.reps[i].max, self.reps[i].percent)
+                } else {
+                    assert!(false);
+                    (4, 8, 100)
+                };
+                VariableReps { min, max, percent }
+            }
+        }
     }
 }

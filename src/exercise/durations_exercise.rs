@@ -1,3 +1,5 @@
+use crate::SetIndex;
+
 /// Used for stuff like 3x60s planks. Target is used to signal the user to increase
 /// difficulty (typically by switching to a harder variant of the exercise or adding
 /// weight).
@@ -23,7 +25,14 @@ impl DurationsExercise {
     //     }
     // }
 
-    pub fn sets(&self) -> &Vec<i32> {
-        &self.secs
+    pub fn num_sets(&self) -> usize {
+        self.secs.len()
+    }
+
+    pub fn set(&self, index: SetIndex) -> i32 {
+        match index {
+            SetIndex::Workset(i) => self.secs[i],
+            _ => panic!("expected workset"),
+        }
     }
 }

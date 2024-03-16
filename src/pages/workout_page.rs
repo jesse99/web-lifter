@@ -56,35 +56,30 @@ impl ExerciseData {
 fn summarize(exercise: &Exercise) -> String {
     let sets = match exercise {
         // TODO: convert to a short time, eg secs or mins
-        Exercise::Durations(_, _, exercise, s) => (0..exercise.sets().len())
-            .map(|i| (exercise.sets()[i as usize], s.weight))
-            .map(|(d, w)| {
+        Exercise::Durations(_, _, e, _) => (0..e.num_sets())
+            .map(|i| {
+                let index = SetIndex::Workset(i);
+                let d = e.set(index);
+                let w = exercise.weight(index);
                 let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
                 format!("{d}s{suffix}")
             })
             .collect(),
-        Exercise::FixedReps(_, _, exercise, s) => (0..exercise.worksets().len())
+        Exercise::FixedReps(_, _, e, _) => (0..e.num_worksets())
             .map(|i| {
-                let percent = exercise.worksets()[i as usize].percent as f32;
-                (
-                    exercise.worksets()[i as usize].reps,
-                    s.weight.map(|w| (percent * w) / 100.0),
-                )
-            })
-            .map(|(r, w)| {
+                let index = SetIndex::Workset(i); // workout page only shows work sets
+                let r = e.set(index).reps;
+                let w = exercise.weight(index);
                 let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
                 format!("{r} reps{suffix}")
             })
             .collect(),
-        Exercise::VariableReps(_, _, exercise, s) => (0..exercise.sets().len())
+        Exercise::VariableReps(_, _, e, _) => (0..e.num_sets())
             .map(|i| {
-                let percent = exercise.sets()[i as usize].percent as f32;
-                (
-                    exercise.expected_range(i as i32),
-                    s.weight.map(|w| (percent * w) / 100.0),
-                )
-            })
-            .map(|(r, w)| {
+                let index = SetIndex::Workset(i);
+                let r = e.expected_range(index);
+                println!("expected: {r:?}");
+                let w = exercise.weight(index);
                 let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
                 if r.min < r.max {
                     format!("{}-{} reps{suffix}", r.min, r.max)

@@ -1,3 +1,5 @@
+use crate::*;
+
 /// Reps to use for a set along with a percentage of weight.
 #[derive(Clone, Debug)]
 pub struct FixedReps {
@@ -35,11 +37,18 @@ impl FixedRepsExercise {
         FixedRepsExercise { warmup, worksets }
     }
 
-    pub fn warmup(&self) -> &Vec<FixedReps> {
-        &self.warmup
+    pub fn num_warmups(&self) -> usize {
+        self.warmup.len()
     }
 
-    pub fn worksets(&self) -> &Vec<FixedReps> {
-        &self.worksets
+    pub fn num_worksets(&self) -> usize {
+        self.worksets.len()
+    }
+
+    pub fn set(&self, index: SetIndex) -> &FixedReps {
+        match index {
+            SetIndex::Warmup(i) => &self.warmup[i],
+            SetIndex::Workset(i) => &self.worksets[i],
+        }
     }
 }
