@@ -29,7 +29,7 @@ pub fn post_next_exercise_page(
     exercise_name: &str,
     options: Option<VarRepsOptions>,
 ) -> Result<String, InternalError> {
-    let set_state = {
+    let finished = {
         let program = &state.read().unwrap().program;
         let workout = program
             .find(&workout_name)
@@ -38,13 +38,13 @@ pub fn post_next_exercise_page(
             .find(&ExerciseName(exercise_name.to_owned()))
             .context("failed to find exercise")?;
         match exercise {
-            Exercise::Durations(_, _, _, s) => s.state,
-            Exercise::FixedReps(_, _, _, s) => s.state,
-            Exercise::VariableReps(_, _, _, s) => s.state,
+            Exercise::Durations(_, _, _, s) => s.finished,
+            Exercise::FixedReps(_, _, _, s) => s.finished,
+            Exercise::VariableReps(_, _, _, s) => s.finished,
         }
     };
 
-    if set_state == SetState::Finished {
+    if finished {
         complete_set(&mut state, workout_name, exercise_name, options);
         get_workout_page(state, workout_name)
     } else {
@@ -107,7 +107,7 @@ fn advance_set(
             Exercise::Durations(_, _, e, s) => match s.current_index {
                 SetIndex::Workset(i) => {
                     if i + 1 == e.num_sets() {
-                        s.state = SetState::Finished
+                        s.finished = true
                     } else {
                         s.current_index = SetIndex::Workset(i + 1);
                     }
@@ -124,7 +124,7 @@ fn advance_set(
                 }
                 SetIndex::Workset(i) => {
                     if i + 1 == e.num_worksets() {
-                        s.state = SetState::Finished
+                        s.finished = true
                     } else {
                         s.current_index = SetIndex::Workset(i + 1);
                     }
@@ -133,7 +133,7 @@ fn advance_set(
             Exercise::VariableReps(_, _, e, s) => match s.current_index {
                 SetIndex::Workset(i) => {
                     if i + 1 == e.num_sets() {
-                        s.state = SetState::Finished
+                        s.finished = true
                     } else {
                         s.current_index = SetIndex::Workset(i + 1);
                     }
@@ -225,7 +225,7 @@ fn complete_set(
             Exercise::Durations(_, _, _, s) => {
                 assert!(options.is_none());
                 s.current_index = SetIndex::Workset(0);
-                s.state = SetState::Timed;
+                s.finished = false;
             }
             Exercise::FixedReps(_, _, e, s) => {
                 assert!(options.is_none());
@@ -234,11 +234,11 @@ fn complete_set(
                 } else {
                     s.current_index = SetIndex::Workset(0);
                 }
-                s.state = SetState::Implicit;
+                s.finished = false;
             }
             Exercise::VariableReps(_, _, _, s) => {
                 s.current_index = SetIndex::Workset(0);
-                s.state = SetState::Implicit;
+                s.finished = false;
             }
         }
     }
@@ -344,19 +344,20 @@ impl ExerciseData {
         let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
         let exercise_set_details = format!("{}s{suffix}", e.set(s.current_index));
 
-        let wait = if s.state == SetState::Finished {
+        let wait = if s.finished {
             "0".to_owned()
         } else {
             format!("{}", e.set(s.current_index))
         };
-        let rest = match s.state {
-            SetState::Finished => "0".to_owned(),
-            _ => exercise
+        let rest = if s.finished {
+            "0".to_owned()
+        } else {
+            exercise
                 .rest(s.current_index)
-                .map_or("0".to_owned(), |r| format!("{r}")),
+                .map_or("0".to_owned(), |r| format!("{r}"))
         };
         let records = ExerciseData::get_records(history, program, workout, exercise);
-        let button_title = if s.state == SetState::Finished {
+        let button_title = if s.finished {
             "Exit".to_owned()
         } else {
             "Start".to_owned()
@@ -416,7 +417,7 @@ impl ExerciseData {
         let exercise_set_details = format!("{} reps{suffix}", e.set(s.current_index).reps);
 
         let wait = "0".to_owned(); // for durations
-        let rest = if s.state == SetState::Finished {
+        let rest = if s.finished {
             "0".to_owned()
         } else {
             match s.current_index {
@@ -427,7 +428,7 @@ impl ExerciseData {
             }
         };
         let records = ExerciseData::get_records(history, program, workout, exercise);
-        let button_title = if s.state == SetState::Finished {
+        let button_title = if s.finished {
             "Exit".to_owned()
         } else {
             match s.current_index {
@@ -492,14 +493,15 @@ impl ExerciseData {
         };
 
         let wait = "0".to_owned(); // for durations
-        let rest = match s.state {
-            SetState::Finished => "0".to_owned(),
-            _ => exercise
+        let rest = if s.finished {
+            "0".to_owned()
+        } else {
+            exercise
                 .rest(s.current_index)
-                .map_or("0".to_owned(), |r| format!("{r}")),
+                .map_or("0".to_owned(), |r| format!("{r}"))
         };
         let records = ExerciseData::get_records(history, program, workout, exercise);
-        let button_title = if s.state == SetState::Finished {
+        let button_title = if s.finished {
             "Exit".to_owned()
         } else {
             match s.current_index {
@@ -515,7 +517,7 @@ impl ExerciseData {
         };
 
         let expected = e.expected_range(s.current_index);
-        let hide_reps = if s.state == SetState::Finished {
+        let hide_reps = if s.finished {
             "hidden".to_owned()
         } else {
             "".to_owned()
@@ -524,16 +526,15 @@ impl ExerciseData {
         let rep_items = reps_to_vec(expected);
 
         let reps = get_var_reps_done(history, exercise);
-        let (update_hidden, update_value) =
-            if s.state == SetState::Finished && reps != *e.expected() {
-                ("".to_owned(), "1".to_owned())
-            } else {
-                ("hidden".to_owned(), "0".to_owned())
-            };
+        let (update_hidden, update_value) = if s.finished && reps != *e.expected() {
+            ("".to_owned(), "1".to_owned())
+        } else {
+            ("hidden".to_owned(), "0".to_owned())
+        };
 
         let weight = exercise.weight(s.current_index);
         let (advance_hidden, advance_value) =
-            if s.state == SetState::Finished && weight.is_some() && reps >= e.max_expected() {
+            if s.finished && weight.is_some() && reps >= e.max_expected() {
                 ("".to_owned(), "1".to_owned())
             } else {
                 ("hidden".to_owned(), "0".to_owned())

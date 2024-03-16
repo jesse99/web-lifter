@@ -22,13 +22,6 @@ pub struct ExerciseName(pub String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct FormalName(pub String);
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum SetState {
-    Implicit, // user does the exercise then presses Next button
-    Timed,    // user presses Start button (aka Next), waits for timer, then does optional rest
-    Finished, // user has done every set
-}
-
 /// Not all exercises will support all of these.
 #[derive(Clone, Copy, Debug)]
 pub enum SetIndex {
@@ -49,7 +42,7 @@ impl SetIndex {
 /// Used for exercises that are done multiple times, often using rest between sets.
 #[derive(Clone, Debug)]
 pub struct Sets {
-    pub state: SetState,
+    pub finished: bool,
     pub current_index: SetIndex,
     weight: Option<f32>, // base weight to use for each workset, often modified by set percent
     rest: Option<i32>,   // used for work sets
@@ -151,8 +144,7 @@ impl SetsExercise {
         formal_name: FormalName,
         exercise: DurationsExercise,
     ) -> SetsExercise {
-        let state = SetState::Timed;
-        let sets = Sets::new(state, SetIndex::Workset(0));
+        let sets = Sets::new(SetIndex::Workset(0));
         SetsExercise {
             exercise: Exercise::Durations(name, formal_name, exercise, sets.clone()),
             sets,
@@ -164,11 +156,10 @@ impl SetsExercise {
         formal_name: FormalName,
         exercise: FixedRepsExercise,
     ) -> SetsExercise {
-        let state = SetState::Implicit;
         let sets = if exercise.num_warmups() > 0 {
-            Sets::new(state, SetIndex::Warmup(0))
+            Sets::new(SetIndex::Warmup(0))
         } else {
-            Sets::new(state, SetIndex::Workset(0))
+            Sets::new(SetIndex::Workset(0))
         };
         SetsExercise {
             exercise: Exercise::FixedReps(name, formal_name, exercise, sets.clone()),
@@ -181,8 +172,7 @@ impl SetsExercise {
         formal_name: FormalName,
         exercise: VariableRepsExercise,
     ) -> SetsExercise {
-        let state = SetState::Implicit;
-        let sets = Sets::new(state, SetIndex::Workset(0));
+        let sets = Sets::new(SetIndex::Workset(0));
         SetsExercise {
             exercise: Exercise::VariableReps(name, formal_name, exercise, sets.clone()),
             sets,
@@ -229,9 +219,9 @@ impl SetsExercise {
 }
 
 impl Sets {
-    fn new(state: SetState, current_set: SetIndex) -> Sets {
+    fn new(current_set: SetIndex) -> Sets {
         Sets {
-            state,
+            finished: false,
             current_index: current_set,
             weight: None,
             rest: None,
