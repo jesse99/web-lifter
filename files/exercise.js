@@ -24,6 +24,24 @@ function on_click_reps(event, title) {
     });
 }
 
+function update_clicked() {
+    const update = document.getElementById('update_button');
+    if (update.getAttribute("value") == "1") {
+        update.setAttribute("value", "0");
+    } else {
+        update.setAttribute("value", "1");
+    }
+}
+
+function advance_clicked() {
+    const update = document.getElementById('advance_button');
+    if (update.getAttribute("value") == "1") {
+        update.setAttribute("value", "0");
+    } else {
+        update.setAttribute("value", "1");
+    }
+}
+
 function on_next(event) {
     const body = document.getElementById('body');
     const wait = parseInt(body.getAttribute("data-wait"));
@@ -145,14 +163,9 @@ function post_next_set() {
     const workout = body.getAttribute("data-workout");
     const exercise = body.getAttribute("data-exercise");
 
-    // var payload = {
-    //     name: 'John',
-    //     time: '2pm'
-    // };
     var form = document.createElement('form');
     form.style.visibility = 'hidden'; // no user interaction is necessary
     form.method = 'POST'; // forms by default use GET query strings
-    form.action = `/exercise/${workout}/${exercise}/next-set`;
 
     if (reps === undefined) {
         const dropdown = document.getElementById('reps_button');
@@ -162,15 +175,18 @@ function post_next_set() {
         }
     }
     if (reps !== undefined) {
+        form.action = `/exercise/${workout}/${exercise}/next-var-set`;
         form.action += `?reps=${reps}`;
+
+        const update = document.getElementById('update_button');
+        form.action += `&update=${update.getAttribute("value")}`;
+
+        const advance = document.getElementById('advance_button');
+        form.action += `&advance=${advance.getAttribute("value")}`;
+    } else {
+        form.action = `/exercise/${workout}/${exercise}/next-set`;
     }
 
-    // for (key in Object.keys(payload)) {
-    //     var input = document.createElement('input');
-    //     input.name = key;
-    //     input.value = payload[key];
-    //     form.appendChild(input); // add key/value pair to form
-    // }
     document.body.appendChild(form); // forms cannot be submitted outside of body
     form.submit(); // send the payload and navigate
 }

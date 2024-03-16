@@ -67,6 +67,7 @@ impl History {
         }
     }
 
+    /// Returns revords from oldest to newest.
     pub fn records(&self, name: &ExerciseName) -> impl DoubleEndedIterator<Item = &Record> + '_ {
         self.records.get(name).unwrap_or(&self.empty).iter()
     }

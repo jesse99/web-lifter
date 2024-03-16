@@ -32,9 +32,23 @@ impl VariableRepsExercise {
         &self.reps
     }
 
+    pub fn set_expected(&mut self, expected: Vec<i32>) {
+        self.expected = expected;
+    }
+
+    /// Minimum the user is currently expected to do.
+    pub fn min_expected(&self) -> &Vec<i32> {
+        &self.expected
+    }
+
+    /// Maximum the user is expected to do.
+    pub fn max_expected(&self) -> Vec<i32> {
+        self.reps.iter().map(|r| r.max).collect()
+    }
+
     /// What the user wants to do up to the most he user is expected to do. Can be larger
     /// than what they did last time, or sometimes even smaller.
-    pub fn expected(&self, set_index: i32) -> RepRange {
+    pub fn expected_range(&self, set_index: i32) -> RepRange {
         let set_index = set_index as usize;
         let (min, max) = if set_index < self.expected.len() && set_index < self.reps.len() {
             (

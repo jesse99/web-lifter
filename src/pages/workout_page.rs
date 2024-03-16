@@ -56,22 +56,43 @@ impl ExerciseData {
 fn summarize(exercise: &Exercise) -> String {
     let sets = match exercise {
         // TODO: convert to a short time, eg secs or mins
-        Exercise::Durations(_, _, exercise, _) => {
-            exercise.sets().iter().map(|d| format!("{d}s")).collect()
-        }
-        Exercise::FixedReps(_, _, exercise, _) => exercise
-            .sets()
-            .iter()
-            .map(|d| format!("{d} reps"))
+        Exercise::Durations(_, _, exercise, s) => (0..exercise.sets().len())
+            .map(|i| {
+                (
+                    exercise.sets()[i as usize],
+                    s.weight.as_ref().map_or(None, |v| Some(v[i])),
+                )
+            })
+            .map(|(d, w)| {
+                let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
+                format!("{d}s{suffix}")
+            })
             .collect(),
-        Exercise::VariableReps(_, _, exercise, _) => exercise
-            .sets()
-            .iter()
-            .map(|r| {
+        Exercise::FixedReps(_, _, exercise, s) => (0..exercise.sets().len())
+            .map(|i| {
+                (
+                    exercise.sets()[i as usize],
+                    s.weight.as_ref().map_or(None, |v| Some(v[i])),
+                )
+            })
+            .map(|(d, w)| {
+                let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
+                format!("{d} reps{suffix}")
+            })
+            .collect(),
+        Exercise::VariableReps(_, _, exercise, s) => (0..exercise.sets().len())
+            .map(|i| {
+                (
+                    exercise.expected_range(i as i32),
+                    s.weight.as_ref().map_or(None, |v| Some(v[i])),
+                )
+            })
+            .map(|(r, w)| {
+                let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
                 if r.min < r.max {
-                    format!("{}-{} reps", r.min, r.max)
+                    format!("{}-{} reps{suffix}", r.min, r.max)
                 } else {
-                    format!("{} reps", r.max)
+                    format!("{} reps{suffix}", r.max)
                 }
             })
             .collect(),

@@ -3,7 +3,7 @@ use axum::{
     http::{header, StatusCode},
     response::IntoResponse,
     routing::{get, post},
-    Json, Router,
+    Router,
 };
 use chrono::{Utc, Weekday};
 use handlebars::Handlebars;
@@ -43,7 +43,9 @@ fn make_program() -> pages::State {
     let exercise = VariableRepsExercise::new(vec![RepRange::new(4, 8); 3]);
     let name = ExerciseName("Squat".to_owned());
     let formal_name = FormalName("Low bar Squat".to_owned());
-    let exercise3 = SetsExercise::variable_reps(name.clone(), formal_name, exercise).finalize();
+    let exercise3 = SetsExercise::variable_reps(name.clone(), formal_name, exercise)
+        .with_weight(vec![135.0; 3])
+        .finalize();
 
     // workouts
     let mut workout1 = Workout::new("Full Body".to_owned(), Schedule::Every(2));
@@ -126,6 +128,10 @@ async fn main() {
         .route("/workout/:name", get(get_workout))
         .route("/exercise/:workout/:exercise", get(get_exercise))
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
+        .route(
+            "/exercise/:workout/:exercise/next-var-set",
+            post(post_next_var_set),
+        )
         .route("/scripts/exercise.js", get(get_exercise_js))
         .route("/styles/style.css", get(get_styles))
         .layer(
@@ -180,17 +186,26 @@ async fn get_exercise(
     Ok(axum::response::Html(contents))
 }
 
-#[derive(Deserialize)]
-struct NextSetOptions {
+#[derive(Debug, Deserialize)]
+struct VarRepsOptions {
     reps: i32,
+    update: i32,
+    advance: i32,
 }
 
 async fn post_next_set(
     Path((workout, exercise)): Path<(String, String)>,
-    options: Option<Query<NextSetOptions>>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let reps = options.map(|q| q.0.reps);
-    let contents = post_next_exercise_page(state, &workout, &exercise, reps)?;
+    let contents = post_next_exercise_page(state, &workout, &exercise, None)?;
+    Ok(axum::response::Html(contents))
+}
+
+async fn post_next_var_set(
+    Path((workout, exercise)): Path<(String, String)>,
+    options: Query<VarRepsOptions>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, InternalError> {
+    let contents = post_next_exercise_page(state, &workout, &exercise, Some(options.0))?;
     Ok(axum::response::Html(contents))
 }
