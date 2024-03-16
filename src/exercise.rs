@@ -25,19 +25,19 @@ pub struct FormalName(pub String);
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SetState {
     Implicit, // user does the exercise then presses Next button
-    Timed,    // user presses Start button (aka Next), waits for timer, then does optional weight
-    Finished, // user has done everything
+    Timed,    // user presses Start button (aka Next), waits for timer, then does optional rest
+    Finished, // user has done every set
 }
 
 /// Used for exercises that are done multiple times, often using rest between sets.
 #[derive(Clone, Debug)]
 pub struct Sets {
     pub state: SetState,
-    pub current_set: i32, // TODO should have optional expected reps array (for non-fixed reps and maybe even FixedReps)
+    pub current_set: i32,
     pub num_sets: i32,
-    pub weight: Option<Vec<f32>>, // weight to use for each set
+    pub weight: Option<f32>, // base weight to use for each set, often modified by set percent
     pub rest: Option<i32>,
-    pub last_rest: Option<i32>, // overrides rest
+    pub last_rest: Option<i32>, // overrides rest.last()
 }
 
 #[derive(Debug)]
@@ -64,17 +64,14 @@ impl Exercise {
         }
     }
 
-    pub fn weight(&self) -> Option<f32> {
+    pub fn current_weight(&self) -> Option<f32> {
         match self {
-            Exercise::Durations(_, _, _, sets) => {
-                sets.weight.as_ref().map(|v| v[sets.current_set as usize])
+            Exercise::Durations(_, _, _, sets) => sets.weight,
+            Exercise::FixedReps(_, _, e, sets) => {
+                let percent = e.worksets()[sets.current_set as usize].percent as f32;
+                sets.weight.map(|w| (percent * w) / 100.0)
             }
-            Exercise::FixedReps(_, _, _, sets) => {
-                sets.weight.as_ref().map(|v| v[sets.current_set as usize])
-            }
-            Exercise::VariableReps(_, _, _, sets) => {
-                sets.weight.as_ref().map(|v| v[sets.current_set as usize])
-            }
+            Exercise::VariableReps(_, _, _, sets) => sets.weight,
         }
     }
 
@@ -120,7 +117,7 @@ impl SetsExercise {
         exercise: FixedRepsExercise,
     ) -> SetsExercise {
         let state = SetState::Implicit;
-        let num_sets = exercise.sets().len() as i32;
+        let num_sets = exercise.worksets().len() as i32;
         let dummy = Sets::new(state, 0);
         SetsExercise {
             exercise: Exercise::FixedReps(name, formal_name, exercise, dummy),
@@ -142,7 +139,7 @@ impl SetsExercise {
         }
     }
 
-    pub fn with_weight(self, weight: Vec<f32>) -> SetsExercise {
+    pub fn with_weight(self, weight: f32) -> SetsExercise {
         let sets = Sets {
             weight: Some(weight),
             ..self.sets
@@ -158,13 +155,13 @@ impl SetsExercise {
         SetsExercise { sets, ..self }
     }
 
-    pub fn with_last_rest(self, last: i32) -> SetsExercise {
-        let sets = Sets {
-            last_rest: Some(last),
-            ..self.sets
-        };
-        SetsExercise { sets, ..self }
-    }
+    // pub fn with_last_rest(self, last: i32) -> SetsExercise {
+    //     let sets = Sets {
+    //         last_rest: Some(last),
+    //         ..self.sets
+    //     };
+    //     SetsExercise { sets, ..self }
+    // }
 
     pub fn finalize(self) -> Exercise {
         match self.exercise {

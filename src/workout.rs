@@ -550,7 +550,7 @@ mod tests {
     fn build_squat(schedule: Schedule) -> (Workout, ExerciseName) {
         let name = ExerciseName("Squat".to_owned());
         let formal_name = FormalName("Low-bar Squat".to_owned());
-        let exercise = FixedRepsExercise::new(vec![5; 3]);
+        let exercise = FixedRepsExercise::with_reps(vec![5; 3]);
         let exercise = SetsExercise::fixed_reps(name.clone(), formal_name, exercise).finalize();
 
         let mut workout = Workout::new("Full Body".to_owned(), schedule);
@@ -562,12 +562,12 @@ mod tests {
     fn build_squat_bench(schedule: Schedule) -> (Workout, ExerciseName, ExerciseName) {
         let name1 = ExerciseName("Squat".to_owned());
         let formal_name = FormalName("Low-bar Squat".to_owned());
-        let exercise = FixedRepsExercise::new(vec![5; 3]);
+        let exercise = FixedRepsExercise::with_reps(vec![5; 3]);
         let exercise1 = SetsExercise::fixed_reps(name1.clone(), formal_name, exercise).finalize();
 
         let name2 = ExerciseName("Bench".to_owned());
         let formal_name = FormalName("Bench Press".to_owned());
-        let exercise = FixedRepsExercise::new(vec![5; 3]);
+        let exercise = FixedRepsExercise::with_reps(vec![5; 3]);
         let exercise2 = SetsExercise::fixed_reps(name2.clone(), formal_name, exercise).finalize();
 
         let mut workout = Workout::new("Full Body".to_owned(), schedule);

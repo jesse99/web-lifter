@@ -57,34 +57,31 @@ fn summarize(exercise: &Exercise) -> String {
     let sets = match exercise {
         // TODO: convert to a short time, eg secs or mins
         Exercise::Durations(_, _, exercise, s) => (0..exercise.sets().len())
-            .map(|i| {
-                (
-                    exercise.sets()[i as usize],
-                    s.weight.as_ref().map_or(None, |v| Some(v[i])),
-                )
-            })
+            .map(|i| (exercise.sets()[i as usize], s.weight))
             .map(|(d, w)| {
                 let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
                 format!("{d}s{suffix}")
             })
             .collect(),
-        Exercise::FixedReps(_, _, exercise, s) => (0..exercise.sets().len())
+        Exercise::FixedReps(_, _, exercise, s) => (0..exercise.worksets().len())
             .map(|i| {
+                let percent = exercise.worksets()[i as usize].percent as f32;
                 (
-                    exercise.sets()[i as usize],
-                    s.weight.as_ref().map_or(None, |v| Some(v[i])),
+                    exercise.worksets()[i as usize].reps,
+                    s.weight.map(|w| (percent * w) / 100.0),
                 )
             })
-            .map(|(d, w)| {
+            .map(|(r, w)| {
                 let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
-                format!("{d} reps{suffix}")
+                format!("{r} reps{suffix}")
             })
             .collect(),
         Exercise::VariableReps(_, _, exercise, s) => (0..exercise.sets().len())
             .map(|i| {
+                let percent = exercise.sets()[i as usize].percent as f32;
                 (
                     exercise.expected_range(i as i32),
-                    s.weight.as_ref().map_or(None, |v| Some(v[i])),
+                    s.weight.map(|w| (percent * w) / 100.0),
                 )
             })
             .map(|(r, w)| {

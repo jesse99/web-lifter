@@ -130,15 +130,15 @@ fn advance_set(
                 Exercise::Durations(_, _, e, s) => (
                     Some(e.sets()[s.current_set as usize]),
                     None,
-                    exercise.weight(),
+                    exercise.current_weight(),
                 ),
                 Exercise::FixedReps(_, _, e, s) => (
                     None,
-                    Some(e.sets()[s.current_set as usize]),
-                    exercise.weight(),
+                    Some(e.worksets()[s.current_set as usize].reps),
+                    exercise.current_weight(),
                 ),
                 Exercise::VariableReps(_, _, _, _) => {
-                    (None, options.map(|o| o.reps), exercise.weight())
+                    (None, options.map(|o| o.reps), exercise.current_weight())
                 }
             }
         };
@@ -211,10 +211,7 @@ fn complete_set(
             match exercise {
                 Exercise::VariableReps(_, _, e, s) => {
                     new_expected = e.min_expected().clone();
-                    s.weight = s
-                        .weight
-                        .as_ref()
-                        .map(|v| v.iter().map(|w| w + 5.0).collect()); // TODO: need to use a weight set
+                    s.weight = s.weight.map(|w| w + 5.0); // TODO: need to use a weight set
                 }
                 _ => panic!("expected Exercise::VariableReps"),
             }
@@ -273,27 +270,21 @@ impl ExerciseData {
         let (exercise_set, exercise_set_details) =
             if let Some((current_set, num_sets)) = e.current_set() {
                 let details = match e {
-                    Exercise::Durations(_, _, exercise, s) => {
-                        let w = s
-                            .weight
-                            .as_ref()
-                            .map_or(None, |v| Some(v[current_set as usize]));
+                    Exercise::Durations(_, _, exercise, _) => {
+                        let w = e.current_weight();
                         let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
                         format!("{}s{suffix}", exercise.sets()[current_set as usize])
                     }
-                    Exercise::FixedReps(_, _, exercise, s) => {
-                        let w = s
-                            .weight
-                            .as_ref()
-                            .map_or(None, |v| Some(v[current_set as usize]));
+                    Exercise::FixedReps(_, _, exercise, _) => {
+                        let w = e.current_weight();
                         let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
-                        format!("{} reps{suffix}", exercise.sets()[current_set as usize])
+                        format!(
+                            "{} reps{suffix}",
+                            exercise.worksets()[current_set as usize].reps
+                        )
                     }
-                    Exercise::VariableReps(_, _, exercise, s) => {
-                        let w = s
-                            .weight
-                            .as_ref()
-                            .map_or(None, |v| Some(v[current_set as usize]));
+                    Exercise::VariableReps(_, _, exercise, _) => {
+                        let w = e.current_weight();
                         let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
 
                         let range = exercise.expected_range(current_set);
@@ -422,7 +413,7 @@ impl ExerciseData {
     }
 }
 
-fn reps_to_title(reps: RepRange) -> String {
+fn reps_to_title(reps: VariableReps) -> String {
     if reps.min == 1 {
         "1 rep".to_owned()
     } else {
@@ -430,7 +421,7 @@ fn reps_to_title(reps: RepRange) -> String {
     }
 }
 
-fn reps_to_vec(reps: RepRange) -> Vec<RepItem> {
+fn reps_to_vec(reps: VariableReps) -> Vec<RepItem> {
     (1..=reps.max)
         .map(|n| {
             let title = if n == 1 {

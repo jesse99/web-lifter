@@ -4,7 +4,7 @@
 #[derive(Clone, Debug)]
 pub struct DurationsExercise {
     secs: Vec<i32>,
-    target_secs: Option<i32>,
+    // target_secs: Option<i32>,    // TODO: support this
 }
 
 impl DurationsExercise {
@@ -12,16 +12,16 @@ impl DurationsExercise {
     pub fn new(secs: Vec<i32>) -> DurationsExercise {
         DurationsExercise {
             secs,
-            target_secs: None,
+            // target_secs: None,
         }
     }
 
-    pub fn with_target_secs(self, secs: i32) -> DurationsExercise {
-        DurationsExercise {
-            target_secs: Some(secs),
-            ..self
-        }
-    }
+    // pub fn with_target_secs(self, secs: i32) -> DurationsExercise {
+    //     DurationsExercise {
+    //         target_secs: Some(secs),
+    //         ..self
+    //     }
+    // }
 
     pub fn sets(&self) -> &Vec<i32> {
         &self.secs

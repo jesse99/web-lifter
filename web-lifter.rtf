@@ -2,50 +2,67 @@
 \cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fnil\fcharset0 Menlo-Italic;\f2\fswiss\fcharset0 Helvetica;
 \f3\fswiss\fcharset0 Helvetica-Bold;}
 {\colortbl;\red255\green255\blue255;\red203\green0\blue77;\red60\green60\blue59;\red117\green66\blue151;
-\red130\green130\blue130;\red9\green76\blue116;\red95\green124\blue3;\red60\green60\blue59;\red2\green2\blue2;
-\red25\green28\blue31;}
+\red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;\red117\green66\blue151;\red130\green130\blue130;
+\red130\green130\blue130;\red95\green124\blue3;\red2\green2\blue2;\red25\green28\blue31;}
 {\*\expandedcolortbl;;\cssrgb\c84314\c0\c37255;\cssrgb\c30196\c30196\c29804;\cssrgb\c53725\c34902\c65882;
-\cssrgb\c58039\c58039\c58039;\cssrgb\c0\c37255\c52941;\cssrgb\c44314\c54902\c0;\cssrgb\c30196\c30196\c29804;\csgenericrgb\c784\c784\c784;
-\cssrgb\c12941\c14510\c16078;}
+\cssrgb\c30196\c30196\c29804;\cssrgb\c84314\c0\c37255;\cssrgb\c0\c37255\c52941;\cssrgb\c53725\c34902\c65882;\cssrgb\c58039\c58039\c58039;
+\cssrgb\c58039\c58039\c58039;\cssrgb\c44314\c54902\c0;\csgenericrgb\c784\c784\c784;\cssrgb\c12941\c14510\c16078;}
 \deftab720
 \pard\pardeftab720\partightenfactor0
 
 \f0\fs36 \cf2 \expnd0\expndtw0\kerning0
-pub\cf3  \cf2 struct\cf3  DurationsExercise \{\
-    \cf4 secs\cf3 : Vec<i32>,\
-    \cf4 target_secs\cf3 : Option<i32>,\
+\outl0\strokewidth0 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  FixedReps \{\
+    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 reps\cf3 \strokec3 : i32,\
+    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 percent\cf3 \strokec3 : i32,\
+\pard\pardeftab720\partightenfactor0
+
+\fs40 \cf5 \outl0\strokewidth0 \
+\pard\pardeftab720\partightenfactor0
+
+\fs36 \cf6 impl\cf5  FixedRepsExercise \{\
+    \cf6 pub\cf5  \cf6 fn\cf5  \cf7 with_reps\cf5 (\cf8 worksets\cf5 : Vec<i32>) -> FixedRepsExercise \{\
+    \cf6 pub\cf5  \cf6 fn\cf5  \cf7 with_percent\cf5 (\cf8 warmup\cf5 : Vec<FixedReps>, \cf8 worksets\cf5 : Vec<FixedReps>) -> FixedRepsExercise \{\
 \
-\cf2 pub\cf3  \cf2 struct\cf3  FixedRepsExercise \{\
-    \cf4 reps\cf3 : Vec<i32>,\
+    \cf6 pub\cf5  \cf6 fn\cf5  \cf7 warmup\cf5 (&\cf8 self\cf5 ) -> &Vec<FixedReps> \{\
+    \cf6 pub\cf5  \cf6 fn\cf5  \cf7 worksets\cf5 (&\cf8 self\cf5 ) -> &Vec<FixedReps> \{\
+\pard\pardeftab720\partightenfactor0
+
+\fs40 \cf6 \
+\pard\pardeftab720\partightenfactor0
+
+\fs36 \cf6 pub\cf5  \cf6 struct\cf5  DurationsExercise \{\
+    \cf8 secs\cf5 : Vec<i32>,\
+    \cf8 target_secs\cf5 : Option<i32>,\
+\pard\pardeftab720\partightenfactor0
+
+\fs32 \cf3 \outl0\strokewidth0 \strokec3 \
+\pard\pardeftab720\partightenfactor0
+
+\fs36 \cf6 \outl0\strokewidth0 pub\cf5  \cf6 struct\cf5  Sets \{\
+    \cf6 pub\cf5  \cf8 state\cf5 : SetState,\
+    \cf6 pub\cf5  \cf8 current_set\cf5 : i32, \
+    \cf6 pub\cf5  \cf8 num_sets\cf5 : i32,\
+\pard\pardeftab720\partightenfactor0
+\cf3 \outl0\strokewidth0 \strokec3     \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 weight\cf3 \strokec3 : Option<f32>, \cf9 \strokec9 // base weight to use for each set, often modified by set percent\cf3 \strokec3 \
+\pard\pardeftab720\partightenfactor0
+\cf5 \outl0\strokewidth0     \cf6 pub\cf5  \cf8 rest\cf5 : Option<i32>,\
+    \cf6 pub\cf5  \cf8 last_rest\cf5 : Option<i32>, \cf10 // overrides rest\cf5 \
 \
-\cf2 pub\cf3  \cf2 enum\cf3  SetState \{\
-    Implicit, \cf5 // user does the exercise then presses Next button\cf3 \
-    Timed,    \cf5 // user presses Start button (aka Next), waits for timer, then does optional weight\cf3 \
-    Finished, \cf5 // user has done everything\cf3 \
-\
-\cf2 pub\cf3  \cf2 struct\cf3  Sets \{\
-    \cf2 pub\cf3  \cf4 state\cf3 : SetState,\
-    \cf2 pub\cf3  \cf4 current_set\cf3 : i32, \
-    \cf2 pub\cf3  \cf4 num_sets\cf3 : i32,\
-    \cf2 pub\cf3  \cf4 weight\cf3 : Option<Vec<f32>>, \cf5 // weight to use for each set\cf3 \
-    \cf2 pub\cf3  \cf4 rest\cf3 : Option<i32>,\
-    \cf2 pub\cf3  \cf4 last_rest\cf3 : Option<i32>, \cf5 // overrides rest\cf3 \
-\
-\cf2 pub\cf3  \cf2 enum\cf3  Exercise \{\
-    \cf6 Durations\cf3 (ExerciseName, FormalName, DurationsExercise, Sets),\
-    \cf6 FixedReps\cf3 (ExerciseName, FormalName, FixedRepsExercise, Sets),\
+\cf6 pub\cf5  \cf6 enum\cf5  Exercise \{\
+    \cf7 Durations\cf5 (ExerciseName, FormalName, DurationsExercise, Sets),\
+    \cf7 FixedReps\cf5 (ExerciseName, FormalName, FixedRepsExercise, Sets),\
 	\
 	\
 \pard\pardeftab720\partightenfactor0
 
-\fs32 \cf7 \outl0\strokewidth0 \strokec7 update_expected_div  update_button\cf8 \strokec8 \
-\cf7 \strokec7 advance_weight_div   advance_button\cf8 \strokec8 \
+\fs32 \cf11 \outl0\strokewidth0 \strokec11 update_expected_div  update_button\cf3 \strokec3 \
+\cf11 \strokec11 advance_weight_div   advance_button\cf3 \strokec3 \
 \pard\pardeftab720\partightenfactor0
 
-\fs36 \cf3 \outl0\strokewidth0 \
+\fs36 \cf5 \outl0\strokewidth0 \
 \pard\pardeftab720\partightenfactor0
 
-\fs32 \cf3      [4 reps ^]\
+\fs32 \cf5      [4 reps ^]\
      \
      o update expected      
 \f1\i could default these to checked, show this if reps differs from expected
@@ -56,25 +73,28 @@ pub\cf3  \cf2 struct\cf3  DurationsExercise \{\
      \
        [Exit]\
 \pard\pardeftab720\partightenfactor0
-\cf8 \outl0\strokewidth0 \strokec8 \
+\cf3 \outl0\strokewidth0 \strokec3 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
-\f2\fs48 \cf9 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
-\'95 Hide reps button when in finished state\
-\'95 Make sure stuff still works on mobile, especially var reps\
+\f2\fs48 \cf12 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
 \'95\'a0Fixed reps needs to support warmup sets\
 	- update exercise labels when warmups are in use\
+	- make sure tests still work\
 \'95 Variable reps needs to support warmup sets\
+\'95 May want to add some more Exercise helpers\
+	- also annoying how exercise and e usage is not consistent\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf9 \'95 Variable reps needs to support backoff sets\
+\cf12 \'95 Variable reps needs to support backoff sets\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf9 \'95 Should fixed reps support backoff sets?\
+\cf12 \'95 Should fixed reps support backoff sets?\
 \'95 Support weight sets\
 	maybe via a settings option in hamburger\
 	or a settings button/dropdown\
 \'95\'a0Support notes (use some sort of tabbed view with history)\
+\'95\'a0Persist program and history\
+	- probably want to have a dummy user name\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf9 \'95\'a0Should all mutates go through an enum op?\
+\cf12 \'95\'a0Should all mutates go through an enum op?\
 	- could persist those instead of struct instances\
 	- how messy would that get, e.g. modify\
 		reps in a set in an exercise\
@@ -87,31 +107,31 @@ restart a thread. Might be some tower thing for this.\
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f0\fs36 \cf2 \expnd0\expndtw0\kerning0
+\f0\fs36 \cf6 \expnd0\expndtw0\kerning0
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f3\b\fs48 \cf9 \kerning1\expnd0\expndtw0 \
+\f3\b\fs48 \cf12 \kerning1\expnd0\expndtw0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f2\b0 \cf9          \cf9 \ul \ulc9 Full Body Exercises\cf9 \ulnone \
+\f2\b0 \cf12          \cf12 \ul \ulc12 Full Body Exercises\cf12 \ulnone \
 \
 \
          Side Leg Lift
-\f3\b \cf9             
-\f2\b0 \cf9 \
+\f3\b \cf12             
+\f2\b0 \cf12 \
          \
          \
             Set 1 of 2
-\f3\b \cf9               
-\f2\b0 \cf9 \
+\f3\b \cf12               
+\f2\b0 \cf12 \
                
-\fs36 \cf9 10 reps
-\f3\b\fs48 \cf9                  
-\f2\b0 \cf9 \
+\fs36 \cf12 10 reps
+\f3\b\fs48 \cf12                  
+\f2\b0 \cf12 \
             \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf9 \ul \ulc9 Next\ulnone                        \ul Reset
+\cf12 \ul \ulc12 Next\ulnone                        \ul Reset
 \f3\b \ulnone  
 \f2\b0 \ul \
 \ulnone \
@@ -124,21 +144,21 @@ restart a thread. Might be some tower thing for this.\
 2x10   Mar 6, 2024\
 2x10   Mar 1, 2024\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf9 \
+\cf12 \
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf9 https://www.shuttle.rs/blog/2023/12/06/using-axum-rustJeremy Chone has a good axum tutorial\
+\cf12 https://www.shuttle.rs/blog/2023/12/06/using-axum-rustJeremy Chone has a good axum tutorial\
 Jeremy Chone has a good axum tutorial\
 		\
 http://localhost:3000/
-\f0\fs32 \cf3 \expnd0\expndtw0\kerning0
+\f0\fs32 \cf5 \expnd0\expndtw0\kerning0
 \
 \pard\pardeftab720\partightenfactor0
-\cf3 \
+\cf5 \
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f2\fs48 \cf9 https://squatuniversity.com/2017/05/30/how-to-fix-it-band-pain/\cf9 \kerning1\expnd0\expndtw0 \
+\f2\fs48 \cf12 https://squatuniversity.com/2017/05/30/how-to-fix-it-band-pain/\cf12 \kerning1\expnd0\expndtw0 \
 foam roll \
 \
 Eloquent JavaScript 4th edition\
