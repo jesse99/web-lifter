@@ -34,9 +34,37 @@ impl History {
         }
     }
 
+    /// Used to add a record with no sets.
     pub fn add(&mut self, name: &ExerciseName, record: Record) {
+        assert!(record.sets.is_none());
         let list = self.records.entry(name.clone()).or_insert(Vec::new());
         list.push(record);
+    }
+
+    /// Append a Durations set onto the last added record.
+    pub fn append_duration(&mut self, name: &ExerciseName, duration: i32, weight: Option<f32>) {
+        let entries = self.records.get_mut(name).unwrap();
+        let last = entries.last_mut().unwrap();
+        if last.sets.is_none() {
+            last.sets = Some(CompletedSets::Durations(Vec::new()));
+        }
+        match last.sets {
+            Some(CompletedSets::Durations(ref mut sets)) => sets.push((duration, weight)),
+            _ => panic!("expected Durations"),
+        }
+    }
+
+    /// Append a Reps set onto the last added record.
+    pub fn append_reps(&mut self, name: &ExerciseName, reps: i32, weight: Option<f32>) {
+        let entries = self.records.get_mut(name).unwrap();
+        let last = entries.last_mut().unwrap();
+        if last.sets.is_none() {
+            last.sets = Some(CompletedSets::Reps(Vec::new()));
+        }
+        match last.sets {
+            Some(CompletedSets::Reps(ref mut sets)) => sets.push((reps, weight)),
+            _ => panic!("expected Reps"),
+        }
     }
 
     pub fn records(&self, name: &ExerciseName) -> impl DoubleEndedIterator<Item = &Record> + '_ {

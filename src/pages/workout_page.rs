@@ -64,6 +64,17 @@ fn summarize(exercise: &Exercise) -> String {
             .iter()
             .map(|d| format!("{d} reps"))
             .collect(),
+        Exercise::VariableReps(_, _, exercise, _) => exercise
+            .sets()
+            .iter()
+            .map(|r| {
+                if r.min < r.max {
+                    format!("{}-{} reps", r.min, r.max)
+                } else {
+                    format!("{} reps", r.max)
+                }
+            })
+            .collect(),
     };
     join_labels(sets)
 }

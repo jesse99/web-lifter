@@ -7,6 +7,22 @@ let waiting = undefined;
 let start_time = undefined;
 let deadline = undefined;
 let timer_id = undefined;
+let reps = undefined;
+
+function on_click_reps(event, title) {
+    const dropdown = document.getElementById('reps_button');
+    dropdown.innerText = title;
+    reps = title.split(" ")[0];
+
+    const items = document.querySelectorAll('.rep_item');
+    items.forEach(item => {
+        if (item.innerText == title) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+}
 
 function on_next(event) {
     const body = document.getElementById('body');
@@ -137,6 +153,18 @@ function post_next_set() {
     form.style.visibility = 'hidden'; // no user interaction is necessary
     form.method = 'POST'; // forms by default use GET query strings
     form.action = `/exercise/${workout}/${exercise}/next-set`;
+
+    if (reps === undefined) {
+        const dropdown = document.getElementById('reps_button');
+        if (!dropdown.hidden) {
+            // user didn't change default
+            reps = dropdown.innerText.split(" ")[0];
+        }
+    }
+    if (reps !== undefined) {
+        form.action += `?reps=${reps}`;
+    }
+
     // for (key in Object.keys(payload)) {
     //     var input = document.createElement('input');
     //     input.name = key;

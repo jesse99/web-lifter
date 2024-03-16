@@ -1,6 +1,5 @@
 use crate::*;
 use anyhow::Context;
-use std::iter;
 
 pub fn get_exercise_page(
     state: SharedState,
@@ -24,10 +23,11 @@ pub fn get_exercise_page(
         .context("failed to render template")?)
 }
 
-pub fn get_next_exercise_page(
+pub fn post_next_exercise_page(
     mut state: SharedState,
     workout_name: &str,
     exercise_name: &str,
+    reps: Option<i32>,
 ) -> Result<String, InternalError> {
     let set_state = {
         let program = &state.read().unwrap().program;
@@ -40,6 +40,7 @@ pub fn get_next_exercise_page(
         match exercise {
             Exercise::Durations(_, _, _, s) => s.state,
             Exercise::FixedReps(_, _, _, s) => s.state,
+            Exercise::VariableReps(_, _, _, s) => s.state,
         }
     };
 
@@ -47,120 +48,139 @@ pub fn get_next_exercise_page(
         complete_set(&mut state, workout_name, exercise_name);
         get_workout_page(state, workout_name)
     } else {
-        advance_set(&mut state, workout_name, exercise_name);
+        advance_set(&mut state, workout_name, exercise_name, reps);
         get_exercise_page(state, workout_name, exercise_name)
     }
 }
 
-fn advance_set(state: &mut SharedState, workout_name: &str, exercise_name: &str) {
-    let program = &mut state.write().unwrap().program;
-    let workout = program.find_mut(&workout_name).unwrap();
-    let exercise = workout
-        .find_mut(&ExerciseName(exercise_name.to_owned()))
-        .unwrap();
-    match exercise {
-        Exercise::Durations(_, _, _, s) => {
-            if s.current_set + 1 == s.num_sets {
-                s.state = SetState::Finished
-            } else {
-                s.current_set += 1;
-            }
+fn advance_set(
+    state: &mut SharedState,
+    workout_name: &str,
+    exercise_name: &str,
+    reps: Option<i32>,
+) {
+    fn just_started(state: &mut SharedState, workout_name: &str, exercise_name: &str) -> bool {
+        let program = &state.read().unwrap().program;
+        let workout = program.find(&workout_name).unwrap();
+        let exercise = workout
+            .find(&ExerciseName(exercise_name.to_owned()))
+            .unwrap();
+        match exercise {
+            Exercise::Durations(_, _, _, s) => s.current_set == 0,
+            Exercise::FixedReps(_, _, _, s) => s.current_set == 0,
+            Exercise::VariableReps(_, _, _, s) => s.current_set == 0,
         }
-        Exercise::FixedReps(_, _, _, s) => {
-            if s.current_set + 1 == s.num_sets {
-                s.state = SetState::Finished
-            } else {
-                s.current_set += 1;
+    }
+
+    fn advance_current(state: &mut SharedState, workout_name: &str, exercise_name: &str) {
+        let program = &mut state.write().unwrap().program;
+        let workout = program.find_mut(&workout_name).unwrap();
+        let exercise = workout
+            .find_mut(&ExerciseName(exercise_name.to_owned()))
+            .unwrap();
+        match exercise {
+            Exercise::Durations(_, _, _, s) => {
+                if s.current_set + 1 == s.num_sets {
+                    s.state = SetState::Finished
+                } else {
+                    s.current_set += 1;
+                }
+            }
+            Exercise::FixedReps(_, _, _, s) => {
+                if s.current_set + 1 == s.num_sets {
+                    s.state = SetState::Finished
+                } else {
+                    s.current_set += 1;
+                }
+            }
+            Exercise::VariableReps(_, _, _, s) => {
+                if s.current_set + 1 == s.num_sets {
+                    s.state = SetState::Finished
+                } else {
+                    s.current_set += 1;
+                }
             }
         }
     }
+
+    fn get_new_record(state: &mut SharedState, workout_name: &str) -> Record {
+        let program = &state.read().unwrap().program;
+
+        Record {
+            program: program.name.clone(),
+            workout: workout_name.to_owned(),
+            date: Utc::now(),
+            sets: None,
+            comment: None,
+        }
+    }
+
+    fn append_result(
+        state: &mut SharedState,
+        workout_name: &str,
+        exercise_name: &str,
+        vreps: Option<i32>,
+    ) {
+        let name = ExerciseName(exercise_name.to_owned());
+        let (duration, reps, weight) = {
+            let program = &state.read().unwrap().program;
+            let workout = program.find(&workout_name).unwrap();
+            let exercise = workout.find(&name).unwrap();
+            match exercise {
+                Exercise::Durations(_, _, e, s) => (
+                    Some(e.sets()[s.current_set as usize]),
+                    None,
+                    exercise.weight(),
+                ),
+                Exercise::FixedReps(_, _, e, s) => (
+                    None,
+                    Some(e.sets()[s.current_set as usize]),
+                    exercise.weight(),
+                ),
+                Exercise::VariableReps(_, _, _, _) => (None, vreps, exercise.weight()),
+            }
+        };
+        if let Some(duration) = duration {
+            let history = &mut state.write().unwrap().history;
+            history.append_duration(&name, duration, weight);
+        } else if let Some(reps) = reps {
+            let history = &mut state.write().unwrap().history;
+            history.append_reps(&name, reps, weight);
+        } else {
+            panic!("expected duration or reps");
+        }
+    }
+
+    let name = ExerciseName(exercise_name.to_owned());
+    if just_started(state, workout_name, exercise_name) {
+        let record = get_new_record(state, workout_name);
+        let history = &mut state.write().unwrap().history;
+        history.add(&name, record);
+    }
+    append_result(state, workout_name, exercise_name, reps);
+    advance_current(state, workout_name, exercise_name);
 }
 
 fn complete_set(state: &mut SharedState, workout_name: &str, exercise_name: &str) {
     let exercise_name = ExerciseName(exercise_name.to_owned());
-    let record = {
-        let program = &state.read().unwrap().program;
-        let workout = program.find(&workout_name).unwrap();
-        let exercise = workout.find(&exercise_name).unwrap();
+    let program = &mut state.write().unwrap().program;
+    let workout = program.find_mut(&workout_name).unwrap();
+    let exercise = workout.find_mut(&exercise_name).unwrap();
 
-        let sets = match exercise {
-            Exercise::Durations(_, _, e, s) => {
-                if let Some(ref w) = s.weight {
-                    assert!(e.sets().len() == w.len());
-                    CompletedSets::Durations(
-                        iter::zip(e.sets().iter().copied(), w.iter().copied().map(|x| Some(x)))
-                            .collect(),
-                    )
-                } else {
-                    let n = e.sets().len();
-                    CompletedSets::Durations(
-                        iter::zip(e.sets().iter().copied(), iter::repeat(None))
-                            .take(n)
-                            .collect(),
-                    )
-                }
-            }
-            Exercise::FixedReps(_, _, e, s) => {
-                if let Some(ref w) = s.weight {
-                    assert!(e.sets().len() == w.len());
-                    CompletedSets::Reps(
-                        iter::zip(e.sets().iter().copied(), w.iter().copied().map(|x| Some(x)))
-                            .collect(),
-                    )
-                } else {
-                    let n = e.sets().len();
-                    CompletedSets::Reps(
-                        iter::zip(e.sets().iter().copied(), iter::repeat(None).take(n)).collect(),
-                    )
-                }
-            }
-        };
-        Record {
-            program: program.name.clone(),
-            workout: workout_name.to_owned(),
-            date: Utc::now(),
-            sets: Some(sets),
-            comment: None,
+    match exercise {
+        Exercise::Durations(_, _, _, s) => {
+            s.current_set = 0;
+            s.state = SetState::Timed;
         }
-    };
-
-    {
-        let program = &mut state.write().unwrap().program;
-        let workout = program.find_mut(&workout_name).unwrap();
-        let exercise = workout.find_mut(&exercise_name).unwrap();
-
-        match exercise {
-            Exercise::Durations(_, _, _, s) => {
-                s.current_set = 0;
-                s.state = SetState::Timed;
-            }
-            Exercise::FixedReps(_, _, _, s) => {
-                s.current_set = 0;
-                s.state = SetState::Implicit;
-            }
+        Exercise::FixedReps(_, _, _, s) => {
+            s.current_set = 0;
+            s.state = SetState::Implicit;
+        }
+        Exercise::VariableReps(_, _, _, s) => {
+            s.current_set = 0;
+            s.state = SetState::Implicit;
         }
     }
-
-    let history = &mut state.write().unwrap().history;
-    history.add(&exercise_name, record);
-}
-
-fn complete_non_set(state: &mut SharedState, workout_name: &str, exercise_name: &str) {
-    let exercise_name = ExerciseName(exercise_name.to_owned());
-
-    let record = {
-        let program = &state.read().unwrap().program;
-        Record {
-            program: program.name.clone(),
-            workout: workout_name.to_owned(),
-            date: Utc::now(),
-            sets: None, // TODO these will probably support (a) weight
-            comment: None,
-        }
-    };
-
-    let history = &mut state.write().unwrap().history;
-    history.add(&exercise_name, record);
 }
 
 #[derive(Serialize, Deserialize)]
@@ -168,6 +188,12 @@ struct ExerciseDataRecord {
     pub indicator: String,
     pub text: String,
     pub id: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct RepItem {
+    pub active: String, // "active" or ""
+    pub title: String,  // "4 reps"
 }
 
 #[derive(Serialize, Deserialize)]
@@ -180,6 +206,9 @@ struct ExerciseData {
     rest: String,                 // "" or "30" (seconds)
     button_title: String,         // "Next", "Start", "Done", "Exit", etc
     records: Vec<ExerciseDataRecord>,
+    hide_reps: String,  // "hidden" or ""
+    reps_title: String, // "8 reps"
+    rep_items: Vec<RepItem>,
 }
 
 impl ExerciseData {
@@ -195,6 +224,14 @@ impl ExerciseData {
                     Exercise::FixedReps(_, _, exercise, _) => {
                         format!("{} reps", exercise.sets()[current_set as usize])
                     }
+                    Exercise::VariableReps(_, _, exercise, _) => {
+                        let range = exercise.expected(current_set);
+                        if range.min < range.max {
+                            format!("{}-{} reps", range.min, range.max)
+                        } else {
+                            format!("{} reps", range.max)
+                        }
+                    }
                 };
                 (format!("Set {} of {}", current_set + 1, num_sets), details)
             } else {
@@ -204,6 +241,7 @@ impl ExerciseData {
         let (state, current_set, num_sets) = match e {
             Exercise::Durations(_, _, _, s) => (s.state, s.current_set, s.num_sets),
             Exercise::FixedReps(_, _, _, s) => (s.state, s.current_set, s.num_sets),
+            Exercise::VariableReps(_, _, _, s) => (s.state, s.current_set, s.num_sets),
         };
         let wait = if let SetState::Finished = state {
             "0".to_owned()
@@ -211,13 +249,13 @@ impl ExerciseData {
             match e {
                 Exercise::Durations(_, _, e, _) => format!("{}", e.sets()[current_set as usize]),
                 Exercise::FixedReps(_, _, _, _) => "0".to_owned(),
+                Exercise::VariableReps(_, _, _, _) => "0".to_owned(),
             }
         };
         let rest = match state {
             SetState::Finished => "0".to_owned(),
             _ => e.rest().map_or("".to_owned(), |r| format!("{r}")),
         };
-        // TODO: if current_set + 1 == num_sets then need to show reps stepper (if variable reps)
         let button_title = match state {
             SetState::Implicit => {
                 if current_set + 1 < num_sets {
@@ -241,6 +279,17 @@ impl ExerciseData {
             .map(|(i, r)| (get_delta(&records0, i), r))
             .map(|(d, r)| record_to_record(d, r))
             .collect();
+        let (hide_reps, reps_title, rep_items) =
+            if let Exercise::VariableReps(_, _, exercise, _) = e {
+                let expected = exercise.expected(current_set);
+                (
+                    "".to_owned(),
+                    reps_to_title(expected),
+                    reps_to_vec(expected),
+                )
+            } else {
+                ("hidden".to_owned(), "".to_owned(), Vec::new())
+            };
 
         ExerciseData {
             workout,
@@ -251,8 +300,37 @@ impl ExerciseData {
             rest,
             records,
             button_title,
+            hide_reps,
+            reps_title,
+            rep_items,
         }
     }
+}
+
+fn reps_to_title(reps: RepRange) -> String {
+    if reps.min == 1 {
+        "1 rep".to_owned()
+    } else {
+        format!("{} reps", reps.min)
+    }
+}
+
+fn reps_to_vec(reps: RepRange) -> Vec<RepItem> {
+    (1..=reps.max)
+        .map(|n| {
+            let title = if n == 1 {
+                "1 rep".to_owned()
+            } else {
+                format!("{n} reps")
+            };
+            let active = if reps.min == n {
+                "active".to_owned()
+            } else {
+                "".to_owned()
+            };
+            RepItem { title, active }
+        })
+        .collect()
 }
 
 // Note that here records goes from newest to oldest.

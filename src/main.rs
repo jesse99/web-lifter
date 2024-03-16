@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Extension, Path},
+    extract::{Extension, Path, Query},
     http::{header, StatusCode},
     response::IntoResponse,
     routing::{get, post},
@@ -8,10 +8,7 @@ use axum::{
 use chrono::{Utc, Weekday};
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
-use std::{
-    sync::{Arc, RwLock},
-    time::Duration,
-};
+use std::sync::{Arc, RwLock};
 use tower::ServiceBuilder;
 use tower_http::add_extension::AddExtensionLayer;
 
@@ -43,10 +40,16 @@ fn make_program() -> pages::State {
     let formal_name = FormalName("Side Lying Abduction".to_owned());
     let exercise2 = SetsExercise::fixed_reps(name.clone(), formal_name, exercise).finalize();
 
+    let exercise = VariableRepsExercise::new(vec![RepRange::new(4, 8); 3]);
+    let name = ExerciseName("Squat".to_owned());
+    let formal_name = FormalName("Low bar Squat".to_owned());
+    let exercise3 = SetsExercise::variable_reps(name.clone(), formal_name, exercise).finalize();
+
     // workouts
     let mut workout1 = Workout::new("Full Body".to_owned(), Schedule::Every(2));
     workout1.apply(WorkoutOp::Add(exercise1));
     workout1.apply(WorkoutOp::Add(exercise2));
+    workout1.apply(WorkoutOp::Add(exercise3));
 
     let workout2 = Workout::new("Cardio".to_owned(), Schedule::AnyDay);
     let workout3 = Workout::new(
@@ -65,37 +68,45 @@ fn make_program() -> pages::State {
         program: program.name.clone(),
         workout: "Full Body".to_owned(),
         date: Utc::now() - chrono::Duration::days(12),
-        sets: Some(CompletedSets::Reps(vec![(3, None), (3, None)])),
+        sets: None,
         comment: None,
     };
     history.add(&name, record);
+    history.append_reps(&name, 3, None);
+    history.append_reps(&name, 3, None);
 
     let record = Record {
         program: program.name.clone(),
         workout: "Full Body".to_owned(),
         date: Utc::now() - chrono::Duration::days(9),
-        sets: Some(CompletedSets::Reps(vec![(5, None), (5, None)])),
+        sets: None,
         comment: None,
     };
     history.add(&name, record);
+    history.append_reps(&name, 5, None);
+    history.append_reps(&name, 5, None);
 
     let record = Record {
         program: program.name.clone(),
         workout: "Full Body".to_owned(),
         date: Utc::now() - chrono::Duration::days(6),
-        sets: Some(CompletedSets::Reps(vec![(5, None), (4, None)])),
+        sets: None,
         comment: None,
     };
     history.add(&name, record);
+    history.append_reps(&name, 5, None);
+    history.append_reps(&name, 4, None);
 
     let record = Record {
         program: program.name.clone(),
         workout: "Full Body".to_owned(),
         date: Utc::now() - chrono::Duration::days(3),
-        sets: Some(CompletedSets::Reps(vec![(10, None), (10, None)])),
+        sets: None,
         comment: None,
     };
     history.add(&name, record);
+    history.append_reps(&name, 10, None);
+    history.append_reps(&name, 10, None);
 
     State {
         engine: Handlebars::new(),
@@ -114,11 +125,9 @@ async fn main() {
         .route("/", get(get_program))
         .route("/workout/:name", get(get_workout))
         .route("/exercise/:workout/:exercise", get(get_exercise))
-        .route("/exercise/:workout/:exercise/next-set", post(next_set))
+        .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
         .route("/scripts/exercise.js", get(get_exercise_js))
         .route("/styles/style.css", get(get_styles))
-        // `POST /users` goes to `create_user`
-        .route("/users", post(create_user))
         .layer(
             ServiceBuilder::new() // TODO: more stuff at https://github.com/tokio-rs/axum/blob/dea36db400f27c025b646e5720b9a6784ea4db6e/examples/key-value-store/src/main.rs
                 .layer(AddExtensionLayer::new(SharedState::new(RwLock::new(state))))
@@ -171,36 +180,17 @@ async fn get_exercise(
     Ok(axum::response::Html(contents))
 }
 
-async fn next_set(
+#[derive(Deserialize)]
+struct NextSetOptions {
+    reps: i32,
+}
+
+async fn post_next_set(
     Path((workout, exercise)): Path<(String, String)>,
+    options: Option<Query<NextSetOptions>>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let contents = get_next_exercise_page(state, &workout, &exercise)?;
+    let reps = options.map(|q| q.0.reps);
+    let contents = post_next_exercise_page(state, &workout, &exercise, reps)?;
     Ok(axum::response::Html(contents))
-}
-
-// parse json request body and turn it into a CreateUser instance
-async fn create_user(Json(payload): Json<CreateUser>) -> (StatusCode, Json<User>) {
-    // insert your application logic here
-    let user = User {
-        id: 1337,
-        username: payload.username,
-    };
-
-    // this will be converted into a JSON response
-    // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(user))
-}
-
-// the input to our `create_user` handler
-#[derive(Deserialize)]
-struct CreateUser {
-    username: String,
-}
-
-// the output to our `create_user` handler
-#[derive(Serialize)]
-struct User {
-    id: u64,
-    username: String,
 }

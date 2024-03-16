@@ -5,9 +5,11 @@ use std::fmt::Formatter;
 
 mod durations_exercise;
 mod fixed_reps_exercise;
+mod variable_reps_exercise;
 
 pub use durations_exercise::*;
 pub use fixed_reps_exercise::*;
+pub use variable_reps_exercise::*;
 
 /// Identifies an exercise. This is assigned by the user and will be something like
 /// "Light Squat". It's used when listing the exercise within a [`Workout`] and to
@@ -42,6 +44,7 @@ pub struct Sets {
 pub enum Exercise {
     Durations(ExerciseName, FormalName, DurationsExercise, Sets),
     FixedReps(ExerciseName, FormalName, FixedRepsExercise, Sets),
+    VariableReps(ExerciseName, FormalName, VariableRepsExercise, Sets),
 }
 
 impl Exercise {
@@ -49,6 +52,7 @@ impl Exercise {
         match self {
             Exercise::Durations(name, _, _, _) => name,
             Exercise::FixedReps(name, _, _, _) => name,
+            Exercise::VariableReps(name, _, _, _) => name,
         }
     }
 
@@ -56,6 +60,21 @@ impl Exercise {
         match self {
             Exercise::Durations(_, _, _, sets) => Some((sets.current_set, sets.num_sets)),
             Exercise::FixedReps(_, _, _, sets) => Some((sets.current_set, sets.num_sets)),
+            Exercise::VariableReps(_, _, _, sets) => Some((sets.current_set, sets.num_sets)),
+        }
+    }
+
+    pub fn weight(&self) -> Option<f32> {
+        match self {
+            Exercise::Durations(_, _, _, sets) => {
+                sets.weight.as_ref().map(|v| v[sets.current_set as usize])
+            }
+            Exercise::FixedReps(_, _, _, sets) => {
+                sets.weight.as_ref().map(|v| v[sets.current_set as usize])
+            }
+            Exercise::VariableReps(_, _, _, sets) => {
+                sets.weight.as_ref().map(|v| v[sets.current_set as usize])
+            }
         }
     }
 
@@ -64,6 +83,7 @@ impl Exercise {
         let sets = match self {
             Exercise::Durations(_, _, _, sets) => sets,
             Exercise::FixedReps(_, _, _, sets) => sets,
+            Exercise::VariableReps(_, _, _, sets) => sets,
         };
         if sets.current_set + 1 == sets.num_sets && sets.last_rest.is_some() {
             sets.last_rest
@@ -71,13 +91,6 @@ impl Exercise {
             sets.rest
         }
     }
-
-    //     pub fn num_sets(&self) -> i32 {
-    //         match self {
-    //             Exercise::Durations(exercise) => exercise.sets().len() as i32,
-    //             Exercise::FixedReps(exercise) => exercise.sets().len() as i32,
-    //         }
-    //     }
 }
 
 /// Builder for ['Exercise`]'s that use sets.
@@ -94,8 +107,9 @@ impl SetsExercise {
     ) -> SetsExercise {
         let state = SetState::Timed;
         let num_sets = exercise.sets().len() as i32;
+        let dummy = Sets::new(state, 0);
         SetsExercise {
-            exercise: Exercise::Durations(name, formal_name, exercise, Sets::new(state, 0)),
+            exercise: Exercise::Durations(name, formal_name, exercise, dummy),
             sets: Sets::new(state, num_sets),
         }
     }
@@ -107,8 +121,23 @@ impl SetsExercise {
     ) -> SetsExercise {
         let state = SetState::Implicit;
         let num_sets = exercise.sets().len() as i32;
+        let dummy = Sets::new(state, 0);
         SetsExercise {
-            exercise: Exercise::FixedReps(name, formal_name, exercise, Sets::new(state, 0)),
+            exercise: Exercise::FixedReps(name, formal_name, exercise, dummy),
+            sets: Sets::new(state, num_sets),
+        }
+    }
+
+    pub fn variable_reps(
+        name: ExerciseName,
+        formal_name: FormalName,
+        exercise: VariableRepsExercise,
+    ) -> SetsExercise {
+        let state = SetState::Implicit;
+        let num_sets = exercise.sets().len() as i32;
+        let dummy = Sets::new(state, 0);
+        SetsExercise {
+            exercise: Exercise::VariableReps(name, formal_name, exercise, dummy),
             sets: Sets::new(state, num_sets),
         }
     }
@@ -144,6 +173,9 @@ impl SetsExercise {
             }
             Exercise::FixedReps(name, fname, exercise, _) => {
                 Exercise::FixedReps(name, fname, exercise, self.sets)
+            }
+            Exercise::VariableReps(name, fname, exercise, _) => {
+                Exercise::VariableReps(name, fname, exercise, self.sets)
             }
         }
     }

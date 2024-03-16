@@ -34,8 +34,22 @@
 
         <div id="timer_text" class="fs-3 mt-3"></div>
 
+        <div {{hide_reps}} class="btn-group mt-3">
+            <button {{hide_reps}} id="reps_button" type="button" class="btn btn-success dropdown-toggle"
+                data-bs-toggle="dropdown" aria-expanded="false">
+                {{reps_title}}
+            </button>
+            <ul {{hide_reps}} class="dropdown-menu">
+                {{#each rep_items}}
+                <li><button onclick="on_click_reps(event, '{{this.title}}')"
+                        class="dropdown-item rep_item {{this.active}}" type="button">{{this.title}}</button></li>
+                {{/each}}
+            </ul>
+        </div>
+
         <div class="mt-4">
-            <button type="button" class="btn btn-primary" onclick="on_next()" id="next_button">{{button_title}}</button>
+            <button type="button" class="btn btn-primary" onclick="on_next(event)"
+                id="next_button">{{button_title}}</button>
         </div>
     </div>
 

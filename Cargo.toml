@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"                                                      # error handling
-axum = "0.7"                                                        # web backend
+axum = { version = "0.7", features = ["query"] }                    # web backend
 chrono = { version = "0.4", features = ["serde"] }                  # date and time
 handlebars = "5.1"                                                  # template implementation
 serde = { version = "1.0", features = ["derive"] }                  # serialization
