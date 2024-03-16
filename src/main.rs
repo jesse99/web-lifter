@@ -26,7 +26,7 @@ use pages::*;
 use program::*;
 use workout::*;
 
-fn make_program() -> pages::State {
+fn make_program() -> pages::AppState {
     // exercises
     let exercise = DurationsExercise::new(vec![20; 4]);
     let name = ExerciseName("Quad Stretch".to_owned());
@@ -121,7 +121,7 @@ fn make_program() -> pages::State {
     history.append_reps(&name, 10, None);
     history.append_reps(&name, 10, None);
 
-    State {
+    AppState {
         engine: Handlebars::new(),
         history,
         program,
