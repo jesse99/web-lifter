@@ -32,13 +32,14 @@ fn make_program() -> pages::State {
     let name = ExerciseName("Quad Stretch".to_owned());
     let formal_name = FormalName("Standing Quad Stretch".to_owned());
     let exercise1 = SetsExercise::durations(name, formal_name, exercise)
+        .with_weight(10.0)
         .with_rest(20)
         .finalize();
 
     let warmup = vec![FixedReps::new(5, 80), FixedReps::new(3, 90)];
     let worksets = vec![
-        FixedReps::new(8, 80),
-        FixedReps::new(8, 90),
+        FixedReps::new(8, 100),
+        FixedReps::new(8, 100),
         FixedReps::new(8, 100),
     ];
     let exercise = FixedRepsExercise::with_percent(warmup, worksets);
@@ -46,6 +47,7 @@ fn make_program() -> pages::State {
     let formal_name = FormalName("Side Lying Abduction".to_owned());
     let exercise2 = SetsExercise::fixed_reps(name.clone(), formal_name, exercise)
         .with_weight(12.0)
+        .with_rest(20)
         .finalize();
 
     let exercise = VariableRepsExercise::new(vec![VariableReps::new(4, 8, 100); 3]);
@@ -53,6 +55,7 @@ fn make_program() -> pages::State {
     let formal_name = FormalName("Low bar Squat".to_owned());
     let exercise3 = SetsExercise::variable_reps(name.clone(), formal_name, exercise)
         .with_weight(135.0)
+        .with_rest(20)
         .finalize();
 
     // workouts
@@ -175,7 +178,13 @@ async fn get_program(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
     let contents = get_program_page(state)?;
-    Ok(axum::response::Html(contents))
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
 }
 
 async fn get_workout(
@@ -183,7 +192,13 @@ async fn get_workout(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
     let contents = get_workout_page(state, &name)?;
-    Ok(axum::response::Html(contents))
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
 }
 
 async fn get_exercise(
@@ -191,7 +206,13 @@ async fn get_exercise(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
     let contents = get_exercise_page(state, &workout, &exercise)?;
-    Ok(axum::response::Html(contents))
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
 }
 
 #[derive(Debug, Deserialize)]
@@ -206,7 +227,13 @@ async fn post_next_set(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
     let contents = post_next_exercise_page(state, &workout, &exercise, None)?;
-    Ok(axum::response::Html(contents))
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
 }
 
 async fn post_next_var_set(
@@ -215,5 +242,11 @@ async fn post_next_var_set(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
     let contents = post_next_exercise_page(state, &workout, &exercise, Some(options.0))?;
-    Ok(axum::response::Html(contents))
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
 }
