@@ -385,11 +385,19 @@ impl ExerciseData {
         let (hide_reps, reps_title, rep_items) =
             if let Exercise::VariableReps(_, _, exercise, _) = e {
                 let expected = exercise.expected_range(current_set);
-                (
-                    "".to_owned(),
-                    reps_to_title(expected),
-                    reps_to_vec(expected),
-                )
+                if let SetState::Finished = state {
+                    (
+                        "hidden".to_owned(),
+                        reps_to_title(expected),
+                        reps_to_vec(expected),
+                    )
+                } else {
+                    (
+                        "".to_owned(),
+                        reps_to_title(expected),
+                        reps_to_vec(expected),
+                    )
+                }
             } else {
                 ("hidden".to_owned(), "".to_owned(), Vec::new())
             };
