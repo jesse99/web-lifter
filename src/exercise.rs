@@ -50,7 +50,7 @@ impl SetIndex {
 #[derive(Clone, Debug)]
 pub struct Sets {
     pub state: SetState,
-    pub current_set: SetIndex,
+    pub current_index: SetIndex,
     weight: Option<f32>, // base weight to use for each workset, often modified by set percent
     rest: Option<i32>,   // used for work sets
     last_rest: Option<i32>, // overrides rest.last()
@@ -232,7 +232,7 @@ impl Sets {
     fn new(state: SetState, current_set: SetIndex) -> Sets {
         Sets {
             state,
-            current_set,
+            current_index: current_set,
             weight: None,
             rest: None,
             last_rest: None,

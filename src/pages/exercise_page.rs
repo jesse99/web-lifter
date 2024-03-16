@@ -66,15 +66,15 @@ fn advance_set(
             .find(&ExerciseName(exercise_name.to_owned()))
             .unwrap();
         match exercise {
-            Exercise::Durations(_, _, _, s) => match s.current_set {
+            Exercise::Durations(_, _, _, s) => match s.current_index {
                 SetIndex::Workset(i) => i == 0,
                 _ => false,
             },
-            Exercise::FixedReps(_, _, _, s) => match s.current_set {
+            Exercise::FixedReps(_, _, _, s) => match s.current_index {
                 SetIndex::Workset(i) => i == 0, // OK because this isn't called when in warmups
                 _ => false,
             },
-            Exercise::VariableReps(_, _, _, s) => match s.current_set {
+            Exercise::VariableReps(_, _, _, s) => match s.current_index {
                 SetIndex::Warmup(_) => todo!(),
                 SetIndex::Workset(i) => i == 0,
             },
@@ -89,7 +89,7 @@ fn advance_set(
             .unwrap();
         match exercise {
             Exercise::Durations(_, _, _, _) => true,
-            Exercise::FixedReps(_, _, _, s) => match s.current_set {
+            Exercise::FixedReps(_, _, _, s) => match s.current_index {
                 SetIndex::Workset(_) => true,
                 _ => false,
             },
@@ -104,38 +104,38 @@ fn advance_set(
             .find_mut(&ExerciseName(exercise_name.to_owned()))
             .unwrap();
         match exercise {
-            Exercise::Durations(_, _, e, s) => match s.current_set {
+            Exercise::Durations(_, _, e, s) => match s.current_index {
                 SetIndex::Workset(i) => {
                     if i + 1 == e.num_sets() {
                         s.state = SetState::Finished
                     } else {
-                        s.current_set = SetIndex::Workset(i + 1);
+                        s.current_index = SetIndex::Workset(i + 1);
                     }
                 }
                 _ => panic!("Expected workset"),
             },
-            Exercise::FixedReps(_, _, e, s) => match s.current_set {
+            Exercise::FixedReps(_, _, e, s) => match s.current_index {
                 SetIndex::Warmup(i) => {
                     if i + 1 == e.num_warmups() {
-                        s.current_set = SetIndex::Workset(0);
+                        s.current_index = SetIndex::Workset(0);
                     } else {
-                        s.current_set = SetIndex::Warmup(i + 1);
+                        s.current_index = SetIndex::Warmup(i + 1);
                     }
                 }
                 SetIndex::Workset(i) => {
                     if i + 1 == e.num_worksets() {
                         s.state = SetState::Finished
                     } else {
-                        s.current_set = SetIndex::Workset(i + 1);
+                        s.current_index = SetIndex::Workset(i + 1);
                     }
                 }
             },
-            Exercise::VariableReps(_, _, e, s) => match s.current_set {
+            Exercise::VariableReps(_, _, e, s) => match s.current_index {
                 SetIndex::Workset(i) => {
                     if i + 1 == e.num_sets() {
                         s.state = SetState::Finished
                     } else {
-                        s.current_set = SetIndex::Workset(i + 1);
+                        s.current_index = SetIndex::Workset(i + 1);
                     }
                 }
                 _ => panic!("Expected workset"),
@@ -168,19 +168,19 @@ fn advance_set(
             let exercise = workout.find(&name).unwrap();
             match exercise {
                 Exercise::Durations(_, _, e, s) => (
-                    Some(e.set(s.current_set)),
+                    Some(e.set(s.current_index)),
                     None,
-                    exercise.weight(s.current_set),
+                    exercise.weight(s.current_index),
                 ),
                 Exercise::FixedReps(_, _, e, s) => (
                     None,
-                    Some(e.set(s.current_set).reps),
-                    exercise.weight(s.current_set),
+                    Some(e.set(s.current_index).reps),
+                    exercise.weight(s.current_index),
                 ),
                 Exercise::VariableReps(_, _, _, s) => (
                     None,
                     options.map(|o| o.reps),
-                    exercise.weight(s.current_set),
+                    exercise.weight(s.current_index),
                 ),
             }
         };
@@ -224,20 +224,20 @@ fn complete_set(
         match exercise {
             Exercise::Durations(_, _, _, s) => {
                 assert!(options.is_none());
-                s.current_set = SetIndex::Workset(0);
+                s.current_index = SetIndex::Workset(0);
                 s.state = SetState::Timed;
             }
             Exercise::FixedReps(_, _, e, s) => {
                 assert!(options.is_none());
                 if e.num_warmups() > 0 {
-                    s.current_set = SetIndex::Warmup(0);
+                    s.current_index = SetIndex::Warmup(0);
                 } else {
-                    s.current_set = SetIndex::Workset(0);
+                    s.current_index = SetIndex::Workset(0);
                 }
                 s.state = SetState::Implicit;
             }
             Exercise::VariableReps(_, _, _, s) => {
-                s.current_set = SetIndex::Workset(0);
+                s.current_index = SetIndex::Workset(0);
                 s.state = SetState::Implicit;
             }
         }
@@ -338,21 +338,21 @@ impl ExerciseData {
         exercise: &Exercise,
     ) -> ExerciseData {
         let (e, s) = exercise.expect_durations();
-        let exercise_set = format!("Set {} of {}", s.current_set.index() + 1, e.num_sets());
+        let exercise_set = format!("Set {} of {}", s.current_index.index() + 1, e.num_sets());
 
-        let w = exercise.weight(s.current_set);
+        let w = exercise.weight(s.current_index);
         let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
-        let exercise_set_details = format!("{}s{suffix}", e.set(s.current_set));
+        let exercise_set_details = format!("{}s{suffix}", e.set(s.current_index));
 
         let wait = if s.state == SetState::Finished {
             "0".to_owned()
         } else {
-            format!("{}", e.set(s.current_set))
+            format!("{}", e.set(s.current_index))
         };
         let rest = match s.state {
             SetState::Finished => "0".to_owned(),
             _ => exercise
-                .rest(s.current_set)
+                .rest(s.current_index)
                 .map_or("0".to_owned(), |r| format!("{r}")),
         };
         let records = ExerciseData::get_records(history, program, workout, exercise);
@@ -399,26 +399,30 @@ impl ExerciseData {
     ) -> ExerciseData {
         let (e, s) = exercise.expect_fixed_reps();
         let exercise_set = if e.num_warmups() > 0 {
-            match s.current_set {
+            match s.current_index {
                 SetIndex::Warmup(i) => format!("Warmup {} of {}", i + 1, e.num_warmups()),
                 SetIndex::Workset(i) => format!("Workset {} of {}", i + 1, e.num_worksets()),
             }
         } else {
-            format!("Set {} of {}", s.current_set.index() + 1, e.num_worksets())
+            format!(
+                "Set {} of {}",
+                s.current_index.index() + 1,
+                e.num_worksets()
+            )
         };
 
-        let w = exercise.weight(s.current_set);
+        let w = exercise.weight(s.current_index);
         let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
-        let exercise_set_details = format!("{} reps{suffix}", e.set(s.current_set).reps);
+        let exercise_set_details = format!("{} reps{suffix}", e.set(s.current_index).reps);
 
         let wait = "0".to_owned(); // for durations
         let rest = if s.state == SetState::Finished {
             "0".to_owned()
         } else {
-            match s.current_set {
+            match s.current_index {
                 SetIndex::Warmup(_) => "0".to_owned(),
                 SetIndex::Workset(_) => exercise
-                    .rest(s.current_set)
+                    .rest(s.current_index)
                     .map_or("0".to_owned(), |r| format!("{r}")),
             }
         };
@@ -426,7 +430,7 @@ impl ExerciseData {
         let button_title = if s.state == SetState::Finished {
             "Exit".to_owned()
         } else {
-            match s.current_set {
+            match s.current_index {
                 SetIndex::Warmup(_) => "Next".to_owned(),
                 SetIndex::Workset(i) => {
                     if i + 1 < e.num_worksets() {
@@ -474,12 +478,12 @@ impl ExerciseData {
         exercise: &Exercise,
     ) -> ExerciseData {
         let (e, s) = exercise.expect_var_reps();
-        let exercise_set = format!("Set {} of {}", s.current_set.index() + 1, e.num_sets());
+        let exercise_set = format!("Set {} of {}", s.current_index.index() + 1, e.num_sets());
 
-        let w = exercise.weight(s.current_set);
+        let w = exercise.weight(s.current_index);
         let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
         let exercise_set_details = {
-            let range = e.expected_range(s.current_set);
+            let range = e.expected_range(s.current_index);
             if range.min < range.max {
                 format!("{}-{} reps{suffix}", range.min, range.max)
             } else {
@@ -491,14 +495,14 @@ impl ExerciseData {
         let rest = match s.state {
             SetState::Finished => "0".to_owned(),
             _ => exercise
-                .rest(s.current_set)
+                .rest(s.current_index)
                 .map_or("0".to_owned(), |r| format!("{r}")),
         };
         let records = ExerciseData::get_records(history, program, workout, exercise);
         let button_title = if s.state == SetState::Finished {
             "Exit".to_owned()
         } else {
-            match s.current_set {
+            match s.current_index {
                 SetIndex::Warmup(_) => "Next".to_owned(),
                 SetIndex::Workset(i) => {
                     if i + 1 < e.num_sets() {
@@ -510,7 +514,7 @@ impl ExerciseData {
             }
         };
 
-        let expected = e.expected_range(s.current_set);
+        let expected = e.expected_range(s.current_index);
         let hide_reps = if s.state == SetState::Finished {
             "hidden".to_owned()
         } else {
@@ -527,7 +531,7 @@ impl ExerciseData {
                 ("hidden".to_owned(), "0".to_owned())
             };
 
-        let weight = exercise.weight(s.current_set);
+        let weight = exercise.weight(s.current_index);
         let (advance_hidden, advance_value) =
             if s.state == SetState::Finished && weight.is_some() && reps >= e.max_expected() {
                 ("".to_owned(), "1".to_owned())
