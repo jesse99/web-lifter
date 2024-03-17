@@ -1,6 +1,7 @@
-use std::collections::HashMap;
+use core::fmt;
+use std::{collections::HashMap, fmt::Formatter};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Plate {
     pub weight: f32,
     pub count: i32,   // how many of this plate the user has
@@ -41,7 +42,7 @@ impl Weights {
         if let Some(set) = self.sets.get(name) {
             match set {
                 WeightSet::Discrete(weights) => closest_discrete(target, weights),
-                WeightSet::DualPlates(plates, _) => dual_weight(&closest_dual(target, plates)),
+                WeightSet::DualPlates(plates, bar) => closest_dual(target, plates, bar).weight(),
             }
         } else {
             0.0
@@ -58,14 +59,118 @@ impl Weights {
                     let weight = closest_discrete(target, weights);
                     format_weight(weight, " lbs")
                 }
-                WeightSet::DualPlates(plates, _) => {
-                    let plates = closest_dual(target, plates);
-                    format_plates(&plates)
+                WeightSet::DualPlates(plates, bar) => {
+                    let plates = closest_dual(target, plates, bar);
+                    format!("{}", plates)
                 }
             }
         } else {
             format!("There is no weight set named '{name}'")
         }
+    }
+}
+
+#[derive(Clone)]
+struct Plates {
+    plates: Vec<Plate>, // largest to smallest
+    bar: Option<f32>,
+    dual: bool, // if true plates are added two at a time and Display shows one side
+}
+
+impl Plates {
+    fn weight(&self) -> f32 {
+        self.plates
+            .iter()
+            .fold(0.0, |sum, p| sum + (p.weight * (p.count as f32)))
+            + self.bar.unwrap_or(0.0)
+    }
+
+    fn smallest(&self) -> Option<&Plate> {
+        self.plates.last()
+    }
+
+    fn count(&self, weight: f32, bumper: bool) -> i32 {
+        assert!(weight > 0.0);
+        if let Some(index) = self
+            .plates
+            .iter()
+            .position(|p| (p.weight - weight).abs() < 0.001 && p.bumper == bumper)
+        {
+            self.plates[index].count
+        } else {
+            0
+        }
+    }
+
+    fn add(&mut self, plate: Plate) {
+        assert!(plate.weight > 0.0);
+        assert!(plate.count > 0);
+        assert!(!self.dual || plate.count % 2 == 0);
+
+        if let Some(old) = self
+            .plates
+            .iter_mut()
+            .find(|p| (p.weight - plate.weight).abs() < 0.001 && p.bumper == plate.bumper)
+        {
+            old.count += plate.count;
+        } else {
+            self.plates.push(plate);
+            self.plates
+                .sort_by(|a, b| b.weight.partial_cmp(&a.weight).unwrap());
+        }
+    }
+
+    fn remove(&mut self, weight: f32, count: i32, bumper: bool) {
+        assert!(weight > 0.0);
+        assert!(count > 0);
+        assert!(!self.dual || count % 2 == 0);
+
+        if let Some(index) = self
+            .plates
+            .iter_mut()
+            .position(|p| (p.weight - weight).abs() < 0.001 && p.bumper == bumper)
+        {
+            assert!(self.plates[index].count >= count);
+
+            if self.plates[index].count > count {
+                self.plates[index].count -= count;
+            } else {
+                self.plates.remove(index);
+            }
+        } else {
+            // Not really an error but shouldn't happen so we'll complain in debug.
+            assert!(false, "didn't find matching plate");
+        }
+    }
+
+    fn iter(&self) -> impl DoubleEndedIterator<Item = &Plate> + '_ {
+        self.plates.iter()
+    }
+}
+
+impl fmt::Display for Plates {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let mut v = Vec::new();
+
+        let multiplier = if self.dual { 2 } else { 1 };
+        for plate in self.plates.iter() {
+            if plate.count == multiplier {
+                v.push(format_weight(plate.weight, ""));
+            } else {
+                v.push(format_weight(
+                    plate.weight,
+                    &format!(" x{}", plate.count / multiplier),
+                ));
+            }
+        }
+
+        write!(f, "{}", v.join(" + "))
+    }
+}
+
+impl fmt::Debug for Plates {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
     }
 }
 
@@ -78,18 +183,24 @@ fn closest_discrete(target: f32, weights: &Vec<f32>) -> f32 {
     }
 }
 
-fn closest_dual(target: f32, plates: &Vec<Plate>) -> Vec<Plate> {
+fn closest_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
+    let plates = Plates {
+        plates: plates.clone(),
+        bar: bar.clone(),
+        dual: true,
+    };
+
     // Degenerate case: target is smaller than smallest weight.
-    println!("target: {target} =============================================");
-    if let Some(smallest) = plates.first() {
+    println!("target: {target}");
+    if let Some(smallest) = plates.smallest() {
         if target < 2.0 * smallest.weight {
             println!("degenerate case");
             return find_dual_upper(target, &plates);
         }
     }
-    let lower = find_dual_lower(target, plates);
-    let upper = find_dual_upper(target, plates);
-    let (l, u) = (dual_weight(&lower), dual_weight(&upper));
+    let lower = find_dual_lower(target, &plates);
+    let upper = find_dual_upper(target, &plates);
+    let (l, u) = (lower.weight(), upper.weight());
     if target - l <= u - target {
         lower
     } else {
@@ -97,27 +208,31 @@ fn closest_dual(target: f32, plates: &Vec<Plate>) -> Vec<Plate> {
     }
 }
 
-fn find_dual_lower(target: f32, plates: &Vec<Plate>) -> Vec<Plate> {
-    fn add_plates(from: &Plate, lower: &mut Vec<Plate>, target: f32) {
+fn find_dual_lower(target: f32, plates: &Plates) -> Plates {
+    fn add_plates(from: &Plate, lower: &mut Plates, target: f32) {
         let mut count = 0;
         loop {
             let new = ((count + 2) as f32) * from.weight;
-            if count + 2 > from.count || dual_weight(lower) + new > target {
+            if count + 2 > from.count || lower.weight() + new > target {
                 break;
             }
             count += 2;
         }
         if count > 0 {
-            lower.push(Plate {
+            lower.add(Plate {
                 weight: from.weight,
                 count,
                 bumper: from.bumper,
             });
-            println!("new lower: {lower:?}");
+            println!("new lower: {lower}");
         }
     }
 
-    let mut lower = vec![];
+    let mut lower = Plates {
+        plates: Vec::new(),
+        bar: plates.bar.clone(),
+        dual: plates.dual,
+    };
 
     // Add as many plates as possible from largest to smallest.
     for plate in plates.iter().rev() {
@@ -127,41 +242,45 @@ fn find_dual_lower(target: f32, plates: &Vec<Plate>) -> Vec<Plate> {
     lower
 }
 
-fn find_dual_upper(target: f32, plates: &Vec<Plate>) -> Vec<Plate> {
-    fn add_large(from: &mut Plate, upper: &mut Vec<Plate>, target: f32) {
+fn find_dual_upper(target: f32, plates: &Plates) -> Plates {
+    fn add_large(from: &Plate, remaining: &mut Plates, upper: &mut Plates, target: f32) {
         let mut count = 0;
         loop {
             let new = ((count + 2) as f32) * from.weight;
-            if count + 2 > from.count || dual_weight(upper) + new > target {
+            if count + 2 > from.count || upper.weight() + new > target {
                 break;
             }
             count += 2;
         }
         if count > 0 {
-            from.count -= count;
-            upper.push(Plate {
+            remaining.remove(from.weight, count, from.bumper);
+            upper.add(Plate {
                 weight: from.weight,
                 count,
                 bumper: from.bumper,
             });
-            println!("new large upper: {upper:?}");
+            println!("new large upper: {upper}");
         }
     }
 
-    fn add_small(from: &Plate, upper: &mut Vec<Plate>) -> bool {
+    fn add_small(from: &Plate, remaining: &Plates, upper: &mut Plates) -> bool {
         if from.count >= 2 {
-            if let Some(last) = upper.last_mut() {
-                if (last.weight - from.weight).abs() < 0.001 {
-                    last.count += 2;
-                    println!("updated large upper: {upper:?}");
-                    return true;
-                }
+            if upper.count(from.weight, from.bumper) >= 2
+                && remaining.count(2.0 * from.weight, from.bumper) >= 2
+            {
+                upper.remove(from.weight, 2, from.bumper);
+                upper.add(Plate {
+                    weight: 2.0 * from.weight,
+                    count: 2,
+                    bumper: from.bumper,
+                });
+            } else {
+                upper.add(Plate {
+                    weight: from.weight,
+                    count: 2,
+                    bumper: from.bumper,
+                });
             }
-            upper.push(Plate {
-                weight: from.weight,
-                count: 2,
-                bumper: from.bumper,
-            });
             println!("new large upper: {upper:?}");
             true
         } else {
@@ -169,20 +288,26 @@ fn find_dual_upper(target: f32, plates: &Vec<Plate>) -> Vec<Plate> {
         }
     }
 
-    let mut upper = vec![];
+    let mut upper = Plates {
+        plates: Vec::new(),
+        bar: plates.bar.clone(),
+        dual: plates.dual,
+    };
     let mut remaining = plates.clone();
 
     // Add plates as long as the total is under target from largest to smallest.
-    for plate in remaining.iter_mut().rev() {
+    for plate in plates.iter().rev() {
         println!("upper large candidate: {plate:?}");
-        add_large(plate, &mut upper, target);
+        add_large(plate, &mut remaining, &mut upper, target);
     }
 
     // Then add the smallest plate we can to send us over the target.
-    for plate in remaining.iter() {
-        println!("upper small candidate: {plate:?}");
-        if add_small(plate, &mut upper) {
-            break;
+    if upper.weight() < target {
+        for plate in remaining.iter() {
+            println!("upper small candidate: {plate:?}");
+            if add_small(plate, &remaining, &mut upper) {
+                break;
+            }
         }
     }
 
@@ -205,29 +330,6 @@ fn find_discrete(target: f32, weights: &Vec<f32>) -> (f32, f32) {
     (lower, upper)
 }
 
-fn dual_weight(plates: &Vec<Plate>) -> f32 {
-    plates
-        .iter()
-        .fold(0.0, |sum, p| sum + (p.weight * (p.count as f32)))
-}
-
-fn format_plates(plates: &Vec<Plate>) -> String {
-    let mut v = Vec::new();
-
-    for plate in plates {
-        if plate.count == 2 {
-            v.push(format_weight(plate.weight, ""));
-        } else {
-            v.push(format_weight(
-                plate.weight,
-                &format!(" x{}", plate.count / 2),
-            ));
-        }
-    }
-
-    v.join(" + ")
-}
-
 fn format_weight(weight: f32, suffix: &str) -> String {
     let mut s = format!("{weight:.3}");
     while s.ends_with("0") {
@@ -237,6 +339,19 @@ fn format_weight(weight: f32, suffix: &str) -> String {
         s.remove(s.len() - 1);
     }
     format!("{s}{suffix}")
+}
+
+impl fmt::Debug for Plate {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let suffix = if self.bumper { " bumper" } else { "" };
+        write!(
+            f,
+            "{} x{}{}",
+            format_weight(self.weight, ""),
+            self.count,
+            suffix
+        )
+    }
 }
 
 #[cfg(test)]
@@ -297,9 +412,27 @@ mod tests {
 
     #[test]
     fn dual_plates() {
-        // TODO change this to test find_dual directly
-        let mut weights = Weights::new();
-        let name = "barbell";
+        fn check(target: f32, lower: &str, upper: &str, plates: &Plates) {
+            println!("-----------------------------------------------------");
+            let l = find_dual_lower(target, plates);
+            println!("-----------------------------------------------------");
+            let u = find_dual_upper(target, plates);
+
+            assert!(l.weight() <= target);
+            // Note that upper may be < target if run out of weights
+
+            let l = format!("{}", l);
+            let u = format!("{}", u);
+            assert!(
+                l == lower,
+                "lower FAILED target: {target} actual: {l:?} expected: {lower:?}"
+            );
+            assert!(
+                u == upper,
+                "upper FAILED target: {target} actual: {u:?} expected: {upper:?}"
+            );
+        }
+
         let plate1 = Plate {
             weight: 5.0,
             count: 6,
@@ -320,56 +453,52 @@ mod tests {
             count: 4,
             bumper: false,
         };
-        weights.add(
-            name.to_owned(),
-            WeightSet::DualPlates(vec![plate1, plate2, plate3, plate4], None),
+        let plates = Plates {
+            plates: vec![plate1, plate2, plate3, plate4],
+            bar: None,
+            dual: true,
+        };
+
+        check(11.0, "5", "10", &plates); // on one side
+        check(14.0, "5", "10", &plates);
+        check(18.0, "5", "10", &plates);
+        check(20.0, "10", "10", &plates);
+        check(21.0, "10", "10 + 5", &plates);
+        check(30.0, "10 + 5", "10 + 5", &plates);
+        check(40.0, "10 x2", "10 x2", &plates);
+        check(50.0, "25", "25", &plates);
+        check(103.0, "45 + 5", "45 + 10", &plates);
+        check(120.0, "45 + 10 + 5", "45 + 10 + 5", &plates);
+        check(130.0, "45 + 10 x2", "45 + 10 x2", &plates);
+        check(135.0, "45 + 10 x2", "45 + 10 x2 + 5", &plates);
+        check(160.0, "45 + 25 + 10", "45 + 25 + 10", &plates);
+        check(205.0, "45 x2 + 10", "45 x2 + 10 + 5", &plates);
+        check(230.0, "45 x2 + 25", "45 x2 + 25", &plates);
+        check(240.0, "45 x2 + 25 + 5", "45 x2 + 25 + 5", &plates);
+        check(250.0, "45 x2 + 25 + 10", "45 x2 + 25 + 10", &plates);
+        check(260.0, "45 x2 + 25 + 10 + 5", "45 x2 + 25 + 10 + 5", &plates);
+        check(270.0, "45 x2 + 25 + 10 x2", "45 x2 + 25 + 10 x2", &plates);
+        check(300.0, "45 x2 + 25 x2 + 10", "45 x2 + 25 x2 + 10", &plates);
+        check(
+            320.0,
+            "45 x2 + 25 x2 + 10 x2",
+            "45 x2 + 25 x2 + 10 x2",
+            &plates,
         );
-        assert_eq!(weights.closest(name, 0.0), 10.0);
-        assert_eq!(weights.closest_label(name, 0.0), "5"); // on one side
-
-        assert_eq!(weights.closest(name, 9.0), 10.0);
-        assert_eq!(weights.closest_label(name, 9.0), "5");
-
-        assert_eq!(weights.closest(name, 18.0), 20.0);
-        assert_eq!(weights.closest_label(name, 18.0), "5 x2");
-
-        assert_eq!(weights.closest(name, 30.0), 30.0);
-        assert_eq!(weights.closest_label(name, 30.0), "10 + 5");
-
-        assert_eq!(weights.closest(name, 40.0), 40.0);
-        assert_eq!(weights.closest_label(name, 40.0), "10 x2");
-
-        assert_eq!(weights.closest(name, 50.0), 50.0);
-        assert_eq!(weights.closest_label(name, 50.0), "25");
-
-        assert_eq!(weights.closest(name, 60.0), 60.0);
-        assert_eq!(weights.closest_label(name, 60.0), "25 + 5");
-
-        assert_eq!(weights.closest(name, 70.0), 70.0);
-        assert_eq!(weights.closest_label(name, 70.0), "25 + 10");
-
-        assert_eq!(weights.closest(name, 100.0), 100.0);
-        assert_eq!(weights.closest_label(name, 100.0), "45 + 5");
-
-        assert_eq!(weights.closest(name, 200.0), 200.0);
-        assert_eq!(weights.closest_label(name, 200.0), "45 x2 + 10");
-
-        assert_eq!(weights.closest(name, 300.0), 300.0);
-        assert_eq!(weights.closest_label(name, 200.0), "45 x2 + 10");
-
-        assert_eq!(weights.closest(name, 350.0), 350.0);
-        assert_eq!(
-            weights.closest_label(name, 350.0),
-            "45 x2 + 25 x2 + 10 x3 + 5"
+        check(
+            340.0,
+            "45 x2 + 25 x2 + 10 x3",
+            "45 x2 + 25 x2 + 10 x3",
+            &plates,
         );
-
-        assert_eq!(weights.closest(name, 400.0), 370.0);
-        assert_eq!(
-            weights.closest_label(name, 400.0),
-            "45 x2 + 25 x2 + 10 x3 + 5 x3"
+        check(
+            380.0,
+            "45 x2 + 25 x2 + 10 x3 + 5 x3",
+            "45 x2 + 25 x2 + 10 x3 + 5 x3",
+            &plates,
         );
     }
 
-    // TODO test barweight
+    // TODO add a closest_dual test for degenerate case
     // TODO test bumpers (prefer bumpers when they are available)
 }
