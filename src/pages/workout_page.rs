@@ -74,11 +74,10 @@ fn summarize(exercise: &Exercise) -> String {
                 format!("{r} reps{suffix}")
             })
             .collect(),
-        Exercise::VariableReps(_, _, e, _) => (0..e.num_sets())
+        Exercise::VariableReps(_, _, e, _) => (0..e.num_worksets())
             .map(|i| {
                 let index = SetIndex::Workset(i);
                 let r = e.expected_range(index);
-                println!("expected: {r:?}");
                 let w = exercise.weight(index);
                 let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
                 if r.min < r.max {

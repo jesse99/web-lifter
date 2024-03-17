@@ -36,13 +36,13 @@ fn make_program() -> pages::AppState {
         .with_rest(20)
         .finalize();
 
-    let warmup = vec![FixedReps::new(5, 80), FixedReps::new(3, 90)];
+    let warmups = vec![FixedReps::new(5, 80), FixedReps::new(3, 90)];
     let worksets = vec![
         FixedReps::new(8, 100),
         FixedReps::new(8, 100),
         FixedReps::new(8, 100),
     ];
-    let exercise = FixedRepsExercise::with_percent(warmup, worksets);
+    let exercise = FixedRepsExercise::with_percent(warmups, worksets);
     let name = ExerciseName("Side Leg Lift".to_owned());
     let formal_name = FormalName("Side Lying Abduction".to_owned());
     let exercise2 = SetsExercise::fixed_reps(name.clone(), formal_name, exercise)
@@ -50,12 +50,14 @@ fn make_program() -> pages::AppState {
         .with_rest(20)
         .finalize();
 
-    let exercise = VariableRepsExercise::new(vec![VariableReps::new(4, 8, 100); 3]);
+    let warmups = vec![FixedReps::new(5, 80), FixedReps::new(3, 90)];
+    let worksets = vec![VariableReps::new(4, 8, 100); 3];
+    let exercise = VariableRepsExercise::new(warmups, worksets);
     let name = ExerciseName("Squat".to_owned());
     let formal_name = FormalName("Low bar Squat".to_owned());
     let exercise3 = SetsExercise::variable_reps(name.clone(), formal_name, exercise)
         .with_weight(135.0)
-        .with_rest(20)
+        // .with_rest(20)
         .finalize();
 
     // workouts

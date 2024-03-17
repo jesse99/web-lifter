@@ -17,35 +17,42 @@ impl VariableReps {
 /// Used for stuff like 4-8 squats.
 #[derive(Clone, Debug)]
 pub struct VariableRepsExercise {
-    reps: Vec<VariableReps>,
+    warmups: Vec<FixedReps>,
+    worksets: Vec<VariableReps>,
     expected: Vec<i32>,
 }
 
 impl VariableRepsExercise {
     // TODO: do we want a validator here?
-    pub fn new(reps: Vec<VariableReps>) -> VariableRepsExercise {
+    pub fn new(warmups: Vec<FixedReps>, worksets: Vec<VariableReps>) -> VariableRepsExercise {
         VariableRepsExercise {
-            reps,
+            warmups,
+            worksets,
             expected: Vec::new(),
         }
     }
 
-    pub fn num_sets(&self) -> usize {
-        self.reps.len()
+    pub fn num_warmups(&self) -> usize {
+        self.warmups.len()
+    }
+
+    pub fn num_worksets(&self) -> usize {
+        self.worksets.len()
     }
 
     pub fn set_expected(&mut self, expected: Vec<i32>) {
+        assert!(expected.len() == self.worksets.len());
         self.expected = expected;
     }
 
     /// Minimum the user is currently expected to do.
     pub fn min_expected(&self) -> Vec<i32> {
-        self.reps.iter().map(|r| r.min).collect()
+        self.worksets.iter().map(|r| r.min).collect()
     }
 
     /// Maximum the user is expected to do.
     pub fn max_expected(&self) -> Vec<i32> {
-        self.reps.iter().map(|r| r.max).collect()
+        self.worksets.iter().map(|r| r.max).collect()
     }
 
     pub fn expected(&self) -> &Vec<i32> {
@@ -56,18 +63,26 @@ impl VariableRepsExercise {
     /// than what they did last time, or sometimes even smaller.
     pub fn expected_range(&self, index: SetIndex) -> VariableReps {
         match index {
-            SetIndex::Warmup(_) => todo!(),
+            SetIndex::Warmup(i) => VariableReps::new(
+                self.warmups[i].reps,
+                self.warmups[i].reps,
+                self.warmups[i].percent,
+            ),
             SetIndex::Workset(i) => {
-                let (min, max, percent) = if i < self.expected.len() && i < self.reps.len() {
+                let (min, max, percent) = if i < self.expected.len() && i < self.worksets.len() {
                     (
-                        std::cmp::min(self.expected[i], self.reps[i].max),
-                        self.reps[i].max,
-                        self.reps[i].percent,
+                        std::cmp::min(self.expected[i], self.worksets[i].max),
+                        self.worksets[i].max,
+                        self.worksets[i].percent,
                     )
-                } else if i < self.reps.len() {
+                } else if i < self.worksets.len() {
                     // Typically this happens if expected is empty. Possibly also number of sets
                     // was changed (although doing that should reset expected).
-                    (self.reps[i].min, self.reps[i].max, self.reps[i].percent)
+                    (
+                        self.worksets[i].min,
+                        self.worksets[i].max,
+                        self.worksets[i].percent,
+                    )
                 } else {
                     assert!(false);
                     (4, 8, 100)

@@ -11,12 +11,7 @@
 \pard\pardeftab720\partightenfactor0
 
 \f0\fs36 \cf2 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 enum\cf3 \strokec3  SetKind \{\
-    Warmup,\
-    Workset,\
-    Backoff,\
-\
-\cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  FixedReps \{\
+\outl0\strokewidth0 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  FixedReps \{\
     \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 reps\cf3 \strokec3 : i32,\
     \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 percent\cf3 \strokec3 : i32,\
 \pard\pardeftab720\partightenfactor0
@@ -50,12 +45,12 @@
 
 \fs32 \cf3 \
 \pard\pardeftab720\partightenfactor0
-\cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  Sets \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 state\cf3 \strokec3 : SetState,\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 current_set\cf3 \strokec3 : SetIndex,\
-\pard\pardeftab720\partightenfactor0
 
-\fs36 \cf5 \outl0\strokewidth0 \
+\fs36 \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  Sets \{\
+    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 finished\cf3 \strokec3 : bool,\
+    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 current_index\cf3 \strokec3 : SetIndex,\
+\pard\pardeftab720\partightenfactor0
+\cf5 \outl0\strokewidth0 \
 \cf6 pub\cf5  \cf6 enum\cf5  Exercise \{\
     \cf9 Durations\cf5 (ExerciseName, FormalName, DurationsExercise, Sets),\
     \cf9 FixedReps\cf5 (ExerciseName, FormalName, FixedRepsExercise, Sets),\
@@ -65,27 +60,16 @@
     \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 current_set\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> (SetIndex, usize) \{\
 \
     \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 weight\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 , \cf4 \strokec4 index\cf3 \strokec3 : SetIndex) -> Option<f32> \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 rest\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 , \cf4 \strokec4 index\cf3 \strokec3 : SetIndex) -> Option<i32> \{\
-\pard\pardeftab720\partightenfactor0
-
-\fs32 \cf3 \
-\
+    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 rest\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 , \cf4 \strokec4 index\cf3 \strokec3 : SetIndex) -> Option<i32> \{
+\fs32 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
 \f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
-\'95 Do we still need SetState? Maybe just a finished flag?\
-\'95 Variable reps needs to support warmup sets\
-	- use fixed reps for warmups\
-\'95 May want to add some more Exercise helpers\
-	- also annoying how exercise and e usage is not consistent\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95 Variable reps needs to support backoff sets\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95 Should fixed reps support backoff sets?\
+\'95 Annoying how exercise and e usage is not consistent\
 \'95 Support weight sets\
 	maybe via a settings option in hamburger\
 	or a settings button/dropdown\
-\'95\'a0Support notes (use some sort of tabbed view with history)\
+\'95\'a0Support notes (use some sort of tabbed view that includes history)\
 \'95\'a0Persist program and history\
 	- probably want to have a dummy user name\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
@@ -99,7 +83,11 @@
 \'95\'a0May want a way to replay ops.\
 \'95\'a0Need to restart the server if it dies due to a panic. Or maybe\
 restart a thread. Might be some tower thing for this.\
-\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+\cf10 \'95 Variable reps needs to support backoff sets\
+\'95 Should fixed reps support backoff sets?\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
 \f0\fs36 \cf6 \expnd0\expndtw0\kerning0

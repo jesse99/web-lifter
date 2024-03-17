@@ -93,7 +93,10 @@ impl Exercise {
                 let percent = e.set(index).percent as f32;
                 s.weight.map(|w| (percent * w) / 100.0)
             }
-            Exercise::VariableReps(_, _, _, s) => s.weight,
+            Exercise::VariableReps(_, _, e, s) => {
+                let percent = e.expected_range(index).percent as f32;
+                s.weight.map(|w| (percent * w) / 100.0)
+            }
         }
     }
 
@@ -121,11 +124,11 @@ impl Exercise {
                 _ => None,
             },
             Exercise::FixedReps(_, _, e, s) => match index {
-                SetIndex::Warmup(i) => get(i, e.num_warmups(), s),
                 SetIndex::Workset(i) => get(i, e.num_worksets(), s),
+                _ => None,
             },
             Exercise::VariableReps(_, _, e, s) => match index {
-                SetIndex::Workset(i) => get(i, e.num_sets(), s),
+                SetIndex::Workset(i) => get(i, e.num_worksets(), s),
                 _ => None,
             },
         }

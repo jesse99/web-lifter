@@ -75,8 +75,8 @@ fn advance_set(
                 _ => false,
             },
             Exercise::VariableReps(_, _, _, s) => match s.current_index {
-                SetIndex::Warmup(_) => todo!(),
                 SetIndex::Workset(i) => i == 0,
+                _ => false,
             },
         }
     }
@@ -93,7 +93,10 @@ fn advance_set(
                 SetIndex::Workset(_) => true,
                 _ => false,
             },
-            Exercise::VariableReps(_, _, _, _) => true,
+            Exercise::VariableReps(_, _, _, s) => match s.current_index {
+                SetIndex::Workset(_) => true,
+                _ => false,
+            },
         }
     }
 
@@ -131,14 +134,20 @@ fn advance_set(
                 }
             },
             Exercise::VariableReps(_, _, e, s) => match s.current_index {
+                SetIndex::Warmup(i) => {
+                    if i + 1 == e.num_warmups() {
+                        s.current_index = SetIndex::Workset(0);
+                    } else {
+                        s.current_index = SetIndex::Warmup(i + 1);
+                    }
+                }
                 SetIndex::Workset(i) => {
-                    if i + 1 == e.num_sets() {
+                    if i + 1 == e.num_worksets() {
                         s.finished = true
                     } else {
                         s.current_index = SetIndex::Workset(i + 1);
                     }
                 }
-                _ => panic!("Expected workset"),
             },
         }
     }
@@ -236,8 +245,13 @@ fn complete_set(
                 }
                 s.finished = false;
             }
-            Exercise::VariableReps(_, _, _, s) => {
-                s.current_index = SetIndex::Workset(0);
+            Exercise::VariableReps(_, _, e, s) => {
+                assert!(options.is_some());
+                if e.num_warmups() > 0 {
+                    s.current_index = SetIndex::Warmup(0);
+                } else {
+                    s.current_index = SetIndex::Workset(0);
+                }
                 s.finished = false;
             }
         }
@@ -479,7 +493,18 @@ impl ExerciseData {
         exercise: &Exercise,
     ) -> ExerciseData {
         let (e, s) = exercise.expect_var_reps();
-        let exercise_set = format!("Set {} of {}", s.current_index.index() + 1, e.num_sets());
+        let exercise_set = if e.num_warmups() > 0 {
+            match s.current_index {
+                SetIndex::Warmup(i) => format!("Warmup {} of {}", i + 1, e.num_warmups()),
+                SetIndex::Workset(i) => format!("Workset {} of {}", i + 1, e.num_worksets()),
+            }
+        } else {
+            format!(
+                "Set {} of {}",
+                s.current_index.index() + 1,
+                e.num_worksets()
+            )
+        };
 
         let w = exercise.weight(s.current_index);
         let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
@@ -507,7 +532,7 @@ impl ExerciseData {
             match s.current_index {
                 SetIndex::Warmup(_) => "Next".to_owned(),
                 SetIndex::Workset(i) => {
-                    if i + 1 < e.num_sets() {
+                    if i + 1 < e.num_worksets() {
                         "Next".to_owned()
                     } else {
                         "Done".to_owned()
@@ -516,12 +541,17 @@ impl ExerciseData {
             }
         };
 
-        let expected = e.expected_range(s.current_index);
-        let hide_reps = if s.finished {
+        let in_workset = if let SetIndex::Workset(_) = s.current_index {
+            true
+        } else {
+            false
+        };
+        let hide_reps = if s.finished || !in_workset {
             "hidden".to_owned()
         } else {
             "".to_owned()
         };
+        let expected = e.expected_range(s.current_index);
         let reps_title = reps_to_title(expected);
         let rep_items = reps_to_vec(expected);
 

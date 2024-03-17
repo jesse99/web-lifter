@@ -16,7 +16,7 @@ impl FixedReps {
 /// Used for stuff like 3x12 crunches.
 #[derive(Clone, Debug)]
 pub struct FixedRepsExercise {
-    warmup: Vec<FixedReps>,
+    warmups: Vec<FixedReps>,
     worksets: Vec<FixedReps>,
 }
 
@@ -28,17 +28,17 @@ impl FixedRepsExercise {
             .map(|&reps| FixedReps { reps, percent: 100 })
             .collect();
         FixedRepsExercise {
-            warmup: Vec::new(),
+            warmups: Vec::new(),
             worksets,
         }
     }
 
-    pub fn with_percent(warmup: Vec<FixedReps>, worksets: Vec<FixedReps>) -> FixedRepsExercise {
-        FixedRepsExercise { warmup, worksets }
+    pub fn with_percent(warmups: Vec<FixedReps>, worksets: Vec<FixedReps>) -> FixedRepsExercise {
+        FixedRepsExercise { warmups, worksets }
     }
 
     pub fn num_warmups(&self) -> usize {
-        self.warmup.len()
+        self.warmups.len()
     }
 
     pub fn num_worksets(&self) -> usize {
@@ -47,7 +47,7 @@ impl FixedRepsExercise {
 
     pub fn set(&self, index: SetIndex) -> &FixedReps {
         match index {
-            SetIndex::Warmup(i) => &self.warmup[i],
+            SetIndex::Warmup(i) => &self.warmups[i],
             SetIndex::Workset(i) => &self.worksets[i],
         }
     }
