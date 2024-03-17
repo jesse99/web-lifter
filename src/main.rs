@@ -1,3 +1,11 @@
+mod days;
+mod exercise;
+mod history;
+mod pages;
+mod program;
+mod weights;
+mod workout;
+
 use axum::{
     extract::{Extension, Path, Query},
     http::{header, StatusCode},
@@ -6,24 +14,17 @@ use axum::{
     Router,
 };
 use chrono::{Utc, Weekday};
+use days::*;
+use exercise::*;
 use handlebars::Handlebars;
+use history::*;
+use pages::*;
+use program::*;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock};
 use tower::ServiceBuilder;
 use tower_http::add_extension::AddExtensionLayer;
-
-mod days;
-mod exercise;
-mod history;
-mod pages;
-mod program;
-mod workout;
-
-use days::*;
-use exercise::*;
-use history::*;
-use pages::*;
-use program::*;
+use weights::*;
 use workout::*;
 
 fn make_program() -> pages::AppState {
