@@ -302,7 +302,7 @@ fn find_dual_upper(target: f32, plates: &Plates) -> Plates {
     }
 
     // Then add the smallest plate we can to send us over the target.
-    if upper.weight() < target {
+    if upper.weight() < target || upper.weight() == 0.0 {
         for plate in remaining.iter() {
             println!("upper small candidate: {plate:?}");
             if add_small(plate, &remaining, &mut upper) {
@@ -499,6 +499,49 @@ mod tests {
         );
     }
 
-    // TODO add a closest_dual test for degenerate case
+    #[test]
+    fn closest_dual_test() {
+        fn check(target: f32, expected: &str, plates: &Vec<Plate>) {
+            println!("-----------------------------------------------------");
+            let actual = closest_dual(target, plates, &None);
+
+            let actual = format!("{}", actual);
+            assert!(
+                actual == expected,
+                "FAILED target: {target} actual: {actual} expected: {expected}"
+            );
+        }
+
+        let plate1 = Plate {
+            weight: 5.0,
+            count: 6,
+            bumper: false,
+        };
+        let plate2 = Plate {
+            weight: 10.0,
+            count: 6,
+            bumper: false,
+        };
+        let plate3 = Plate {
+            weight: 25.0,
+            count: 4,
+            bumper: false,
+        };
+        let plate4 = Plate {
+            weight: 45.0,
+            count: 4,
+            bumper: false,
+        };
+        let plates = vec![plate1, plate2, plate3, plate4];
+
+        check(0.0, "5", &plates); // degenerate case
+        check(4.0, "5", &plates);
+        check(8.0, "5", &plates);
+
+        check(93.0, "45", &plates); // lower is best
+        check(97.0, "45 + 5", &plates); // upper is best
+    }
+
+    // TODO test bar (also do this in closest_dual)
     // TODO test bumpers (prefer bumpers when they are available)
 }
