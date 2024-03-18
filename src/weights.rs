@@ -78,11 +78,23 @@ struct Plates {
 }
 
 impl Plates {
+    fn new(plates: Vec<Plate>, bar: Option<f32>, dual: bool) -> Plates {
+        let mut plates = Plates { plates, bar, dual };
+        plates
+            .plates
+            .sort_by(|a, b| b.weight.partial_cmp(&a.weight).unwrap());
+        plates
+    }
+
     fn weight(&self) -> f32 {
         self.plates
             .iter()
             .fold(0.0, |sum, p| sum + (p.weight * (p.count as f32)))
             + self.bar.unwrap_or(0.0)
+    }
+
+    fn bar(&self) -> f32 {
+        self.bar.unwrap_or(0.0)
     }
 
     fn smallest(&self) -> Option<&Plate> {
@@ -143,6 +155,7 @@ impl Plates {
         }
     }
 
+    // Largest to smallest
     fn iter(&self) -> impl DoubleEndedIterator<Item = &Plate> + '_ {
         self.plates.iter()
     }
@@ -184,18 +197,27 @@ fn closest_discrete(target: f32, weights: &Vec<f32>) -> f32 {
 }
 
 fn closest_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
-    let plates = Plates {
-        plates: plates.clone(),
-        bar: bar.clone(),
-        dual: true,
-    };
+    let plates = Plates::new(plates.clone(), bar.clone(), true);
 
     // Degenerate case: target is smaller than smallest weight.
     println!("target: {target}");
     if let Some(smallest) = plates.smallest() {
-        if target < 2.0 * smallest.weight {
+        println!(
+            "smallest: {} bar: {} sum: {}",
+            smallest.weight,
+            plates.bar(),
+            2.0 * smallest.weight + plates.bar()
+        );
+        if target < 2.0 * smallest.weight + plates.bar() {
+            // 58 < 2*5 + 45
             println!("degenerate case");
-            return find_dual_upper(target, &plates);
+            let upper = find_dual_upper(target, &plates);
+            if plates.bar() > 0.0 && (target - plates.bar()).abs() < (target - upper.weight()).abs()
+            {
+                return Plates::new(Vec::new(), bar.clone(), plates.dual);
+            } else {
+                return upper;
+            }
         }
     }
     let lower = find_dual_lower(target, &plates);
@@ -228,14 +250,10 @@ fn find_dual_lower(target: f32, plates: &Plates) -> Plates {
         }
     }
 
-    let mut lower = Plates {
-        plates: Vec::new(),
-        bar: plates.bar.clone(),
-        dual: plates.dual,
-    };
+    let mut lower = Plates::new(Vec::new(), plates.bar.clone(), plates.dual);
 
     // Add as many plates as possible from largest to smallest.
-    for plate in plates.iter().rev() {
+    for plate in plates.iter() {
         println!("lower candidate: {plate:?}");
         add_plates(plate, &mut lower, target);
     }
@@ -288,24 +306,36 @@ fn find_dual_upper(target: f32, plates: &Plates) -> Plates {
         }
     }
 
-    let mut upper = Plates {
-        plates: Vec::new(),
-        bar: plates.bar.clone(),
-        dual: plates.dual,
-    };
+    let mut upper = Plates::new(Vec::new(), plates.bar.clone(), plates.dual);
     let mut remaining = plates.clone();
 
     // Add plates as long as the total is under target from largest to smallest.
-    for plate in plates.iter().rev() {
+    for plate in plates.iter() {
         println!("upper large candidate: {plate:?}");
         add_large(plate, &mut remaining, &mut upper, target);
     }
 
     // Then add the smallest plate we can to send us over the target.
     if upper.weight() < target || upper.weight() == 0.0 {
-        for plate in remaining.iter() {
+        for plate in remaining.iter().rev() {
             println!("upper small candidate: {plate:?}");
             if add_small(plate, &remaining, &mut upper) {
+                break;
+            }
+        }
+
+        // If we were forced to add a large plate then we may be able to get closer to
+        // target by dropping some smaller plates.
+        loop {
+            if let Some(smallest) = upper.smallest() {
+                let weight = upper.weight() - 2.0 * smallest.weight;
+                println!("smallest: {smallest:?} weight: {weight}");
+                if weight >= target && target > 0.0 {
+                    upper.remove(smallest.weight, 2, smallest.bumper);
+                } else {
+                    break;
+                }
+            } else {
                 break;
             }
         }
@@ -410,29 +440,29 @@ mod tests {
         assert_eq!(weights.closest_label(name, 30.0), "20 lbs");
     }
 
+    fn check2(target: f32, lower: &str, upper: &str, plates: &Plates) {
+        println!("-----------------------------------------------------");
+        let l = find_dual_lower(target, plates);
+        println!("-----------------------------------------------------");
+        let u = find_dual_upper(target, plates);
+
+        assert!(l.weight() <= target);
+        // Note that upper may be < target if run out of weights
+
+        let l = format!("{}", l);
+        let u = format!("{}", u);
+        assert!(
+            l == lower,
+            "lower FAILED target: {target} actual: {l:?} expected: {lower:?}"
+        );
+        assert!(
+            u == upper,
+            "upper FAILED target: {target} actual: {u:?} expected: {upper:?}"
+        );
+    }
+
     #[test]
     fn dual_plates() {
-        fn check(target: f32, lower: &str, upper: &str, plates: &Plates) {
-            println!("-----------------------------------------------------");
-            let l = find_dual_lower(target, plates);
-            println!("-----------------------------------------------------");
-            let u = find_dual_upper(target, plates);
-
-            assert!(l.weight() <= target);
-            // Note that upper may be < target if run out of weights
-
-            let l = format!("{}", l);
-            let u = format!("{}", u);
-            assert!(
-                l == lower,
-                "lower FAILED target: {target} actual: {l:?} expected: {lower:?}"
-            );
-            assert!(
-                u == upper,
-                "upper FAILED target: {target} actual: {u:?} expected: {upper:?}"
-            );
-        }
-
         let plate1 = Plate {
             weight: 5.0,
             count: 6,
@@ -453,45 +483,41 @@ mod tests {
             count: 4,
             bumper: false,
         };
-        let plates = Plates {
-            plates: vec![plate1, plate2, plate3, plate4],
-            bar: None,
-            dual: true,
-        };
+        let plates = Plates::new(vec![plate1, plate2, plate3, plate4], None, true);
 
-        check(11.0, "5", "10", &plates); // on one side
-        check(14.0, "5", "10", &plates);
-        check(18.0, "5", "10", &plates);
-        check(20.0, "10", "10", &plates);
-        check(21.0, "10", "10 + 5", &plates);
-        check(30.0, "10 + 5", "10 + 5", &plates);
-        check(40.0, "10 x2", "10 x2", &plates);
-        check(50.0, "25", "25", &plates);
-        check(103.0, "45 + 5", "45 + 10", &plates);
-        check(120.0, "45 + 10 + 5", "45 + 10 + 5", &plates);
-        check(130.0, "45 + 10 x2", "45 + 10 x2", &plates);
-        check(135.0, "45 + 10 x2", "45 + 10 x2 + 5", &plates);
-        check(160.0, "45 + 25 + 10", "45 + 25 + 10", &plates);
-        check(205.0, "45 x2 + 10", "45 x2 + 10 + 5", &plates);
-        check(230.0, "45 x2 + 25", "45 x2 + 25", &plates);
-        check(240.0, "45 x2 + 25 + 5", "45 x2 + 25 + 5", &plates);
-        check(250.0, "45 x2 + 25 + 10", "45 x2 + 25 + 10", &plates);
-        check(260.0, "45 x2 + 25 + 10 + 5", "45 x2 + 25 + 10 + 5", &plates);
-        check(270.0, "45 x2 + 25 + 10 x2", "45 x2 + 25 + 10 x2", &plates);
-        check(300.0, "45 x2 + 25 x2 + 10", "45 x2 + 25 x2 + 10", &plates);
-        check(
+        check2(11.0, "5", "10", &plates); // on one side
+        check2(14.0, "5", "10", &plates);
+        check2(18.0, "5", "10", &plates);
+        check2(20.0, "10", "10", &plates);
+        check2(21.0, "10", "10 + 5", &plates);
+        check2(30.0, "10 + 5", "10 + 5", &plates);
+        check2(40.0, "10 x2", "10 x2", &plates);
+        check2(50.0, "25", "25", &plates);
+        check2(103.0, "45 + 5", "45 + 10", &plates);
+        check2(120.0, "45 + 10 + 5", "45 + 10 + 5", &plates);
+        check2(130.0, "45 + 10 x2", "45 + 10 x2", &plates);
+        check2(135.0, "45 + 10 x2", "45 + 10 x2 + 5", &plates);
+        check2(160.0, "45 + 25 + 10", "45 + 25 + 10", &plates);
+        check2(205.0, "45 x2 + 10", "45 x2 + 10 + 5", &plates);
+        check2(230.0, "45 x2 + 25", "45 x2 + 25", &plates);
+        check2(240.0, "45 x2 + 25 + 5", "45 x2 + 25 + 5", &plates);
+        check2(250.0, "45 x2 + 25 + 10", "45 x2 + 25 + 10", &plates);
+        check2(260.0, "45 x2 + 25 + 10 + 5", "45 x2 + 25 + 10 + 5", &plates);
+        check2(270.0, "45 x2 + 25 + 10 x2", "45 x2 + 25 + 10 x2", &plates);
+        check2(300.0, "45 x2 + 25 x2 + 10", "45 x2 + 25 x2 + 10", &plates);
+        check2(
             320.0,
             "45 x2 + 25 x2 + 10 x2",
             "45 x2 + 25 x2 + 10 x2",
             &plates,
         );
-        check(
+        check2(
             340.0,
             "45 x2 + 25 x2 + 10 x3",
             "45 x2 + 25 x2 + 10 x3",
             &plates,
         );
-        check(
+        check2(
             380.0,
             "45 x2 + 25 x2 + 10 x3 + 5 x3",
             "45 x2 + 25 x2 + 10 x3 + 5 x3",
@@ -500,10 +526,49 @@ mod tests {
     }
 
     #[test]
+    fn dual_plates_with_bar() {
+        let plate1 = Plate {
+            // we'll use a somewhat unusual plate distribution here
+            weight: 5.0,
+            count: 3,
+            bumper: false,
+        };
+        let plate2 = Plate {
+            weight: 10.0,
+            count: 2,
+            bumper: false,
+        };
+        let plate3 = Plate {
+            weight: 25.0,
+            count: 6,
+            bumper: false,
+        };
+        let plate4 = Plate {
+            weight: 45.0,
+            count: 2,
+            bumper: false,
+        };
+        let plates = Plates::new(vec![plate1, plate2, plate3, plate4], Some(45.0), true);
+
+        check2(60.0, "5", "10", &plates); // can only add a max of 2 5's
+        check2(70.0, "10", "10 + 5", &plates);
+        check2(80.0, "10 + 5", "25", &plates); // can only add a max of 2 10's
+        check2(90.0, "10 + 5", "25", &plates);
+        check2(120.0, "25 + 10", "25 + 10 + 5", &plates);
+        check2(150.0, "45 + 5", "45 + 10", &plates);
+        check2(180.0, "45 + 10 + 5", "45 + 25", &plates);
+        check2(200.0, "45 + 25 + 5", "45 + 25 + 10", &plates);
+        check2(230.0, "45 + 25 + 10 + 5", "45 + 25 x2", &plates);
+        check2(260.0, "45 + 25 x2 + 10", "45 + 25 x2 + 10 + 5", &plates);
+        check2(290.0, "45 + 25 x3", "45 + 25 x3 + 5", &plates);
+        check2(320.0, "45 + 25 x3 + 10 + 5", "45 + 25 x3 + 10 + 5", &plates);
+    }
+
+    #[test]
     fn closest_dual_test() {
-        fn check(target: f32, expected: &str, plates: &Vec<Plate>) {
+        fn check(target: f32, expected: &str, plates: &Vec<Plate>, bar: Option<f32>) {
             println!("-----------------------------------------------------");
-            let actual = closest_dual(target, plates, &None);
+            let actual = closest_dual(target, plates, &bar);
 
             let actual = format!("{}", actual);
             assert!(
@@ -534,14 +599,21 @@ mod tests {
         };
         let plates = vec![plate1, plate2, plate3, plate4];
 
-        check(0.0, "5", &plates); // degenerate case
-        check(4.0, "5", &plates);
-        check(8.0, "5", &plates);
+        check(0.0, "5", &plates, None); // degenerate case
+        check(4.0, "5", &plates, None);
+        check(8.0, "5", &plates, None);
+        check(0.0, "", &plates, Some(45.0));
+        check(40.0, "", &plates, Some(45.0));
 
-        check(93.0, "45", &plates); // lower is best
-        check(97.0, "45 + 5", &plates); // upper is best
+        check(92.0, "45", &plates, None); // lower is best
+        check(47.0, "", &plates, Some(45.0));
+        check(58.0, "5", &plates, Some(45.0)); // 5 == 55, 10 == 65
+
+        check(97.0, "45 + 5", &plates, None); // upper is best
+        check(63.0, "10", &plates, Some(45.0));
     }
 
     // TODO test bar (also do this in closest_dual)
+    //    check2(50.0, "5", "10", &plates); // on one side
     // TODO test bumpers (prefer bumpers when they are available)
 }
