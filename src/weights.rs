@@ -1,11 +1,15 @@
 use core::fmt;
 use std::{collections::HashMap, fmt::Formatter};
 
+// TODO Might want to support bumper plates though that would get quite annoying because
+// we'd want to use them whenever possible. For example, if we had [15 bumper x8, 20 x6]
+// and want 60 lbs we'd normally select 20 x3 (for single plates) but with bumpers we'd
+// want 15 bumper x4.
+
 #[derive(Clone, Copy)]
 pub struct Plate {
     pub weight: f32,
-    pub count: i32,   // how many of this plate the user has
-    pub bumper: bool, // set for bumper plates
+    pub count: i32, // how many of this plate the user has
 }
 
 #[derive(Clone, Debug)]
@@ -101,12 +105,12 @@ impl Plates {
         self.plates.last()
     }
 
-    fn count(&self, weight: f32, bumper: bool) -> i32 {
+    fn count(&self, weight: f32) -> i32 {
         assert!(weight > 0.0);
         if let Some(index) = self
             .plates
             .iter()
-            .position(|p| (p.weight - weight).abs() < 0.001 && p.bumper == bumper)
+            .position(|p| (p.weight - weight).abs() < 0.001)
         {
             self.plates[index].count
         } else {
@@ -122,7 +126,7 @@ impl Plates {
         if let Some(old) = self
             .plates
             .iter_mut()
-            .find(|p| (p.weight - plate.weight).abs() < 0.001 && p.bumper == plate.bumper)
+            .find(|p| (p.weight - plate.weight).abs() < 0.001)
         {
             old.count += plate.count;
         } else {
@@ -132,7 +136,7 @@ impl Plates {
         }
     }
 
-    fn remove(&mut self, weight: f32, count: i32, bumper: bool) {
+    fn remove(&mut self, weight: f32, count: i32) {
         assert!(weight > 0.0);
         assert!(count > 0);
         assert!(!self.dual || count % 2 == 0);
@@ -140,7 +144,7 @@ impl Plates {
         if let Some(index) = self
             .plates
             .iter_mut()
-            .position(|p| (p.weight - weight).abs() < 0.001 && p.bumper == bumper)
+            .position(|p| (p.weight - weight).abs() < 0.001)
         {
             assert!(self.plates[index].count >= count);
 
@@ -244,7 +248,6 @@ fn find_dual_lower(target: f32, plates: &Plates) -> Plates {
             lower.add(Plate {
                 weight: from.weight,
                 count,
-                bumper: from.bumper,
             });
             println!("new lower: {lower}");
         }
@@ -271,11 +274,10 @@ fn find_dual_upper(target: f32, plates: &Plates) -> Plates {
             count += 2;
         }
         if count > 0 {
-            remaining.remove(from.weight, count, from.bumper);
+            remaining.remove(from.weight, count);
             upper.add(Plate {
                 weight: from.weight,
                 count,
-                bumper: from.bumper,
             });
             println!("new large upper: {upper}");
         }
@@ -283,20 +285,16 @@ fn find_dual_upper(target: f32, plates: &Plates) -> Plates {
 
     fn add_small(from: &Plate, remaining: &Plates, upper: &mut Plates) -> bool {
         if from.count >= 2 {
-            if upper.count(from.weight, from.bumper) >= 2
-                && remaining.count(2.0 * from.weight, from.bumper) >= 2
-            {
-                upper.remove(from.weight, 2, from.bumper);
+            if upper.count(from.weight) >= 2 && remaining.count(2.0 * from.weight) >= 2 {
+                upper.remove(from.weight, 2);
                 upper.add(Plate {
                     weight: 2.0 * from.weight,
                     count: 2,
-                    bumper: from.bumper,
                 });
             } else {
                 upper.add(Plate {
                     weight: from.weight,
                     count: 2,
-                    bumper: from.bumper,
                 });
             }
             println!("new large upper: {upper:?}");
@@ -331,7 +329,7 @@ fn find_dual_upper(target: f32, plates: &Plates) -> Plates {
                 let weight = upper.weight() - 2.0 * smallest.weight;
                 println!("smallest: {smallest:?} weight: {weight}");
                 if weight >= target && target > 0.0 {
-                    upper.remove(smallest.weight, 2, smallest.bumper);
+                    upper.remove(smallest.weight, 2);
                 } else {
                     break;
                 }
@@ -373,14 +371,7 @@ fn format_weight(weight: f32, suffix: &str) -> String {
 
 impl fmt::Debug for Plate {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let suffix = if self.bumper { " bumper" } else { "" };
-        write!(
-            f,
-            "{} x{}{}",
-            format_weight(self.weight, ""),
-            self.count,
-            suffix
-        )
+        write!(f, "{} x{}", format_weight(self.weight, ""), self.count)
     }
 }
 
@@ -466,22 +457,18 @@ mod tests {
         let plate1 = Plate {
             weight: 5.0,
             count: 6,
-            bumper: false,
         };
         let plate2 = Plate {
             weight: 10.0,
             count: 6,
-            bumper: false,
         };
         let plate3 = Plate {
             weight: 25.0,
             count: 4,
-            bumper: false,
         };
         let plate4 = Plate {
             weight: 45.0,
             count: 4,
-            bumper: false,
         };
         let plates = Plates::new(vec![plate1, plate2, plate3, plate4], None, true);
 
@@ -531,22 +518,18 @@ mod tests {
             // we'll use a somewhat unusual plate distribution here
             weight: 5.0,
             count: 3,
-            bumper: false,
         };
         let plate2 = Plate {
             weight: 10.0,
             count: 2,
-            bumper: false,
         };
         let plate3 = Plate {
             weight: 25.0,
             count: 6,
-            bumper: false,
         };
         let plate4 = Plate {
             weight: 45.0,
             count: 2,
-            bumper: false,
         };
         let plates = Plates::new(vec![plate1, plate2, plate3, plate4], Some(45.0), true);
 
@@ -580,22 +563,18 @@ mod tests {
         let plate1 = Plate {
             weight: 5.0,
             count: 6,
-            bumper: false,
         };
         let plate2 = Plate {
             weight: 10.0,
             count: 6,
-            bumper: false,
         };
         let plate3 = Plate {
             weight: 25.0,
             count: 4,
-            bumper: false,
         };
         let plate4 = Plate {
             weight: 45.0,
             count: 4,
-            bumper: false,
         };
         let plates = vec![plate1, plate2, plate3, plate4];
 
@@ -613,7 +592,5 @@ mod tests {
         check(63.0, "10", &plates, Some(45.0));
     }
 
-    // TODO test bar (also do this in closest_dual)
-    //    check2(50.0, "5", "10", &plates); // on one side
     // TODO test bumpers (prefer bumpers when they are available)
 }
