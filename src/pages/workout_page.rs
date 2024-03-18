@@ -3,11 +3,12 @@ use anyhow::Context;
 
 pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, InternalError> {
     let engine = &state.read().unwrap().engine;
+    let weights = &state.read().unwrap().weights;
     let program = &state.read().unwrap().program;
 
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
     let template = include_str!("../../files/workout.html");
-    let data = WorkoutData::new(program, workout)?;
+    let data = WorkoutData::new(weights, program, workout)?;
     Ok(engine
         .render_template(template, &data)
         .context("failed to render template")?)
@@ -20,11 +21,11 @@ struct WorkoutData {
 }
 
 impl WorkoutData {
-    fn new(program: &Program, name: &str) -> Result<WorkoutData, anyhow::Error> {
+    fn new(weights: &Weights, program: &Program, name: &str) -> Result<WorkoutData, anyhow::Error> {
         if let Some(workout) = program.find(name) {
             let exercises: Vec<ExerciseData> = workout
                 .exercises()
-                .map(|e| ExerciseData::new(workout, e))
+                .map(|e| ExerciseData::new(weights, workout, e))
                 .collect();
             Ok(WorkoutData {
                 workout_name: name.to_owned(),
@@ -44,23 +45,23 @@ struct ExerciseData {
 }
 
 impl ExerciseData {
-    fn new(workout: &Workout, exercise: &Exercise) -> ExerciseData {
+    fn new(weights: &Weights, workout: &Workout, exercise: &Exercise) -> ExerciseData {
         ExerciseData {
             workout_name: workout.name.clone(),
             name: exercise.name().0.clone(),
-            summary: summarize(exercise),
+            summary: summarize(weights, exercise),
         }
     }
 }
 
-fn summarize(exercise: &Exercise) -> String {
+fn summarize(weights: &Weights, exercise: &Exercise) -> String {
     let sets = match exercise {
         // TODO: convert to a short time, eg secs or mins
         Exercise::Durations(_, _, e, _) => (0..e.num_sets())
             .map(|i| {
                 let index = SetIndex::Workset(i);
                 let d = e.set(index);
-                let w = exercise.weight(index);
+                let w = exercise.lower_weight(weights, index);
                 let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
                 format!("{d}s{suffix}")
             })
@@ -69,7 +70,7 @@ fn summarize(exercise: &Exercise) -> String {
             .map(|i| {
                 let index = SetIndex::Workset(i); // workout page only shows work sets
                 let r = e.set(index).reps;
-                let w = exercise.weight(index);
+                let w = exercise.lower_weight(weights, index);
                 let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
                 format!("{r} reps{suffix}")
             })
@@ -78,7 +79,7 @@ fn summarize(exercise: &Exercise) -> String {
             .map(|i| {
                 let index = SetIndex::Workset(i);
                 let r = e.expected_range(index);
-                let w = exercise.weight(index);
+                let w = exercise.lower_weight(weights, index);
                 let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
                 if r.min < r.max {
                     format!("{}-{} reps{suffix}", r.min, r.max)

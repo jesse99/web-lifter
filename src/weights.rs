@@ -12,6 +12,12 @@ pub struct Plate {
     pub count: i32, // how many of this plate the user has
 }
 
+impl Plate {
+    pub fn new(weight: f32, count: i32) -> Plate {
+        Plate { weight, count }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum WeightSet {
     /// Used for stuff like dumbbells and cable machines. Weights should be sorted from
@@ -49,7 +55,18 @@ impl Weights {
                 WeightSet::DualPlates(plates, bar) => closest_dual(target, plates, bar).weight(),
             }
         } else {
-            0.0
+            target
+        }
+    }
+
+    pub fn lower(&self, name: &str, target: f32) -> f32 {
+        if let Some(set) = self.sets.get(name) {
+            match set {
+                WeightSet::Discrete(weights) => find_discrete(target, weights).0,
+                WeightSet::DualPlates(plates, bar) => lower_dual(target, plates, bar).weight(),
+            }
+        } else {
+            target
         }
     }
 
@@ -200,9 +217,7 @@ fn closest_discrete(target: f32, weights: &Vec<f32>) -> f32 {
     }
 }
 
-fn closest_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
-    let plates = Plates::new(plates.clone(), bar.clone(), true);
-
+fn too_small_target(target: f32, plates: &Plates, bar: &Option<f32>) -> Option<Plates> {
     // Degenerate case: target is smaller than smallest weight.
     println!("target: {target}");
     if let Some(smallest) = plates.smallest() {
@@ -218,19 +233,37 @@ fn closest_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
             let upper = find_dual_upper(target, &plates);
             if plates.bar() > 0.0 && (target - plates.bar()).abs() < (target - upper.weight()).abs()
             {
-                return Plates::new(Vec::new(), bar.clone(), plates.dual);
+                return Some(Plates::new(Vec::new(), bar.clone(), plates.dual));
             } else {
-                return upper;
+                return Some(upper);
             }
         }
     }
-    let lower = find_dual_lower(target, &plates);
-    let upper = find_dual_upper(target, &plates);
-    let (l, u) = (lower.weight(), upper.weight());
-    if target - l <= u - target {
-        lower
+    None
+}
+
+fn closest_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
+    let plates = Plates::new(plates.clone(), bar.clone(), true);
+    if let Some(plates) = too_small_target(target, &plates, bar) {
+        plates
     } else {
-        upper
+        let lower = find_dual_lower(target, &plates);
+        let upper = find_dual_upper(target, &plates);
+        let (l, u) = (lower.weight(), upper.weight());
+        if target - l <= u - target {
+            lower
+        } else {
+            upper
+        }
+    }
+}
+
+fn lower_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
+    let plates = Plates::new(plates.clone(), bar.clone(), true);
+    if let Some(plates) = too_small_target(target, &plates, bar) {
+        plates
+    } else {
+        find_dual_lower(target, &plates)
     }
 }
 
@@ -385,16 +418,16 @@ mod tests {
         let mut weights = Weights::new();
         let name = "dumbbells";
         weights.add(name.to_owned(), WeightSet::Discrete(vec![]));
-        assert_eq!(weights.closest(name, 10.0), 0.0);
+        assert_eq!(weights.closest(name, 10.0), 0.0); // if there are no dumbbells at all then we can't use a weight
         assert_eq!(weights.closest_label(name, 10.0), "0 lbs");
     }
 
     #[test]
     fn empty2() {
-        // Signal a problem if there isn't a wei9ght set.
+        // Signal a problem if there isn't a weight set.
         let weights = Weights::new();
         let name = "dumbbells";
-        assert_eq!(weights.closest(name, 10.0), 0.0);
+        assert_eq!(weights.closest(name, 10.0), 10.0); // if there's not a weightset then we may as well just return target
         assert_eq!(
             weights.closest_label(name, 10.0),
             "There is no weight set named 'dumbbells'"
@@ -591,6 +624,4 @@ mod tests {
         check(97.0, "45 + 5", &plates, None); // upper is best
         check(63.0, "10", &plates, Some(45.0));
     }
-
-    // TODO test bumpers (prefer bumpers when they are available)
 }

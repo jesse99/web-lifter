@@ -1,5 +1,6 @@
 //! Exercises are movements for the user to perform, e.g. a barbell squat. These may be
 //! shared across programs and workouts.
+use crate::*;
 use core::fmt;
 use std::fmt::Formatter;
 
@@ -42,8 +43,10 @@ impl SetIndex {
 /// Used for exercises that are done multiple times, often using rest between sets.
 #[derive(Clone, Debug)]
 pub struct Sets {
+    // TODO may want to rename this something like ExerciseOptions or SharedOptions
     pub finished: bool,
     pub current_index: SetIndex,
+    weightset: Option<String>,
     weight: Option<f32>, // base weight to use for each workset, often modified by set percent
     rest: Option<i32>,   // used for work sets
     last_rest: Option<i32>, // overrides rest.last()
@@ -86,17 +89,24 @@ impl Exercise {
         }
     }
 
-    pub fn weight(&self, index: SetIndex) -> Option<f32> {
-        match self {
-            Exercise::Durations(_, _, _, s) => s.weight,
-            Exercise::FixedReps(_, _, e, s) => {
-                let percent = e.set(index).percent as f32;
-                s.weight.map(|w| (percent * w) / 100.0)
-            }
-            Exercise::VariableReps(_, _, e, s) => {
-                let percent = e.expected_range(index).percent as f32;
-                s.weight.map(|w| (percent * w) / 100.0)
-            }
+    /// Used for warmup sets, returned weight may be over expected weight.
+    pub fn closest_weight(&self, weights: &Weights, index: SetIndex) -> Option<f32> {
+        let (target, name) = self.target_weight(index);
+        if let Some(name) = name {
+            target.map(|t| weights.closest(&name, t))
+        } else {
+            target
+        }
+    }
+
+    /// Used for worksets sets, returns a weight as close as possible to the expected
+    /// weight but not over.
+    pub fn lower_weight(&self, weights: &Weights, index: SetIndex) -> Option<f32> {
+        let (target, name) = self.target_weight(index);
+        if let Some(name) = name {
+            target.map(|t| weights.lower(&name, t))
+        } else {
+            target
         }
     }
 
@@ -131,6 +141,20 @@ impl Exercise {
                 SetIndex::Workset(i) => get(i, e.num_worksets(), s),
                 _ => None,
             },
+        }
+    }
+
+    fn target_weight(&self, index: SetIndex) -> (Option<f32>, &Option<String>) {
+        match self {
+            Exercise::Durations(_, _, _, s) => (s.weight, &s.weightset),
+            Exercise::FixedReps(_, _, e, s) => {
+                let percent = e.set(index).percent as f32;
+                (s.weight.map(|w| (percent * w) / 100.0), &s.weightset)
+            }
+            Exercise::VariableReps(_, _, e, s) => {
+                let percent = e.expected_range(index).percent as f32;
+                (s.weight.map(|w| (percent * w) / 100.0), &s.weightset)
+            }
         }
     }
 }
@@ -182,6 +206,14 @@ impl SetsExercise {
         }
     }
 
+    pub fn with_weightset(self, name: String) -> SetsExercise {
+        let sets = Sets {
+            weightset: Some(name),
+            ..self.sets
+        };
+        SetsExercise { sets, ..self }
+    }
+
     pub fn with_weight(self, weight: f32) -> SetsExercise {
         let sets = Sets {
             weight: Some(weight),
@@ -226,6 +258,7 @@ impl Sets {
         Sets {
             finished: false,
             current_index: current_set,
+            weightset: None,
             weight: None,
             rest: None,
             last_rest: None,

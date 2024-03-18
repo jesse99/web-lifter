@@ -7,6 +7,7 @@ pub fn get_exercise_page(
     exercise_name: &str,
 ) -> Result<String, InternalError> {
     let engine = &state.read().unwrap().engine;
+    let weights = &state.read().unwrap().weights;
     let history = &state.read().unwrap().history;
     let program = &state.read().unwrap().program;
 
@@ -17,7 +18,7 @@ pub fn get_exercise_page(
     let exercise = workout
         .find(&ExerciseName(exercise_name.to_owned()))
         .context("failed to find exercise")?;
-    let data = ExerciseData::new(history, program, workout, exercise);
+    let data = ExerciseData::new(weights, history, program, workout, exercise);
     Ok(engine
         .render_template(template, &data)
         .context("failed to render template")?)
@@ -172,6 +173,7 @@ fn advance_set(
     ) {
         let name = ExerciseName(exercise_name.to_owned());
         let (duration, reps, weight) = {
+            let weights = &state.read().unwrap().weights;
             let program = &state.read().unwrap().program;
             let workout = program.find(&workout_name).unwrap();
             let exercise = workout.find(&name).unwrap();
@@ -179,17 +181,23 @@ fn advance_set(
                 Exercise::Durations(_, _, e, s) => (
                     Some(e.set(s.current_index)),
                     None,
-                    exercise.weight(s.current_index),
+                    exercise.closest_weight(weights, s.current_index),
                 ),
                 Exercise::FixedReps(_, _, e, s) => (
                     None,
                     Some(e.set(s.current_index).reps),
-                    exercise.weight(s.current_index),
+                    match s.current_index {
+                        SetIndex::Warmup(_) => exercise.closest_weight(weights, s.current_index),
+                        SetIndex::Workset(_) => exercise.lower_weight(weights, s.current_index),
+                    },
                 ),
                 Exercise::VariableReps(_, _, _, s) => (
                     None,
                     options.map(|o| o.reps),
-                    exercise.weight(s.current_index),
+                    match s.current_index {
+                        SetIndex::Warmup(_) => exercise.closest_weight(weights, s.current_index),
+                        SetIndex::Workset(_) => exercise.lower_weight(weights, s.current_index),
+                    },
                 ),
             }
         };
@@ -346,6 +354,7 @@ impl ExerciseData {
     }
 
     fn with_durations(
+        weights: &Weights,
         history: &History,
         program: &Program,
         workout: &Workout,
@@ -354,7 +363,7 @@ impl ExerciseData {
         let (e, s) = exercise.expect_durations();
         let exercise_set = format!("Set {} of {}", s.current_index.index() + 1, e.num_sets());
 
-        let w = exercise.weight(s.current_index);
+        let w = exercise.closest_weight(weights, s.current_index);
         let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
         let exercise_set_details = format!("{}s{suffix}", e.set(s.current_index));
 
@@ -407,6 +416,7 @@ impl ExerciseData {
     }
 
     fn with_fixed_reps(
+        weights: &Weights,
         history: &History,
         program: &Program,
         workout: &Workout,
@@ -426,7 +436,10 @@ impl ExerciseData {
             )
         };
 
-        let w = exercise.weight(s.current_index);
+        let w = match s.current_index {
+            SetIndex::Warmup(_) => exercise.closest_weight(weights, s.current_index),
+            SetIndex::Workset(_) => exercise.lower_weight(weights, s.current_index),
+        };
         let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
         let exercise_set_details = format!("{} reps{suffix}", e.set(s.current_index).reps);
 
@@ -487,6 +500,7 @@ impl ExerciseData {
     }
 
     fn with_var_reps(
+        weights: &Weights,
         history: &History,
         program: &Program,
         workout: &Workout,
@@ -506,7 +520,10 @@ impl ExerciseData {
             )
         };
 
-        let w = exercise.weight(s.current_index);
+        let w = match s.current_index {
+            SetIndex::Warmup(_) => exercise.closest_weight(weights, s.current_index),
+            SetIndex::Workset(_) => exercise.lower_weight(weights, s.current_index),
+        };
         let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
         let exercise_set_details = {
             let range = e.expected_range(s.current_index);
@@ -562,9 +579,8 @@ impl ExerciseData {
             ("hidden".to_owned(), "0".to_owned())
         };
 
-        let weight = exercise.weight(s.current_index);
         let (advance_hidden, advance_value) =
-            if s.finished && weight.is_some() && reps >= e.max_expected() {
+            if s.finished && w.is_some() && reps >= e.max_expected() {
                 ("".to_owned(), "1".to_owned())
             } else {
                 ("hidden".to_owned(), "0".to_owned())
@@ -592,6 +608,7 @@ impl ExerciseData {
     }
 
     fn new(
+        weights: &Weights,
         history: &History,
         program: &Program,
         workout: &Workout,
@@ -599,13 +616,13 @@ impl ExerciseData {
     ) -> ExerciseData {
         match exercise {
             Exercise::Durations(_, _, _, _) => {
-                ExerciseData::with_durations(history, program, workout, exercise)
+                ExerciseData::with_durations(weights, history, program, workout, exercise)
             }
             Exercise::FixedReps(_, _, _, _) => {
-                ExerciseData::with_fixed_reps(history, program, workout, exercise)
+                ExerciseData::with_fixed_reps(weights, history, program, workout, exercise)
             }
             Exercise::VariableReps(_, _, _, _) => {
-                ExerciseData::with_var_reps(history, program, workout, exercise)
+                ExerciseData::with_var_reps(weights, history, program, workout, exercise)
             }
         }
     }

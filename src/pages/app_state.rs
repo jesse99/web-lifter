@@ -4,6 +4,7 @@ use crate::*;
 pub struct AppState {
     pub engine: Handlebars<'static>,
     pub history: History,
+    pub weights: Weights,
     pub program: Program,
 }
 

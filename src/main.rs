@@ -57,6 +57,7 @@ fn make_program() -> pages::AppState {
     let name = ExerciseName("Squat".to_owned());
     let formal_name = FormalName("Low bar Squat".to_owned());
     let exercise3 = SetsExercise::variable_reps(name.clone(), formal_name, exercise)
+        .with_weightset("barbell".to_owned())
         .with_weight(135.0)
         // .with_rest(20)
         .finalize();
@@ -124,9 +125,22 @@ fn make_program() -> pages::AppState {
     history.append_reps(&name, 10, None);
     history.append_reps(&name, 10, None);
 
+    let mut weights = Weights::new();
+    let set = WeightSet::DualPlates(
+        vec![
+            Plate::new(5.0, 6),
+            Plate::new(10.0, 6),
+            Plate::new(25.0, 4),
+            Plate::new(45.0, 4),
+        ],
+        Some(45.0),
+    );
+    weights.add("barbell".to_owned(), set);
+
     AppState {
         engine: Handlebars::new(),
         history,
+        weights,
         program,
     }
 }
