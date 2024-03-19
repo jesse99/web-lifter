@@ -57,7 +57,7 @@ impl ExerciseData {
 fn summarize(weights: &Weights, exercise: &Exercise) -> String {
     let sets = match exercise {
         // TODO: convert to a short time, eg secs or mins
-        Exercise::Durations(_, _, e, _) => (0..e.num_sets())
+        Exercise::Durations(_, e) => (0..e.num_sets())
             .map(|i| {
                 let index = SetIndex::Workset(i);
                 let d = e.set(index);
@@ -66,7 +66,7 @@ fn summarize(weights: &Weights, exercise: &Exercise) -> String {
                 format!("{d}s{suffix}")
             })
             .collect(),
-        Exercise::FixedReps(_, _, e, _) => (0..e.num_worksets())
+        Exercise::FixedReps(_, e) => (0..e.num_worksets())
             .map(|i| {
                 let index = SetIndex::Workset(i); // workout page only shows work sets
                 let r = e.set(index).reps;
@@ -75,7 +75,7 @@ fn summarize(weights: &Weights, exercise: &Exercise) -> String {
                 format!("{r} reps{suffix}")
             })
             .collect(),
-        Exercise::VariableReps(_, _, e, _) => (0..e.num_worksets())
+        Exercise::VariableReps(_, e) => (0..e.num_worksets())
             .map(|i| {
                 let index = SetIndex::Workset(i);
                 let r = e.expected_range(index);

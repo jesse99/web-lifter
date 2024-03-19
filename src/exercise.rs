@@ -40,10 +40,11 @@ impl SetIndex {
     }
 }
 
-/// Used for exercises that are done multiple times, often using rest between sets.
+/// State shared across exercise types.
 #[derive(Clone, Debug)]
-pub struct Sets {
-    // TODO may want to rename this something like ExerciseOptions or SharedOptions
+pub struct ExerciseData {
+    pub name: ExerciseName,
+    pub formal_name: FormalName,
     pub finished: bool,
     pub current_index: SetIndex,
     weightset: Option<String>,
@@ -54,37 +55,37 @@ pub struct Sets {
 
 #[derive(Debug)]
 pub enum Exercise {
-    Durations(ExerciseName, FormalName, DurationsExercise, Sets),
-    FixedReps(ExerciseName, FormalName, FixedRepsExercise, Sets),
-    VariableReps(ExerciseName, FormalName, VariableRepsExercise, Sets),
+    Durations(ExerciseData, DurationsExercise),
+    FixedReps(ExerciseData, FixedRepsExercise),
+    VariableReps(ExerciseData, VariableRepsExercise),
 }
 
 impl Exercise {
     pub fn name(&self) -> &ExerciseName {
         match self {
-            Exercise::Durations(name, _, _, _) => name,
-            Exercise::FixedReps(name, _, _, _) => name,
-            Exercise::VariableReps(name, _, _, _) => name,
+            Exercise::Durations(d, _) => &d.name,
+            Exercise::FixedReps(d, _) => &d.name,
+            Exercise::VariableReps(d, _) => &d.name,
         }
     }
 
-    pub fn expect_durations(&self) -> (&DurationsExercise, &Sets) {
+    pub fn expect_durations(&self) -> (&ExerciseData, &DurationsExercise) {
         match self {
-            Exercise::Durations(_, _, e, s) => (e, s),
+            Exercise::Durations(d, e) => (d, e),
             _ => panic!("expected durations"),
         }
     }
 
-    pub fn expect_fixed_reps(&self) -> (&FixedRepsExercise, &Sets) {
+    pub fn expect_fixed_reps(&self) -> (&ExerciseData, &FixedRepsExercise) {
         match self {
-            Exercise::FixedReps(_, _, e, s) => (e, s),
+            Exercise::FixedReps(d, e) => (d, e),
             _ => panic!("expected fixed reps"),
         }
     }
 
-    pub fn expect_var_reps(&self) -> (&VariableRepsExercise, &Sets) {
+    pub fn expect_var_reps(&self) -> (&ExerciseData, &VariableRepsExercise) {
         match self {
-            Exercise::VariableReps(_, _, e, s) => (e, s),
+            Exercise::VariableReps(d, e) => (d, e),
             _ => panic!("expected var reps"),
         }
     }
@@ -121,15 +122,15 @@ impl Exercise {
 
     pub fn set_weight(&mut self, weight: Option<f32>) {
         match self {
-            Exercise::Durations(_, _, _, s) => s.weight = weight,
-            Exercise::FixedReps(_, _, _, s) => s.weight = weight,
-            Exercise::VariableReps(_, _, _, s) => s.weight = weight,
+            Exercise::Durations(d, _) => d.weight = weight,
+            Exercise::FixedReps(d, _) => d.weight = weight,
+            Exercise::VariableReps(d, _) => d.weight = weight,
         }
     }
 
     /// For the specified set, in seconds.
     pub fn rest(&self, index: SetIndex) -> Option<i32> {
-        fn get(index: usize, num: usize, s: &Sets) -> Option<i32> {
+        fn get(index: usize, num: usize, s: &ExerciseData) -> Option<i32> {
             if index + 1 == num && s.last_rest.is_some() {
                 s.last_rest
             } else {
@@ -138,16 +139,16 @@ impl Exercise {
         }
 
         match self {
-            Exercise::Durations(_, _, e, s) => match index {
-                SetIndex::Workset(i) => get(i, e.num_sets(), s),
+            Exercise::Durations(d, e) => match index {
+                SetIndex::Workset(i) => get(i, e.num_sets(), d),
                 _ => None,
             },
-            Exercise::FixedReps(_, _, e, s) => match index {
-                SetIndex::Workset(i) => get(i, e.num_worksets(), s),
+            Exercise::FixedReps(d, e) => match index {
+                SetIndex::Workset(i) => get(i, e.num_worksets(), d),
                 _ => None,
             },
-            Exercise::VariableReps(_, _, e, s) => match index {
-                SetIndex::Workset(i) => get(i, e.num_worksets(), s),
+            Exercise::VariableReps(d, e) => match index {
+                SetIndex::Workset(i) => get(i, e.num_worksets(), d),
                 _ => None,
             },
         }
@@ -155,23 +156,23 @@ impl Exercise {
 
     fn target_weight(&self, index: SetIndex) -> (Option<f32>, &Option<String>) {
         match self {
-            Exercise::Durations(_, _, _, s) => (s.weight, &s.weightset),
-            Exercise::FixedReps(_, _, e, s) => {
+            Exercise::Durations(d, _) => (d.weight, &d.weightset),
+            Exercise::FixedReps(d, e) => {
                 let percent = e.set(index).percent as f32;
-                (s.weight.map(|w| (percent * w) / 100.0), &s.weightset)
+                (d.weight.map(|w| (percent * w) / 100.0), &d.weightset)
             }
-            Exercise::VariableReps(_, _, e, s) => {
+            Exercise::VariableReps(d, e) => {
                 let percent = e.expected_range(index).percent as f32;
-                (s.weight.map(|w| (percent * w) / 100.0), &s.weightset)
+                (d.weight.map(|w| (percent * w) / 100.0), &d.weightset)
             }
         }
     }
 
     fn base_weight(&self) -> (Option<f32>, &Option<String>) {
         match self {
-            Exercise::Durations(_, _, _, s) => (s.weight, &s.weightset),
-            Exercise::FixedReps(_, _, _, s) => (s.weight, &s.weightset),
-            Exercise::VariableReps(_, _, _, s) => (s.weight, &s.weightset),
+            Exercise::Durations(d, _) => (d.weight, &d.weightset),
+            Exercise::FixedReps(d, _) => (d.weight, &d.weightset),
+            Exercise::VariableReps(d, _) => (d.weight, &d.weightset),
         }
     }
 }
@@ -179,7 +180,7 @@ impl Exercise {
 /// Builder for ['Exercise`]'s that use sets.
 pub struct SetsExercise {
     exercise: Exercise,
-    sets: Sets,
+    data: ExerciseData,
 }
 
 impl SetsExercise {
@@ -188,10 +189,10 @@ impl SetsExercise {
         formal_name: FormalName,
         exercise: DurationsExercise,
     ) -> SetsExercise {
-        let sets = Sets::new(SetIndex::Workset(0));
+        let data = ExerciseData::new(name, formal_name, SetIndex::Workset(0));
         SetsExercise {
-            exercise: Exercise::Durations(name, formal_name, exercise, sets.clone()),
-            sets,
+            exercise: Exercise::Durations(data.clone(), exercise),
+            data,
         }
     }
 
@@ -200,14 +201,14 @@ impl SetsExercise {
         formal_name: FormalName,
         exercise: FixedRepsExercise,
     ) -> SetsExercise {
-        let sets = if exercise.num_warmups() > 0 {
-            Sets::new(SetIndex::Warmup(0))
+        let data = if exercise.num_warmups() > 0 {
+            ExerciseData::new(name, formal_name, SetIndex::Warmup(0))
         } else {
-            Sets::new(SetIndex::Workset(0))
+            ExerciseData::new(name, formal_name, SetIndex::Workset(0))
         };
         SetsExercise {
-            exercise: Exercise::FixedReps(name, formal_name, exercise, sets.clone()),
-            sets,
+            exercise: Exercise::FixedReps(data.clone(), exercise),
+            data,
         }
     }
 
@@ -216,63 +217,59 @@ impl SetsExercise {
         formal_name: FormalName,
         exercise: VariableRepsExercise,
     ) -> SetsExercise {
-        let sets = Sets::new(SetIndex::Workset(0));
+        let data = ExerciseData::new(name, formal_name, SetIndex::Workset(0));
         SetsExercise {
-            exercise: Exercise::VariableReps(name, formal_name, exercise, sets.clone()),
-            sets,
+            exercise: Exercise::VariableReps(data.clone(), exercise),
+            data,
         }
     }
 
     pub fn with_weightset(self, name: String) -> SetsExercise {
-        let sets = Sets {
+        let data = ExerciseData {
             weightset: Some(name),
-            ..self.sets
+            ..self.data
         };
-        SetsExercise { sets, ..self }
+        SetsExercise { data, ..self }
     }
 
     pub fn with_weight(self, weight: f32) -> SetsExercise {
-        let sets = Sets {
+        let data = ExerciseData {
             weight: Some(weight),
-            ..self.sets
+            ..self.data
         };
-        SetsExercise { sets, ..self }
+        SetsExercise { data, ..self }
     }
 
     pub fn with_rest(self, rest: i32) -> SetsExercise {
-        let sets = Sets {
+        let data = ExerciseData {
             rest: Some(rest),
-            ..self.sets
+            ..self.data
         };
-        SetsExercise { sets, ..self }
+        SetsExercise { data, ..self }
     }
 
     // pub fn with_last_rest(self, last: i32) -> SetsExercise {
-    //     let sets = Sets {
+    //     let data = Sets {
     //         last_rest: Some(last),
-    //         ..self.sets
+    //         ..self.data
     //     };
-    //     SetsExercise { sets, ..self }
+    //     SetsExercise { data, ..self }
     // }
 
     pub fn finalize(self) -> Exercise {
         match self.exercise {
-            Exercise::Durations(name, fname, exercise, _) => {
-                Exercise::Durations(name, fname, exercise, self.sets)
-            }
-            Exercise::FixedReps(name, fname, exercise, _) => {
-                Exercise::FixedReps(name, fname, exercise, self.sets)
-            }
-            Exercise::VariableReps(name, fname, exercise, _) => {
-                Exercise::VariableReps(name, fname, exercise, self.sets)
-            }
+            Exercise::Durations(_, exercise) => Exercise::Durations(self.data, exercise),
+            Exercise::FixedReps(_, exercise) => Exercise::FixedReps(self.data, exercise),
+            Exercise::VariableReps(_, exercise) => Exercise::VariableReps(self.data, exercise),
         }
     }
 }
 
-impl Sets {
-    fn new(current_set: SetIndex) -> Sets {
-        Sets {
+impl ExerciseData {
+    fn new(name: ExerciseName, formal_name: FormalName, current_set: SetIndex) -> ExerciseData {
+        ExerciseData {
+            name,
+            formal_name,
             finished: false,
             current_index: current_set,
             weightset: None,

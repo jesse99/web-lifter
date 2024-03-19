@@ -117,6 +117,8 @@ impl Weights {
                     Weight::plates(closest_dual(target, plates, bar))
                 }
             }
+        } else if name.is_empty() {
+            Weight::discrete(target)
         } else {
             Weight::error(format!("There is no weight set named '{name}'"), target)
         }
@@ -131,6 +133,8 @@ impl Weights {
                     Weight::plates(lower_dual(target, plates, bar))
                 }
             }
+        } else if name.is_empty() {
+            Weight::discrete(target)
         } else {
             Weight::error(format!("There is no weight set named '{name}'"), target)
         }
