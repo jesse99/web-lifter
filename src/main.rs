@@ -32,7 +32,7 @@ fn make_program() -> pages::AppState {
     let exercise = DurationsExercise::new(vec![20; 4]);
     let name = ExerciseName("Quad Stretch".to_owned());
     let formal_name = FormalName("Standing Quad Stretch".to_owned());
-    let exercise1 = SetsExercise::durations(name, formal_name, exercise)
+    let exercise1 = BuildExercise::durations(name, formal_name, exercise)
         .with_weight(10.0)
         .with_rest(20)
         .finalize();
@@ -46,7 +46,7 @@ fn make_program() -> pages::AppState {
     let exercise = FixedRepsExercise::with_percent(warmups, worksets);
     let name = ExerciseName("Side Leg Lift".to_owned());
     let formal_name = FormalName("Side Lying Abduction".to_owned());
-    let exercise2 = SetsExercise::fixed_reps(name.clone(), formal_name, exercise)
+    let exercise2 = BuildExercise::fixed_reps(name.clone(), formal_name, exercise)
         .with_weight(12.0)
         .with_rest(20)
         .finalize();
@@ -56,7 +56,7 @@ fn make_program() -> pages::AppState {
     let exercise = VariableRepsExercise::new(warmups, worksets);
     let name = ExerciseName("Squat".to_owned());
     let formal_name = FormalName("Low bar Squat".to_owned());
-    let exercise3 = SetsExercise::variable_reps(name.clone(), formal_name, exercise)
+    let exercise3 = BuildExercise::variable_reps(name.clone(), formal_name, exercise)
         .with_weightset("barbell".to_owned())
         .with_weight(135.0)
         // .with_rest(20)

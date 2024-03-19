@@ -178,19 +178,19 @@ impl Exercise {
 }
 
 /// Builder for ['Exercise`]'s that use sets.
-pub struct SetsExercise {
+pub struct BuildExercise {
     exercise: Exercise,
     data: ExerciseData,
 }
 
-impl SetsExercise {
+impl BuildExercise {
     pub fn durations(
         name: ExerciseName,
         formal_name: FormalName,
         exercise: DurationsExercise,
-    ) -> SetsExercise {
+    ) -> BuildExercise {
         let data = ExerciseData::new(name, formal_name, SetIndex::Workset(0));
-        SetsExercise {
+        BuildExercise {
             exercise: Exercise::Durations(data.clone(), exercise),
             data,
         }
@@ -200,13 +200,13 @@ impl SetsExercise {
         name: ExerciseName,
         formal_name: FormalName,
         exercise: FixedRepsExercise,
-    ) -> SetsExercise {
+    ) -> BuildExercise {
         let data = if exercise.num_warmups() > 0 {
             ExerciseData::new(name, formal_name, SetIndex::Warmup(0))
         } else {
             ExerciseData::new(name, formal_name, SetIndex::Workset(0))
         };
-        SetsExercise {
+        BuildExercise {
             exercise: Exercise::FixedReps(data.clone(), exercise),
             data,
         }
@@ -216,36 +216,36 @@ impl SetsExercise {
         name: ExerciseName,
         formal_name: FormalName,
         exercise: VariableRepsExercise,
-    ) -> SetsExercise {
+    ) -> BuildExercise {
         let data = ExerciseData::new(name, formal_name, SetIndex::Workset(0));
-        SetsExercise {
+        BuildExercise {
             exercise: Exercise::VariableReps(data.clone(), exercise),
             data,
         }
     }
 
-    pub fn with_weightset(self, name: String) -> SetsExercise {
+    pub fn with_weightset(self, name: String) -> BuildExercise {
         let data = ExerciseData {
             weightset: Some(name),
             ..self.data
         };
-        SetsExercise { data, ..self }
+        BuildExercise { data, ..self }
     }
 
-    pub fn with_weight(self, weight: f32) -> SetsExercise {
+    pub fn with_weight(self, weight: f32) -> BuildExercise {
         let data = ExerciseData {
             weight: Some(weight),
             ..self.data
         };
-        SetsExercise { data, ..self }
+        BuildExercise { data, ..self }
     }
 
-    pub fn with_rest(self, rest: i32) -> SetsExercise {
+    pub fn with_rest(self, rest: i32) -> BuildExercise {
         let data = ExerciseData {
             rest: Some(rest),
             ..self.data
         };
-        SetsExercise { data, ..self }
+        BuildExercise { data, ..self }
     }
 
     // pub fn with_last_rest(self, last: i32) -> SetsExercise {
