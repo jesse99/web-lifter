@@ -18,6 +18,67 @@ impl Plate {
     }
 }
 
+#[derive(Clone)]
+pub struct Weight {
+    weight: InternalWeight,
+}
+
+#[derive(Clone)]
+enum InternalWeight {
+    Discrete(f32),
+    Error(String, f32),
+    Plates(Plates),
+}
+
+impl Weight {
+    fn discrete(value: f32) -> Weight {
+        Weight {
+            weight: InternalWeight::Discrete(value),
+        }
+    }
+
+    fn error(mesg: String, target: f32) -> Weight {
+        Weight {
+            weight: InternalWeight::Error(mesg, target),
+        }
+    }
+
+    fn plates(plates: Plates) -> Weight {
+        Weight {
+            weight: InternalWeight::Plates(plates),
+        }
+    }
+
+    /// The actual weight, may include stuff like a bar weight.
+    pub fn value(&self) -> f32 {
+        match &self.weight {
+            InternalWeight::Discrete(v) => *v,
+            InternalWeight::Error(_, v) => *v,
+            InternalWeight::Plates(p) => p.weight(),
+        }
+    }
+
+    /// The weight as a string, e.g. "165 lbs".
+    pub fn text(&self) -> String {
+        match &self.weight {
+            InternalWeight::Discrete(v) => format_weight(*v, " lbs"),
+            InternalWeight::Error(_, _) => String::new(),
+            InternalWeight::Plates(p) => format_weight(p.weight(), " lbs"),
+        }
+    }
+
+    /// More information about the weight e.g. "45 + 10 + 5" (if plates are being used)
+    /// or "40 + 2.5 magnet" (for dumbbells with optional magnets). Note that for
+    /// DualPlates this returns the plates for only one side.
+    pub fn details(&self) -> Option<String> {
+        match &self.weight {
+            InternalWeight::Discrete(_) => None,
+            InternalWeight::Error(m, _) => Some(m.clone()),
+            InternalWeight::Plates(p) => Some(format!("{}", p)),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum WeightSet {
     /// Used for stuff like dumbbells and cable machines. Weights should be sorted from
@@ -48,45 +109,45 @@ impl Weights {
     }
 
     /// Used for warmups and backoff sets. May return a weight larger than target.
-    pub fn closest(&self, name: &str, target: f32) -> f32 {
+    pub fn closest(&self, name: &str, target: f32) -> Weight {
         if let Some(set) = self.sets.get(name) {
             match set {
-                WeightSet::Discrete(weights) => closest_discrete(target, weights),
-                WeightSet::DualPlates(plates, bar) => closest_dual(target, plates, bar).weight(),
-            }
-        } else {
-            target
-        }
-    }
-
-    pub fn lower(&self, name: &str, target: f32) -> f32 {
-        if let Some(set) = self.sets.get(name) {
-            match set {
-                WeightSet::Discrete(weights) => find_discrete(target, weights).0,
-                WeightSet::DualPlates(plates, bar) => lower_dual(target, plates, bar).weight(),
-            }
-        } else {
-            target
-        }
-    }
-
-    /// For Discrete weight sets this will return an empty string. For other sets using
-    /// plates this will return stuff like "45 + 10 + 2.5". Note that for DualPlates this
-    /// returns the plates for only one side.
-    pub fn closest_label(&self, name: &str, target: f32) -> String {
-        if let Some(set) = self.sets.get(name) {
-            match set {
-                WeightSet::Discrete(weights) => {
-                    let weight = closest_discrete(target, weights);
-                    format_weight(weight, " lbs")
-                }
+                WeightSet::Discrete(weights) => Weight::discrete(closest_discrete(target, weights)),
                 WeightSet::DualPlates(plates, bar) => {
-                    let plates = closest_dual(target, plates, bar);
-                    format!("{}", plates)
+                    Weight::plates(closest_dual(target, plates, bar))
                 }
             }
         } else {
-            format!("There is no weight set named '{name}'")
+            Weight::error(format!("There is no weight set named '{name}'"), target)
+        }
+    }
+
+    /// Used for worksets. Will not return a weight larger than target.
+    pub fn lower(&self, name: &str, target: f32) -> Weight {
+        if let Some(set) = self.sets.get(name) {
+            match set {
+                WeightSet::Discrete(weights) => Weight::discrete(find_discrete(target, weights).0),
+                WeightSet::DualPlates(plates, bar) => {
+                    Weight::plates(lower_dual(target, plates, bar))
+                }
+            }
+        } else {
+            Weight::error(format!("There is no weight set named '{name}'"), target)
+        }
+    }
+
+    /// Return the next weight larger than target.
+    pub fn advance(&self, name: &str, target: f32) -> Weight {
+        let target = target + 0.001;
+        if let Some(set) = self.sets.get(name) {
+            match set {
+                WeightSet::Discrete(weights) => Weight::discrete(find_discrete(target, weights).1),
+                WeightSet::DualPlates(plates, bar) => {
+                    Weight::plates(upper_dual(target, plates, bar))
+                }
+            }
+        } else {
+            Weight::error(format!("There is no weight set named '{name}'"), target)
         }
     }
 }
@@ -219,17 +280,17 @@ fn closest_discrete(target: f32, weights: &Vec<f32>) -> f32 {
 
 fn too_small_target(target: f32, plates: &Plates, bar: &Option<f32>) -> Option<Plates> {
     // Degenerate case: target is smaller than smallest weight.
-    println!("target: {target}");
+    // println!("target: {target}");
     if let Some(smallest) = plates.smallest() {
-        println!(
-            "smallest: {} bar: {} sum: {}",
-            smallest.weight,
-            plates.bar(),
-            2.0 * smallest.weight + plates.bar()
-        );
+        // println!(
+        //     "smallest: {} bar: {} sum: {}",
+        //     smallest.weight,
+        //     plates.bar(),
+        //     2.0 * smallest.weight + plates.bar()
+        // );
         if target < 2.0 * smallest.weight + plates.bar() {
             // 58 < 2*5 + 45
-            println!("degenerate case");
+            // println!("degenerate case");
             let upper = find_dual_upper(target, &plates);
             if plates.bar() > 0.0 && (target - plates.bar()).abs() < (target - upper.weight()).abs()
             {
@@ -267,6 +328,15 @@ fn lower_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
     }
 }
 
+fn upper_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
+    let plates = Plates::new(plates.clone(), bar.clone(), true);
+    if let Some(plates) = too_small_target(target, &plates, bar) {
+        plates
+    } else {
+        find_dual_upper(target, &plates)
+    }
+}
+
 fn find_dual_lower(target: f32, plates: &Plates) -> Plates {
     fn add_plates(from: &Plate, lower: &mut Plates, target: f32) {
         let mut count = 0;
@@ -282,7 +352,7 @@ fn find_dual_lower(target: f32, plates: &Plates) -> Plates {
                 weight: from.weight,
                 count,
             });
-            println!("new lower: {lower}");
+            // println!("new lower: {lower}");
         }
     }
 
@@ -290,7 +360,7 @@ fn find_dual_lower(target: f32, plates: &Plates) -> Plates {
 
     // Add as many plates as possible from largest to smallest.
     for plate in plates.iter() {
-        println!("lower candidate: {plate:?}");
+        // println!("lower candidate: {plate:?}");
         add_plates(plate, &mut lower, target);
     }
     lower
@@ -312,7 +382,7 @@ fn find_dual_upper(target: f32, plates: &Plates) -> Plates {
                 weight: from.weight,
                 count,
             });
-            println!("new large upper: {upper}");
+            // println!("new large upper: {upper}");
         }
     }
 
@@ -330,7 +400,7 @@ fn find_dual_upper(target: f32, plates: &Plates) -> Plates {
                     count: 2,
                 });
             }
-            println!("new large upper: {upper:?}");
+            // println!("new large upper: {upper:?}");
             true
         } else {
             false
@@ -342,14 +412,14 @@ fn find_dual_upper(target: f32, plates: &Plates) -> Plates {
 
     // Add plates as long as the total is under target from largest to smallest.
     for plate in plates.iter() {
-        println!("upper large candidate: {plate:?}");
+        // println!("upper large candidate: {plate:?}");
         add_large(plate, &mut remaining, &mut upper, target);
     }
 
     // Then add the smallest plate we can to send us over the target.
     if upper.weight() < target || upper.weight() == 0.0 {
         for plate in remaining.iter().rev() {
-            println!("upper small candidate: {plate:?}");
+            // println!("upper small candidate: {plate:?}");
             if add_small(plate, &remaining, &mut upper) {
                 break;
             }
@@ -360,7 +430,7 @@ fn find_dual_upper(target: f32, plates: &Plates) -> Plates {
         loop {
             if let Some(smallest) = upper.smallest() {
                 let weight = upper.weight() - 2.0 * smallest.weight;
-                println!("smallest: {smallest:?} weight: {weight}");
+                // println!("smallest: {smallest:?} weight: {weight}");
                 if weight >= target && target > 0.0 {
                     upper.remove(smallest.weight, 2);
                 } else {
@@ -418,8 +488,8 @@ mod tests {
         let mut weights = Weights::new();
         let name = "dumbbells";
         weights.add(name.to_owned(), WeightSet::Discrete(vec![]));
-        assert_eq!(weights.closest(name, 10.0), 0.0); // if there are no dumbbells at all then we can't use a weight
-        assert_eq!(weights.closest_label(name, 10.0), "0 lbs");
+        assert_eq!(weights.closest(name, 10.0).value(), 0.0); // if there are no dumbbells at all then we can't use a weight
+        assert_eq!(weights.closest(name, 10.0).text(), "0 lbs");
     }
 
     #[test]
@@ -427,9 +497,9 @@ mod tests {
         // Signal a problem if there isn't a weight set.
         let weights = Weights::new();
         let name = "dumbbells";
-        assert_eq!(weights.closest(name, 10.0), 10.0); // if there's not a weightset then we may as well just return target
+        assert_eq!(weights.closest(name, 10.0).value(), 10.0); // if there's not a weight set then we may as well just return target
         assert_eq!(
-            weights.closest_label(name, 10.0),
+            weights.closest(name, 10.0).details().unwrap(),
             "There is no weight set named 'dumbbells'"
         );
     }
@@ -442,26 +512,26 @@ mod tests {
             name.to_owned(),
             WeightSet::Discrete(vec![5.0, 10.0, 15.0, 20.0]),
         );
-        assert_eq!(weights.closest(name, 0.0), 5.0);
-        assert_eq!(weights.closest_label(name, 0.0), "5 lbs");
+        assert_eq!(weights.closest(name, 0.0).value(), 5.0);
+        assert_eq!(weights.closest(name, 0.0).text(), "5 lbs");
 
-        assert_eq!(weights.closest(name, 4.0), 5.0);
-        assert_eq!(weights.closest_label(name, 4.0), "5 lbs");
+        assert_eq!(weights.closest(name, 4.0).value(), 5.0);
+        assert_eq!(weights.closest(name, 4.0).text(), "5 lbs");
 
-        assert_eq!(weights.closest(name, 5.0), 5.0);
-        assert_eq!(weights.closest_label(name, 5.0), "5 lbs");
+        assert_eq!(weights.closest(name, 5.0).value(), 5.0);
+        assert_eq!(weights.closest(name, 5.0).text(), "5 lbs");
 
-        assert_eq!(weights.closest(name, 6.0), 5.0);
-        assert_eq!(weights.closest_label(name, 6.0), "5 lbs");
+        assert_eq!(weights.closest(name, 6.0).value(), 5.0);
+        assert_eq!(weights.closest(name, 6.0).text(), "5 lbs");
 
-        assert_eq!(weights.closest(name, 9.0), 10.0);
-        assert_eq!(weights.closest_label(name, 9.0), "10 lbs");
+        assert_eq!(weights.closest(name, 9.0).value(), 10.0);
+        assert_eq!(weights.closest(name, 9.0).text(), "10 lbs");
 
-        assert_eq!(weights.closest(name, 18.0), 20.0);
-        assert_eq!(weights.closest_label(name, 18.0), "20 lbs");
+        assert_eq!(weights.closest(name, 18.0).value(), 20.0);
+        assert_eq!(weights.closest(name, 18.0).text(), "20 lbs");
 
-        assert_eq!(weights.closest(name, 30.0), 20.0);
-        assert_eq!(weights.closest_label(name, 30.0), "20 lbs");
+        assert_eq!(weights.closest(name, 30.0).value(), 20.0);
+        assert_eq!(weights.closest(name, 30.0).text(), "20 lbs");
     }
 
     fn check2(target: f32, lower: &str, upper: &str, plates: &Plates) {
@@ -623,5 +693,76 @@ mod tests {
 
         check(97.0, "45 + 5", &plates, None); // upper is best
         check(63.0, "10", &plates, Some(45.0));
+    }
+
+    #[test]
+    fn advance_discrete() {
+        let mut weights = Weights::new();
+        let name = "dumbbells";
+        weights.add(
+            name.to_owned(),
+            WeightSet::Discrete(vec![5.0, 10.0, 15.0, 20.0]),
+        );
+        assert_eq!(weights.advance(name, 0.0).value(), 5.0);
+        assert_eq!(weights.advance(name, 4.0).value(), 5.0);
+        assert_eq!(weights.advance(name, 5.0).value(), 10.0);
+        assert_eq!(weights.advance(name, 6.0).value(), 10.0);
+    }
+
+    #[test]
+    fn advance_dual_plates() {
+        let plate1 = Plate {
+            weight: 5.0,
+            count: 6,
+        };
+        let plate2 = Plate {
+            weight: 10.0,
+            count: 6,
+        };
+        let plate3 = Plate {
+            weight: 25.0,
+            count: 4,
+        };
+        let plate4 = Plate {
+            weight: 45.0,
+            count: 4,
+        };
+        let plates = vec![plate1, plate2, plate3, plate4];
+        let mut weights = Weights::new();
+        let name = "plates";
+        weights.add(name.to_owned(), WeightSet::DualPlates(plates, None));
+
+        assert_eq!(weights.advance(name, 0.0).value(), 10.0);
+        assert_eq!(weights.advance(name, 4.0).value(), 10.0);
+        assert_eq!(weights.advance(name, 11.0).value(), 20.0);
+        assert_eq!(weights.advance(name, 25.0).value(), 30.0);
+    }
+
+    #[test]
+    fn advance_dual_plates_with_bar() {
+        let plate1 = Plate {
+            weight: 5.0,
+            count: 6,
+        };
+        let plate2 = Plate {
+            weight: 10.0,
+            count: 6,
+        };
+        let plate3 = Plate {
+            weight: 25.0,
+            count: 4,
+        };
+        let plate4 = Plate {
+            weight: 45.0,
+            count: 4,
+        };
+        let plates = vec![plate1, plate2, plate3, plate4];
+        let mut weights = Weights::new();
+        let name = "plates";
+        weights.add(name.to_owned(), WeightSet::DualPlates(plates, Some(45.0)));
+
+        assert_eq!(weights.advance(name, 0.0).value(), 45.0);
+        assert_eq!(weights.advance(name, 50.0).value(), 55.0);
+        assert_eq!(weights.advance(name, 55.0).value(), 65.0);
     }
 }

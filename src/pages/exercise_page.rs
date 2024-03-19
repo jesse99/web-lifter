@@ -203,10 +203,10 @@ fn advance_set(
         };
         if let Some(duration) = duration {
             let history = &mut state.write().unwrap().history;
-            history.append_duration(&name, duration, weight);
+            history.append_duration(&name, duration, weight.map(|w| w.value()));
         } else if let Some(reps) = reps {
             let history = &mut state.write().unwrap().history;
-            history.append_reps(&name, reps, weight);
+            history.append_reps(&name, reps, weight.map(|w| w.value()));
         } else {
             panic!("expected duration or reps");
         }
@@ -276,10 +276,18 @@ fn complete_set(
 
         if options.advance == 1 {
             // Advance weight (for VariableReps)
+            let new_weight = {
+                let weights = &state.read().unwrap().weights;
+                let program = &state.read().unwrap().program;
+                let workout = program.find(&workout_name).unwrap();
+                let exercise = workout.find(&exercise_name).unwrap();
+                exercise.advance_weight(weights).map(|w| w.value())
+            };
+
             let program = &mut state.write().unwrap().program;
             let workout = program.find_mut(&workout_name).unwrap();
             let exercise = workout.find_mut(&exercise_name).unwrap();
-            exercise.advance_weight();
+            exercise.set_weight(new_weight);
             new_expected = match exercise {
                 Exercise::VariableReps(_, _, e, _) => e.min_expected().clone(),
                 _ => panic!("expected Exercise::VariableReps"),
@@ -318,7 +326,8 @@ struct ExerciseData {
     workout: String,              // "Full Body Exercises"
     exercise: String,             // "RDL"
     exercise_set: String,         // "Set 1 of 3"
-    exercise_set_details: String, // "8 reps @ 135 lbs"
+    exercise_set_details: String, // "8 reps @ 145 lbs"
+    weight_details: String,       // "45 + 10 + 5"
     wait: String,                 // "" or "30" (seconds), this is for durations type exercises
     rest: String,                 // "" or "30" (seconds)
     button_title: String,         // "Next", "Start", "Done", "Exit", etc
@@ -364,8 +373,11 @@ impl ExerciseData {
         let exercise_set = format!("Set {} of {}", s.current_index.index() + 1, e.num_sets());
 
         let w = exercise.closest_weight(weights, s.current_index);
-        let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
+        let suffix = w
+            .clone()
+            .map_or("".to_owned(), |w| format!(" @ {}", w.text()));
         let exercise_set_details = format!("{}s{suffix}", e.set(s.current_index));
+        let weight_details = w.map(|w| w.details()).flatten().unwrap_or("".to_owned());
 
         let wait = if s.finished {
             "0".to_owned()
@@ -401,6 +413,7 @@ impl ExerciseData {
             exercise,
             exercise_set,
             exercise_set_details,
+            weight_details,
             wait,
             rest,
             records,
@@ -440,8 +453,11 @@ impl ExerciseData {
             SetIndex::Warmup(_) => exercise.closest_weight(weights, s.current_index),
             SetIndex::Workset(_) => exercise.lower_weight(weights, s.current_index),
         };
-        let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
+        let suffix = w
+            .clone()
+            .map_or("".to_owned(), |w| format!(" @ {}", w.text()));
         let exercise_set_details = format!("{} reps{suffix}", e.set(s.current_index).reps);
+        let weight_details = w.map(|w| w.details()).flatten().unwrap_or("".to_owned());
 
         let wait = "0".to_owned(); // for durations
         let rest = if s.finished {
@@ -485,6 +501,7 @@ impl ExerciseData {
             exercise,
             exercise_set,
             exercise_set_details,
+            weight_details,
             wait,
             rest,
             records,
@@ -524,7 +541,9 @@ impl ExerciseData {
             SetIndex::Warmup(_) => exercise.closest_weight(weights, s.current_index),
             SetIndex::Workset(_) => exercise.lower_weight(weights, s.current_index),
         };
-        let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
+        let suffix = w
+            .clone()
+            .map_or("".to_owned(), |w| format!(" @ {}", w.text()));
         let exercise_set_details = {
             let range = e.expected_range(s.current_index);
             if range.min < range.max {
@@ -533,6 +552,11 @@ impl ExerciseData {
                 format!("{} reps{suffix}", range.max)
             }
         };
+        let weight_details = w
+            .clone()
+            .map(|w| w.details())
+            .flatten()
+            .unwrap_or("".to_owned());
 
         let wait = "0".to_owned(); // for durations
         let rest = if s.finished {
@@ -593,6 +617,7 @@ impl ExerciseData {
             exercise,
             exercise_set,
             exercise_set_details,
+            weight_details,
             wait,
             rest,
             records,

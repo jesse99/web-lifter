@@ -62,7 +62,7 @@ fn summarize(weights: &Weights, exercise: &Exercise) -> String {
                 let index = SetIndex::Workset(i);
                 let d = e.set(index);
                 let w = exercise.lower_weight(weights, index);
-                let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
+                let suffix = w.map_or("".to_owned(), |w| format!(" @ {}", w.text()));
                 format!("{d}s{suffix}")
             })
             .collect(),
@@ -71,7 +71,7 @@ fn summarize(weights: &Weights, exercise: &Exercise) -> String {
                 let index = SetIndex::Workset(i); // workout page only shows work sets
                 let r = e.set(index).reps;
                 let w = exercise.lower_weight(weights, index);
-                let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
+                let suffix = w.map_or("".to_owned(), |w| format!(" @ {}", w.text()));
                 format!("{r} reps{suffix}")
             })
             .collect(),
@@ -80,7 +80,7 @@ fn summarize(weights: &Weights, exercise: &Exercise) -> String {
                 let index = SetIndex::Workset(i);
                 let r = e.expected_range(index);
                 let w = exercise.lower_weight(weights, index);
-                let suffix = w.map_or("".to_owned(), |w| format!(" @ {:.1} lbs", w));
+                let suffix = w.map_or("".to_owned(), |w| format!(" @ {}", w.text()));
                 if r.min < r.max {
                     format!("{}-{} reps{suffix}", r.min, r.max)
                 } else {

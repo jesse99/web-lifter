@@ -90,31 +90,40 @@ impl Exercise {
     }
 
     /// Used for warmup sets, returned weight may be over expected weight.
-    pub fn closest_weight(&self, weights: &Weights, index: SetIndex) -> Option<f32> {
+    pub fn closest_weight(&self, weights: &Weights, index: SetIndex) -> Option<Weight> {
         let (target, name) = self.target_weight(index);
         if let Some(name) = name {
             target.map(|t| weights.closest(&name, t))
         } else {
-            target
+            target.map(|t| weights.closest("", t))
         }
     }
 
     /// Used for worksets sets, returns a weight as close as possible to the expected
     /// weight but not over.
-    pub fn lower_weight(&self, weights: &Weights, index: SetIndex) -> Option<f32> {
+    pub fn lower_weight(&self, weights: &Weights, index: SetIndex) -> Option<Weight> {
         let (target, name) = self.target_weight(index);
         if let Some(name) = name {
             target.map(|t| weights.lower(&name, t))
         } else {
-            target
+            target.map(|t| weights.closest("", t))
         }
     }
 
-    pub fn advance_weight(&mut self) {
+    pub fn advance_weight(&self, weights: &Weights) -> Option<Weight> {
+        let (target, name) = self.base_weight();
+        if let Some(name) = name {
+            target.map(|t| weights.advance(&name, t))
+        } else {
+            target.map(|t| weights.advance("", t))
+        }
+    }
+
+    pub fn set_weight(&mut self, weight: Option<f32>) {
         match self {
-            Exercise::Durations(_, _, _, s) => s.weight = s.weight.map(|w| w + 5.0), // TODO need to use a weight set
-            Exercise::FixedReps(_, _, _, s) => s.weight = s.weight.map(|w| w + 5.0),
-            Exercise::VariableReps(_, _, _, s) => s.weight = s.weight.map(|w| w + 5.0),
+            Exercise::Durations(_, _, _, s) => s.weight = weight,
+            Exercise::FixedReps(_, _, _, s) => s.weight = weight,
+            Exercise::VariableReps(_, _, _, s) => s.weight = weight,
         }
     }
 
@@ -155,6 +164,14 @@ impl Exercise {
                 let percent = e.expected_range(index).percent as f32;
                 (s.weight.map(|w| (percent * w) / 100.0), &s.weightset)
             }
+        }
+    }
+
+    fn base_weight(&self) -> (Option<f32>, &Option<String>) {
+        match self {
+            Exercise::Durations(_, _, _, s) => (s.weight, &s.weightset),
+            Exercise::FixedReps(_, _, _, s) => (s.weight, &s.weightset),
+            Exercise::VariableReps(_, _, _, s) => (s.weight, &s.weightset),
         }
     }
 }
