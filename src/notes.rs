@@ -3,7 +3,10 @@ use std::collections::HashMap;
 
 pub struct Notes {
     // TODO will need a (per user) edited table that overrides the default table
-    table: HashMap<FormalName, String>,
+    table: HashMap<FormalName, String>, // values are markup
+
+    #[cfg(test)]
+    lines: Vec<String>,
 
     #[cfg(test)]
     links: Vec<String>,
@@ -15,6 +18,9 @@ impl Notes {
             table: HashMap::new(),
 
             #[cfg(test)]
+            lines: Vec::new(),
+
+            #[cfg(test)]
             links: Vec::new(),
         };
 
@@ -22,10 +28,10 @@ impl Notes {
     vec![
             "[Row](http://stronglifts.com/barbell-row)",
             "[Power Clean](https://experiencelife.com/article/learn-to-power-clean)",
-            "[Front Squat](https://www.bodybuilding.com/exercises/detail/view/name/front-barbell-squat)",
-            "[Military Press](https://www.bodybuilding.com/exercises/detail/view/name/standing-military-press)",
+            "[Front Squat](https://www.verywellfit.com/how-to-do-a-barbell-front-squat-4842368)",
+            "[Military Press](https://www.muscleandstrength.com/exercises/military-press.html)",
             "[Back Squat](http://strengtheory.com/how-to-squat)",
-            "[Good Morning](https://www.bodybuilding.com/exercises/detail/view/name/good-morning)"],
+            "[Good Morning](https://www.verywellfit.com/how-to-do-the-good-morning-exercise-with-barbell-3498255)"],
     vec![("Link", "https://www.t-nation.com/training/rebuild-yourself-with-complexes")]);
 
         notes.add("Ab Wheel Rollout",
@@ -33,7 +39,7 @@ impl Notes {
             "Hold the ab wheel with both hands and kneel on the floor.",
             "Roll the wheel straight forward as far as you can without touching the floor with your body.",
             "Pause and slowly roll back."],
-    vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/ab-roller"), ("Video", "https://www.youtube.com/watch?v=uYBOBBv9GzY")]);
+    vec![("Link", "https://www.muscleandfitness.com/workouts/full-body-exercises/the-ab-wheel-rollout-how-to-benefits-variations/"), ("Video", "https://www.youtube.com/watch?v=uYBOBBv9GzY")]);
 
         notes.add(
             "Adductor Foam Roll",
@@ -45,7 +51,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/adductor",
+                "https://www.nasm.org/exercise-library/foam-roll-adductors",
             )],
         );
 
@@ -101,8 +107,8 @@ impl Notes {
         notes.add(
             "Arch Hangs",
             vec![
-                "Hang off a pullup bar.",
-                "Bring your head and shoulders back and arch your entire body",
+                "Hang off a pull-up bar.",
+                "Bring your head and shoulders back and arch your entire body.",
                 "Try to pinch your shoulder blades together and keep your elbows straight.",
             ],
             vec![(
@@ -166,7 +172,7 @@ impl Notes {
             "Lower the dumbbells rotating them back to the original position."],
             vec![(
                 "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/arnold-dumbbell-press",
+                "https://www.muscleandstrength.com/exercises/seated-arnold-press.html",
             )],
         );
 
@@ -198,7 +204,7 @@ impl Notes {
             "[Clean-grip High Pull](https://www.t-nation.com/training/clean-high-pull)",
             "[Clean-grip Snatch](https://www.catalystathletics.com/exercise/383/Clean-Grip-Snatch/)",
             "[Back Squats](http://strengtheory.com/how-to-squat)",
-            "[Good Morning](https://www.bodybuilding.com/exercises/detail/view/name/good-morning)",
+            "[Good Morning](https://www.verywellfit.com/how-to-do-the-good-morning-exercise-with-barbell-3498255)",
             "[Rows](http://stronglifts.com/barbell-row)"],
     vec![("Link", "https://www.t-nation.com/training/rebuild-yourself-with-complexes")],
 );
@@ -211,7 +217,7 @@ impl Notes {
             "Raise upwards again keeping back straight.",
             "Stop once your body forms a straight line.",
             "Difficulty can be increased by clasping your hands behind your head (prisoner position), by bracing yourself with one leg, or by holding a weight to your chest."],
-    vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/hyperextensions-back-extensions"), ("Video", "https://bretcontreras.com/back-extensions/")],
+    vec![("Link", "https://www.strengthlog.com/back-extension/"), ("Video", "https://bretcontreras.com/back-extensions/")],
 );
 
         notes.add(
@@ -228,14 +234,14 @@ impl Notes {
         notes.add(
             "Band Pull Apart",
             vec![
-                "Grip a band with your hands and extend your arms straight out in fromnt of you.",
+                "Grip a band with your hands and extend your arms straight out in front of you.",
                 "Move your hands to your sides keeping your arms straight.",
                 "Keep your shoulders back.",
                 "Bring your hands back to the starting position.",
             ],
             vec![(
                 "Link",
-                "https://www.bodybuilding.com/exercises/band-pull-apart",
+                "https://www.gymreapers.com/blogs/news/how-to-do-resistance-band-pull-aparts",
             )],
         );
 
@@ -286,8 +292,8 @@ impl Notes {
         notes.add(
             "Bar Pullover",
             vec![
-                "Do a pullup and as you come up bring your legs up and spin around the bar.",
-                "From the top roll forward, lower your legs, and no a negative pullup.",
+                "Do a pull-up and as you come up bring your legs up and spin around the bar.",
+                "From the top roll forward, lower your legs, and no a negative pull-up.",
             ],
             vec![
                 ("Link", "https://www.youtube.com/watch?v=saLtuweg8As"),
@@ -326,7 +332,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/barbell-lunge",
+                "https://www.muscleandstrength.com/exercises/barbell-lunge.html",
             )],
         );
 
@@ -337,7 +343,7 @@ impl Notes {
             "Raise your shoulders as high as they will go.",
             "Slowly lower the bar back down.",
             "Avoid using your biceps."],
-    vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/barbell-shrug")],
+    vec![("Link", "https://www.muscleandstrength.com/exercises/barbell-shrug.html")],
 );
 
         notes.add(
@@ -384,10 +390,7 @@ impl Notes {
                 "Stand with feet about shoulder width apart.",
                 "Do a short squat, swing arms back, and jump as high as possible over the bench.",
             ],
-            vec![(
-                "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/bench-jump",
-            )],
+            vec![("Link", "https://focusedonfit.com/exercise/bench-jump/")],
         );
 
         notes.add("Bench Press",
@@ -397,7 +400,7 @@ impl Notes {
             "Feet should usually be between knees and hips and out as much as possible.",
             "Bar should rest on palm, near wrists.",
             "Lower shoulders, squeeze shoulders together, stay tight throughout.",
-            "Raise chest unstead of arching lower back.",
+            "Raise chest instead of arching lower back.",
             "Squeeze the bar hard.",
             "Bring bar down to about lower nipples. Raise back to over eyes.",
             "Don't watch the bar, instead look at a fixed point on the ceiling.",
@@ -433,7 +436,7 @@ impl Notes {
             "Keeping legs tucked and shoulders on the floor slowly rotate your legs from side to side.",
             "Turn your head in the opposite direction as your legs.",
             "Hold the down position for a two count."],
-    vec![("Video", "https://www.youtube.com/watch?v=2HYWl009bq0"), ("Gallery", "https://imgur.com/gallery/iEsaS"), ("Notes", "https://www.bodybuilding.com/fun/limber-11-the-only-lower-body-warm-up-youll-ever-need.html")],
+    vec![("Video", "https://www.youtube.com/watch?v=2HYWl009bq0"), ("Gallery", "https://imgur.com/gallery/iEsaS")],
 );
 
         notes.add(
@@ -445,7 +448,7 @@ impl Notes {
             "Bring dumbbells to your sides while keeping torso stationary."],
             vec![(
                 "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/bent-over-two-dumbbell-row",
+                "https://www.muscleandstrength.com/exercises/bent-over-dumbbell-row.html",
             )],
         );
 
@@ -455,7 +458,7 @@ impl Notes {
                 "Use as much resistance as possible.",
                 "Sprint for 15-30 seconds.",
                 "Rest for 30-45 seconds.",
-                "Do 5-8 sets",
+                "Do 5-8 sets.",
             ],
             vec![(
                 "Link",
@@ -489,7 +492,7 @@ impl Notes {
             "Push your knees out so that they stay over your feet.",
             "Go down until your butt touches the box and then go back up.",
             "Keep your back straight."],
-    vec![("Link", "https://www.nerdfitness.com/blog/2014/03/03/strength-training-101-how-to-squat-properly/"), ("Barbell Version", "https://www.bodybuilding.com/exercises/detail/view/name/box-squat")],
+    vec![("Link", "https://www.nerdfitness.com/blog/2014/03/03/strength-training-101-how-to-squat-properly/")],
 );
 
         notes.add(
@@ -503,8 +506,8 @@ impl Notes {
             ],
             vec![
                 (
-                    "Shoulders Down Version",
-                    "https://www.bodybuilding.com/exercises/detail/view/name/butt-lift-bridge",
+                    "Link",
+                    "https://www.muscleandstrength.com/exercises/bodyweight-hip-thrust",
                 ),
                 (
                     "Barbell Version",
@@ -621,15 +624,16 @@ impl Notes {
                 "Stand with feet shoulder width apart and your hands on your hips.",
                 "Step forward with one leg and descend until one knee nearly touches the ground.",
                 "Press using your heel to raise yourself back up.",
-                "Repeat with the other leg",
+                "Repeat with the other leg.",
                 "Keep your torso upright.",
             ],
-            vec![(
-                "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/bodyweight-walking-lunge"),
-                ("Video",
-                "https://www.youtube.com/watch?v=L8fvypPrzzs",
-            )],
+            vec![
+                (
+                    "Link",
+                    "https://www.muscleandstrength.com/exercises/bodyweight-walking-lunge.html",
+                ),
+                ("Video", "https://www.youtube.com/watch?v=L8fvypPrzzs"),
+            ],
         );
 
         notes.add(
@@ -642,7 +646,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/bottoms-up",
+                "https://superhumanfitness.com/exercises/abs/lower-abs/bottoms-up/",
             )],
         );
 
@@ -652,7 +656,7 @@ impl Notes {
             "Bend underneath the bar and setup as if for a low bar squat. When the bar is at the correct height you should be parallel to the floor.",
             "Straighten up until you are standing.",
             "Keep back straight and knees slightly bent."],
-    vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/good-morning-off-pins")],
+    vec![("Link", "https://www.youtube.com/watch?v=1ATixR61uWw")],
 );
 
         notes.add(
@@ -723,7 +727,7 @@ impl Notes {
             "[Hang Snatch](https://www.bodybuilding.com/exercises/hang-snatch)",
             "[Overhead Squat](https://barbend.com/overhead-squat/)",
             "[Back Squat](http://strengtheory.com/how-to-squat)",
-            "[Good Morning](https://www.bodybuilding.com/exercises/detail/view/name/good-morning)",
+            "[Good Morning](https://www.verywellfit.com/how-to-do-the-good-morning-exercise-with-barbell-3498255)",
             "[Rows](http://stronglifts.com/barbell-row)",
             "[Deadlift](http://stronglifts.com/deadlift)"],
             vec![(
@@ -882,7 +886,7 @@ impl Notes {
             vec![("Link", "https://www.youtube.com/watch?v=wQylqaCl8Zo")],
         );
 
-        notes.add("Chinup",
+        notes.add("Chin-up",
     vec![
             "Hands closer than shoulder width. Palms facing in.",
             "Keep elbows close to body and pull until head is even or above the bar.",
@@ -1082,7 +1086,7 @@ impl Notes {
             "As the bar approaches your knees drive forward with your hips.",
             "Never bend arms: all the lifting should be done with legs and back.",
             "Don't shrug or lean back too far at the top.",
-            "Can help to switch to a mixed grip for the last warmup and worksets.",
+            "Can help to switch to a mixed grip for the last warmup and work sets.",
             "Can build grip strength by holding a set for 10-15s."],
     vec![("Stronglifts", "http://stronglifts.com/deadlift/"), ("Thrall Video", "https://www.youtube.com/watch?v=Y1IGeJEXpF4"), ("Tips", "https://www.t-nation.com/training/5-tips-to-dominate-the-deadlift"), ("Grip", "https://stronglifts.com/deadlift/grip/")],
 );
@@ -1229,7 +1233,7 @@ impl Notes {
         notes.add("Doorway Chest Stretch",
     vec![
             "Stand in front of a doorway.",
-            "Raise hands just above shoudlers with palms facing forward.",
+            "Raise hands just above shoulders with palms facing forward.",
             "Lean into the doorway supporting yourself with your forearms.",
             "Pinch shoulder blades together.",
             "Difficulty can be increased by using one arm at a time.",
@@ -1538,8 +1542,8 @@ impl Notes {
     vec![
             "[Overhead Squat](https://barbend.com/overhead-squat)",
             "[Back Squat](http://strengtheory.com/how-to-squat)",
-            "[Good Morning](https://www.bodybuilding.com/exercises/detail/view/name/good-morning)",
-            "[Front Squat](https://www.bodybuilding.com/exercises/detail/view/name/front-barbell-squat)",
+            "[Good Morning](https://www.verywellfit.com/how-to-do-the-good-morning-exercise-with-barbell-3498255)",
+            "[Front Squat](https://www.verywellfit.com/how-to-do-a-barbell-front-squat-4842368)",
             "[Rows](http://stronglifts.com/barbell-row)",
             "[Deadlift](http://stronglifts.com/deadlift)"],
     vec![("Link", "https://www.t-nation.com/training/rebuild-yourself-with-complexes")],
@@ -1557,7 +1561,7 @@ impl Notes {
             vec![
                 (
                     "Link",
-                    "https://www.bodybuilding.com/exercises/detail/view/name/face-pull",
+                    "https://www.verywellfit.com/face-pulls-exercise-for-stronger-shoulders-4161298",
                 ),
                 (
                     "Proper Form",
@@ -1576,7 +1580,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/farmers-walk",
+                "https://www.verywellfit.com/how-to-do-a-farmer-carry-techniques-benefits-variations-4796615",
             )],
         );
 
@@ -1589,10 +1593,7 @@ impl Notes {
                 "Lower the bar as far as possible.",
                 "Using your fingers raise the bar as far as possible.",
             ],
-            vec![(
-                "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/finger-curls",
-            )],
+            vec![("Link", "https://training.fit/exercise/finger-curls/")],
         );
 
         notes.add("Finger Stretch",
@@ -1636,7 +1637,7 @@ impl Notes {
     vec![
             "Stand facing an elevated surface (ideally about 15\" high).",
             "Place one foot onto the surface keeping your knee straight.",
-            "The foot on the ground should be pointed sraight ahead.",
+            "The foot on the ground should be pointed straight ahead.",
             "The toes of the elevated foot should be pointed straight upwards (or backwards to also stretch the calf).",
             "Gently lean forward until you feel your hamstrings stretch.",
             "Bend at the waist: don't roll your shoulders forward."],
@@ -1705,7 +1706,7 @@ impl Notes {
             "Stand on the block and squat down.",
             "Keep your knees apart and place your hands on the ground, shoulder width apart.",
             "Balance on your toes and lean forward.",
-            "As youur body moves forward allow your arms to bend at the elbows.",
+            "As your body moves forward allow your arms to bend at the elbows.",
             "Once you can do that for 30s lift one foot off the ground towards your butt.",
             "Once that is comfortable lean forward a bit more until the other foot comes off the ground."],
     vec![("Video", "https://www.youtube.com/watch?v=Hml31hm-Zkg"), ("Notes", "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase2")],
@@ -1733,7 +1734,8 @@ impl Notes {
             "Feet shoulder width apart with toes slightly pointed out.",
             "Go down slowly until thighs break parallel with the floor.",
             "Go up quickly."],
-    vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/front-barbell-squat"), ("25 Tips", "http://breakingmuscle.com/strength-conditioning/when-in-doubt-do-front-squats-25-tips-for-better-front-squats")],
+    vec![("Link", "https://www.verywellfit.com/how-to-do-a-barbell-front-squat-4842368"), 
+    ("25 Tips", "http://breakingmuscle.com/strength-conditioning/when-in-doubt-do-front-squats-25-tips-for-better-front-squats")],
 );
 
         notes.add("Gliding Leg Curl",
@@ -1815,7 +1817,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/good-morning",
+                "https://www.verywellfit.com/how-to-do-the-good-morning-exercise-with-barbell-3498255",
             )],
         );
 
@@ -1863,7 +1865,7 @@ impl Notes {
                 "Adjust the seat so that the handles are just below shoulder level.",
                 "Grip the handles with palms down and with a width that keeps your arms straight.",
                 "Don't allow your wrist to bend backwards.",
-                "Retract your shoulder blades by pincing them together.",
+                "Retract your shoulder blades by pinching them together.",
                 "Keep your shoulder blades retracted and extend your arms out.",
             ],
             vec![(
@@ -1913,7 +1915,7 @@ impl Notes {
         notes.add("Handstand Pushup",
     vec![
             "Get into a wall handstand about a foot from the wall. Hands should be shoulder width or a little wider.",
-            "Lower youself until your forehead touches the floor and raise yourself back up."],
+            "Lower yourself until your forehead touches the floor and raise yourself back up."],
     vec![("Video", "https://www.youtube.com/watch?v=5Vs-hk74zOQ"), ("Progression", "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase3/hspu")],
 );
 
@@ -2070,7 +2072,7 @@ impl Notes {
         notes.add(
             "Horizontal Rows",
             vec![
-                "Setup using something like a pullup bar and optionally a low stool for your feet.",
+                "Setup using something like a pull-up bar and optionally a low stool for your feet.",
                 "Pull your body into the bar and then allow it to move back down.",
                 "Keep your body straight.",
                 "Arms should be straight at the bottom.",
@@ -2208,7 +2210,7 @@ impl Notes {
 
         notes.add("Inverted Row",
     vec![
-            "Position a bar in a rack about waist height. A smith machine or a pullup bar are also suitable.",
+            "Position a bar in a rack about waist height. A smith machine or a pull-up bar are also suitable.",
             "Scoot underneath the bar and grip it with hands wider than your shoulders.",
             "Keep your heels on the ground and hang with arms fully extended.",
             "Flex your elbows and pull your chest to the bar.",
@@ -2338,16 +2340,16 @@ impl Notes {
             "2) One-foot supported: raise one leg off the ground.",
             "3) Tuck legs: bend knees about 90 degrees. Hands slightly in front of your butt.",
             "4) Slightly tuck legs: as above but bend your knees less.",
-            "5) Full L-sit",
+            "5) Full L-sit.",
             "When progressing use multiple sets to reach 60s as needed."],
     vec![("Pictures", "https://bit.ly/2MEkeBB"), ("L-sits", "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/l-sit"), ("Cues", "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/l-sit")],
 );
 
         notes.add(
-            "L-sit Pullup",
+            "L-sit pull-up",
             vec![
                 "Hold your legs extended straight outward from your body.",
-                "Do a pullup.",
+                "Do a pull-up.",
             ],
             vec![
                 ("Link", "https://www.youtube.com/watch?v=quFBLtkxMRM"),
@@ -2467,7 +2469,7 @@ impl Notes {
         notes.add(
             "Low bar Squat",
             vec![
-                "Hands should be as close together as possible without pain or discomfort",
+                "Hands should be as close together as possible without pain or discomfort.",
                 "Bar goes as far down as it can go without sliding downwards.",
                 "Wrists should be straight and thumbs above the bar.",
                 "Elbows should be up.",
@@ -2596,7 +2598,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/standing-military-press",
+                "https://www.muscleandstrength.com/exercises/military-press.html",
             )],
         );
 
@@ -2612,7 +2614,7 @@ impl Notes {
         notes.add("Negative Handstand Pushup",
     vec![
             "Get into a wall handstand about a foot from the wall. Hands should be shoulder width or a little wider.",
-            "Slowly lower youself (take up to 10s).",
+            "Slowly lower yourself (take up to 10s).",
             "Once your forehead touches the floor roll out."],
     vec![("Video", "https://www.youtube.com/watch?v=Lj2KZwbr_jo"), ("Progression", "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase3/hspu")],
 );
@@ -2643,7 +2645,7 @@ impl Notes {
 
         notes.add("One-Handed Hang",
     vec![
-            "With your palm facing away from you grab a chinup bar.",
+            "With your palm facing away from you grab a chin-up bar.",
             "Keep your feet on the ground or on a support so that you're not supporting quite all of your weight.",
             "Hold that position."],
     vec![("Link", "https://www.bodybuilding.com/exercises/one-handed-hang")],
@@ -2710,7 +2712,7 @@ impl Notes {
                 "Attach a band to a support.",
                 "Grab the band with both hands and turn your body to the side.",
                 "Thrust the band outwards and then back in.",
-                "Keep core braced and back straight",
+                "Keep core braced and back straight.",
                 "Chin tucked and knees slightly bent.",
                 "Arms stay tight beside ribs.",
             ],
@@ -2721,7 +2723,7 @@ impl Notes {
             "Parallel Bar Support",
             vec![
                 "Arms straight.",
-                "Body straight or slightly hollow",
+                "Body straight or slightly hollow.",
                 "Depress the shoulders.",
             ],
             vec![
@@ -2852,7 +2854,7 @@ impl Notes {
         notes.add(
             "Plank Shoulder Taps",
             vec![
-                "Get into a plank position with youe hands directly under your shoulders.",
+                "Get into a plank position with your hands directly under your shoulders.",
                 "Spread your legs wide.",
                 "Keep your head in a neutral position: don't look up.",
                 "Raise one hand and touch it to your opposite shoulder.",
@@ -2927,7 +2929,7 @@ impl Notes {
             )],
         );
 
-        notes.add("Pullup",
+        notes.add("Pull-up",
     vec![
             "Hands can be wider, the same, or narrower than shoulder width.",
             "Palms face out.",
@@ -2940,7 +2942,7 @@ impl Notes {
 );
 
         notes.add(
-            "Pullup Negative",
+            "Pull-up Negative",
             vec![
                 "Jump to the top and slowly lower yourself.",
                 "Work towards taking 10s to lower yourself.",
@@ -2951,7 +2953,7 @@ impl Notes {
                     "https://www.fitstream.com/exercises/negative-pull-up-a6041",
                 ),
                 (
-                    "Pullups",
+                    "Pull-ups",
                     "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pullup",
                 ),
                 (
@@ -3039,7 +3041,7 @@ impl Notes {
             vec![
                 "Crouch down on all fours.",
                 "Place one hand behind your head.",
-                "Rotate that arm inwards so that the elbow is pointed to the oppsite knee",
+                "Rotate that arm inwards so that the elbow is pointed to the opposite knee.",
                 "Pause and then rotate the arm up as far as possible.",
                 "Keep your lower back straight.",
             ],
@@ -3050,11 +3052,11 @@ impl Notes {
         );
 
         notes.add(
-            "Rack Chinup",
+            "Rack Chin-up",
             vec![
                 "Use a smith machine or squat rack.",
                 "Prop feet on a bench or chair.",
-                "Using a wide grip do chinups.",
+                "Using a wide grip do chin-ups.",
                 "Difficulty can be increased by resting a dumbbell on hips.",
             ],
             vec![("Video", "https://www.youtube.com/watch?v=6nmrFR_ulkY")],
@@ -3217,7 +3219,7 @@ impl Notes {
             "Ring Support Hold",
             vec![
                 "Arms straight.",
-                "Body straight or slightly hollow",
+                "Body straight or slightly hollow.",
                 "Depress the shoulders.",
             ],
             vec![
@@ -3421,7 +3423,7 @@ impl Notes {
             "RTO Support Hold",
             vec![
                 "Arms straight.",
-                "Body straight or slightly hollow",
+                "Body straight or slightly hollow.",
                 "Depress the shoulders.",
             ],
             vec![
@@ -3473,7 +3475,7 @@ impl Notes {
         notes.add(
             "Scapular Pulls",
             vec![
-                "Hang down from a pullup bar.",
+                "Hang down from a pull-up bar.",
                 "Keeping your arms straight.",
             ],
             vec![
@@ -3494,7 +3496,7 @@ impl Notes {
                 "Lay down and use a bar to elevate your torso above the ground.",
                 "Use your arms to lift your shoulders upwards.",
                 "Keeping your arms straight raise your torso by shrugging your shoulders forward.",
-                "Move slowly, pinch your shoulderblades together.",
+                "Move slowly, pinch your shoulder blades together.",
             ],
             vec![
                 ("Video", "https://www.youtube.com/watch?v=XzSNFureSCE"),
@@ -3762,7 +3764,7 @@ impl Notes {
             "Situp",
             vec![
                 "Lie down with feet held by a partner or under something that will not move.",
-                "Knees should be off the floor",
+                "Knees should be off the floor.",
                 "Lock your hands behind your head.",
                 "Raise your torso upwards.",
                 "Difficulty can be increased by crossing your arms in front while holding a plate.",
@@ -4272,7 +4274,7 @@ impl Notes {
             "Grab the attachment with palms facing each other.",
             "Stand straight up with a slight forward lean.",
             "Bring upper arms close to your torso and perpendicular to the ground.",
-            "Start with forarms parallel to the ground.",
+            "Start with forearms parallel to the ground.",
             "Using only your forearms bring the attachment down to your thighs.",
             "At the end your arms should be fully extended."],
     vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/triceps-pushdown-rope-attachment")],
@@ -4281,7 +4283,7 @@ impl Notes {
         notes.add(
             "Tuck Front Lever",
             vec![
-                "Use a shoulder width grip on a pullup bar.",
+                "Use a shoulder width grip on a pull-up bar.",
                 "Tuck legs and bring them up to your chest.",
                 "Keep hips at the same height as your head.",
                 "Difficulty can be increased by tucking less.",
@@ -4314,7 +4316,7 @@ impl Notes {
         notes.add(
             "Tuck Ice Cream Maker",
             vec![
-                "From the top point of a pullup on rings tuck your legs.",
+                "From the top point of a pull-up on rings tuck your legs.",
                 "Then lean back while keeping body horizontal.",
                 "Lock out arms and pause for a second in tuck front level position.",
             ],
@@ -4358,7 +4360,7 @@ impl Notes {
                 "Sit at a lat pulldown machine with a wide bar attached to the pulley.",
                 "Grab the bar with your palms facing you at closer than shoulder width.",
                 "Stick your chest out and lean back about thirty degrees.",
-                "Pull the bar to your upper chest keeping albows in tight.",
+                "Pull the bar to your upper chest keeping elbows in tight.",
             ],
             vec![(
                 "Link",
@@ -4368,12 +4370,12 @@ impl Notes {
 
         notes.add("Upright Row",
     vec![
-            "Grasp a barbell with palms facing inward slighty less than shoulder width.",
+            "Grasp a barbell with palms facing inward slightly less than shoulder width.",
             "Rest the bar on thighs with elbows slightly bent.",
             "Keep back straight.",
             "Raise bar to chin keeping elbows higher than forearms.",
             "Lower bar back to thighs.",
-            "Note that many people discourage peforming this exercise because it can cause shoulder impingement."],
+            "Note that many people discourage performing this exercise because it can cause shoulder impingement."],
     vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/upright-barbell-row"), ("Dangers", "https://www.t-nation.com/training/five-exercises-you-should-stop-doing-forever")],
 );
 
@@ -4558,7 +4560,7 @@ impl Notes {
         notes.add(
             "Wide Rows",
             vec![
-                "Setup a pullup bar, a barbell, or rings. Use a grip at 1.5x shoulder width.",
+                "Setup a pull-up bar, a barbell, or rings. Use a grip at 1.5x shoulder width.",
                 "Pull your body into the bar and then allow it to move back down.",
                 "Keep your body straight and elbows in.",
                 "Arms should be straight at the bottom.",
@@ -4641,7 +4643,7 @@ impl Notes {
             "5 Do the Star Trek salute and stick your hands, palm up again, around your knees. Rotate your elbows back and forth.",
             "6 Place palms on the ground in front of you and rotate your elbows back and forth.",
             "7 Place your hands backwards with the palms down, bring knees forward, and sit back on your heels and come back up.",
-            "8 Place your hands with palms down and facing forward. Lean foward and then back.",
+            "8 Place your hands with palms down and facing forward. Lean forward and then back.",
             "Difficulty can be increased by doing these in a plank position."],
     vec![("Link", "https://www.youtube.com/watch?v=8lDC4Ri9zAQ&feature=youtu.be&t=4m22s")],
 );
@@ -4708,6 +4710,9 @@ impl Notes {
     fn add(&mut self, name: &str, lines: Vec<&str>, links: Vec<(&str, &str)>) {
         #[cfg(test)]
         {
+            for &line in lines.iter() {
+                self.lines.push(line.to_owned());
+            }
             for &(_, link) in links.iter() {
                 self.links.push(link.to_owned());
             }
@@ -4737,6 +4742,7 @@ mod tests {
     use super::*;
     use reqwest::blocking::Response;
     use reqwest::Error;
+    use spellbound::Checker;
     use std::{
         sync::mpsc::{channel, Sender},
         time::{Duration, Instant},
@@ -4744,12 +4750,40 @@ mod tests {
     use threadpool::ThreadPool;
 
     #[test]
+    fn check_for_periods() {
+        let notes = Notes::new();
+        for line in notes.lines.iter() {
+            if !line.starts_with("[") && !line.ends_with(":") {
+                assert!(line.ends_with("."), "'{line}' doesn't end with a period");
+            }
+        }
+    }
+
+    #[test]
+    fn check_spelling() {
+        let mut checker = Checker::new();
+        checker.ignore("unrack");
+
+        let notes = Notes::new();
+        for line in notes.lines.iter() {
+            if !line.starts_with("[") {
+                let errors: Vec<_> = checker.check(line).collect();
+                if !errors.is_empty() {
+                    let errors: Vec<_> = errors.iter().map(|e| e.text()).collect();
+                    let errors = errors.join(", ");
+                    assert!(false, "'{line} has misspelled words: {errors}");
+                }
+            }
+        }
+    }
+
+    // #[test]          // TODO enable this every so often
     fn check_links() {
         let now = Instant::now();
         let notes = Notes::new();
 
         let (tx, rx) = channel();
-        let n_workers = 16; // threads will spend most of the time blocking so we can spin up quite a few
+        let n_workers = 32; // threads will spend most of the time blocking so we can spin up quite a few
         let pool = ThreadPool::new(n_workers);
         for link in notes.links.iter() {
             let tx = tx.clone();
@@ -4768,7 +4802,7 @@ mod tests {
             }
         }
         println!("elapsed: {}s", now.elapsed().as_secs());
-        assert!(false); // enable to measure runtime
+        // assert!(false); // enable to measure runtime
     }
 
     fn check_link(tx: Sender<(String, Result<Response, Error>)>, link: String) {
@@ -4776,8 +4810,10 @@ mod tests {
             .head(link.clone())
             .timeout(Duration::from_secs(10));
         if link.contains("reddit") {
+            // reddit requires something like this
             client = client.header("User-Agent", "reddit-api-test (by u/jesse_vorisek)");
         } else {
+            // Sites like www.muscleandstrength.com requires a User-Agent
             client = client.header("User-Agent", "web-lifter");
         }
         let response = client.send();
