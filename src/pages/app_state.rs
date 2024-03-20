@@ -3,6 +3,7 @@ use crate::*;
 /// Global state passed into axum handlers.
 pub struct AppState {
     pub engine: Handlebars<'static>,
+    pub notes: Notes,
     pub history: History,
     pub weights: Weights,
     pub program: Program,

@@ -1,6 +1,7 @@
 mod days;
 mod exercise;
 mod history;
+mod notes;
 mod pages;
 mod program;
 mod weights;
@@ -18,6 +19,7 @@ use days::*;
 use exercise::*;
 use handlebars::Handlebars;
 use history::*;
+use notes::*;
 use pages::*;
 use program::*;
 use serde::{Deserialize, Serialize};
@@ -55,7 +57,7 @@ fn make_program() -> pages::AppState {
     let worksets = vec![VariableReps::new(4, 8, 100); 3];
     let exercise = VariableRepsExercise::new(warmups, worksets);
     let name = ExerciseName("Squat".to_owned());
-    let formal_name = FormalName("Low bar Squat".to_owned());
+    let formal_name = FormalName("High bar Squat".to_owned());
     let exercise3 = BuildExercise::variable_reps(name.clone(), formal_name, exercise)
         .with_weightset("barbell".to_owned())
         .with_weight(135.0)
@@ -137,8 +139,10 @@ fn make_program() -> pages::AppState {
     );
     weights.add("barbell".to_owned(), set);
 
+    let notes = Notes::new();
     AppState {
         engine: Handlebars::new(),
+        notes,
         history,
         weights,
         program,
