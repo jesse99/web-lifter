@@ -8,6 +8,7 @@ pub fn get_exercise_page(
 ) -> Result<String, InternalError> {
     let engine = &state.read().unwrap().engine;
     let weights = &state.read().unwrap().weights;
+    let notes = &state.read().unwrap().notes;
     let history = &state.read().unwrap().history;
     let program = &state.read().unwrap().program;
 
@@ -18,7 +19,7 @@ pub fn get_exercise_page(
     let exercise = workout
         .find(&ExerciseName(exercise_name.to_owned()))
         .context("failed to find exercise")?;
-    let data = ExerciseData::new(weights, history, program, workout, exercise);
+    let data = ExerciseData::new(weights, notes, history, program, workout, exercise);
     Ok(engine
         .render_template(template, &data)
         .context("failed to render template")?)
@@ -339,6 +340,7 @@ struct ExerciseData {
     advance_value: String,  // "1" or "0"
     reps_title: String,     // "8 reps"
     rep_items: Vec<RepItem>,
+    notes: String,
 }
 
 impl ExerciseData {
@@ -364,6 +366,7 @@ impl ExerciseData {
 
     fn with_durations(
         weights: &Weights,
+        notes: &Notes,
         history: &History,
         program: &Program,
         workout: &Workout,
@@ -398,6 +401,8 @@ impl ExerciseData {
             "Start".to_owned()
         };
 
+        let notes = notes.html(&d.formal_name);
+
         let hide_reps = "hidden".to_owned(); // these are all for var reps exercises
         let update_hidden = "hidden".to_owned();
         let advance_hidden = "hidden".to_owned();
@@ -425,11 +430,13 @@ impl ExerciseData {
             advance_value,
             reps_title,
             rep_items,
+            notes,
         }
     }
 
     fn with_fixed_reps(
         weights: &Weights,
+        notes: &Notes,
         history: &History,
         program: &Program,
         workout: &Workout,
@@ -486,6 +493,8 @@ impl ExerciseData {
             }
         };
 
+        let notes = notes.html(&d.formal_name);
+
         let hide_reps = "hidden".to_owned(); // these are all for var reps exercises
         let update_hidden = "hidden".to_owned();
         let advance_hidden = "hidden".to_owned();
@@ -513,11 +522,13 @@ impl ExerciseData {
             advance_value,
             reps_title,
             rep_items,
+            notes,
         }
     }
 
     fn with_var_reps(
         weights: &Weights,
+        notes: &Notes,
         history: &History,
         program: &Program,
         workout: &Workout,
@@ -582,6 +593,8 @@ impl ExerciseData {
             }
         };
 
+        let notes = notes.html(&d.formal_name);
+
         let in_workset = if let SetIndex::Workset(_) = d.current_index {
             true
         } else {
@@ -629,11 +642,13 @@ impl ExerciseData {
             advance_value,
             reps_title,
             rep_items,
+            notes,
         }
     }
 
     fn new(
         weights: &Weights,
+        notes: &Notes,
         history: &History,
         program: &Program,
         workout: &Workout,
@@ -641,13 +656,13 @@ impl ExerciseData {
     ) -> ExerciseData {
         match exercise {
             Exercise::Durations(_, _) => {
-                ExerciseData::with_durations(weights, history, program, workout, exercise)
+                ExerciseData::with_durations(weights, notes, history, program, workout, exercise)
             }
             Exercise::FixedReps(_, _) => {
-                ExerciseData::with_fixed_reps(weights, history, program, workout, exercise)
+                ExerciseData::with_fixed_reps(weights, notes, history, program, workout, exercise)
             }
             Exercise::VariableReps(_, _) => {
-                ExerciseData::with_var_reps(weights, history, program, workout, exercise)
+                ExerciseData::with_var_reps(weights, notes, history, program, workout, exercise)
             }
         }
     }
