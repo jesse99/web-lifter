@@ -4768,7 +4768,7 @@ mod tests {
             }
         }
         println!("elapsed: {}s", now.elapsed().as_secs());
-        assert!(false);
+        assert!(false); // enable to measure runtime
     }
 
     fn check_link(tx: Sender<(String, Result<Response, Error>)>, link: String) {
