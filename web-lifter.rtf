@@ -99,12 +99,23 @@
 
 \f1\fs48 \cf10 \CocoaLigature1 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \
+
+\f0\fs36 \cf5 \expnd0\expndtw0\kerning0
+   let now = Instant::now();\
+\
+   // we sleep for 2 seconds\
+   sleep(Duration::new(2, 0));\
+   // it prints '2'\
+   println!("\{\}", now.elapsed().as_secs());\
+
+\f1\fs48 \cf10 \kerning1\expnd0\expndtw0    \
+   \
 \'95\'a0Support notes (use some sort of tabbed view that includes history)\
 	- write a unit test to check links?\
-		` print details on failure, eg redirect might have a new address\
-		` create a Client so we can do a head\
-		` could create multiple test functions to get parallelism\
+		` replace www.bodybuilding.com links with something else\
+		` think \cf10 www.bodybuilding.com has some aggresive throttling\cf10 \
+		` would it be faster with a larger thread pool?\
+	` make sure lines end with periods?\
 \'95 Add my workout\
 	- and weight sets\
 \'95\'a0Persist program and history\

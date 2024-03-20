@@ -308,7 +308,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "http://www.exrx.net/WeightExercises/Biceps/BBCurl.html",
+                "https://www.coachweb.com/exercises/arm-exercises/151/barbell-curl",
             )],
         );
 
@@ -349,10 +349,7 @@ impl Notes {
                 "Push out with your shoulders when going backwards.",
             ],
             vec![
-                (
-                    "Video",
-                    "https://gfycat.com/VagueEssentialGalapagosalbatross",
-                ),
+                ("Video", "https://www.youtube.com/watch?v=780CAAkwjMo"),
                 (
                     "Cues",
                     "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase1",
@@ -405,7 +402,7 @@ impl Notes {
             "Bring bar down to about lower nipples. Raise back to over eyes.",
             "Don't watch the bar, instead look at a fixed point on the ceiling.",
             "Press feet hard into the floor to help maintain tension."],
-    vec![("Strength Theory", "http://strengtheory.com/how-to-bench/"), ("Stronglifts", "http://stronglifts.com/bench-press/"), ("Thrall Video", "https://www.youtube.com/watch?v=BYKScL2sgCs"), ("4 mistakes", "https://www.youtube.com/watch?v=TDSXgCB6KfI")],
+    vec![("Stronglifts", "http://stronglifts.com/bench-press/"), ("Thrall Video", "https://www.youtube.com/watch?v=BYKScL2sgCs"), ("4 mistakes", "https://www.youtube.com/watch?v=TDSXgCB6KfI")],
 );
 
         notes.add(
@@ -540,7 +537,7 @@ impl Notes {
             vec![
                 (
                     "Link",
-                    "http://www.alkavadlo.com/body-weight-exercises/the-single-leg-deadlift/",
+                    "https://classpass.com/movements/single-leg-deadlift",
                 ),
                 ("Contreras", "https://bretcontreras.com/the-single-leg-rdl/"),
             ],
@@ -569,7 +566,7 @@ impl Notes {
                 "Stand up straight with one hand on your chest and another on your belly.",
                 "Keeping your back straight and your chest out, bend at the waist.",
             ],
-            vec![("Video", "https://gfycat.com/BlueUltimateBaiji")],
+            vec![("Video", "https://www.youtube.com/watch?v=diyzGOtiPCM")],
         );
 
         notes.add(
@@ -1189,7 +1186,7 @@ impl Notes {
             "Push off with your feet to lean forward.",
             "Keep your forearms straight up and down the whole time.",
             "Go down until your arms form a ninety degree angle."],
-    vec![("Link", "https://www.youtube.com/watch?v=_4EGPVJuqfA"), ("Pushups", "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pushup"), ("Cues", "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase2/pushup"), ("Progression", "https://bit.ly/3qHoNtW")],
+    vec![("Link", "https://www.youtube.com/watch?v=_4EGPVJuqfA"), ("Pushups", "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pushup"), ("Cues", "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase2/pushup"), ("Progression", "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pushup/#wiki_recommended_progression")],
 );
 
         notes.add(
@@ -1290,7 +1287,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "http://exrx.net/WeightExercises/Hamstrings/DBStrBackStrLegDeadlift.html",
+                "https://www.fitandwell.com/how-to/deadlift-with-dumbbells-at-home",
             )],
         );
 
@@ -1373,7 +1370,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "http://exrx.net/WeightExercises/Quadriceps/DBLunge.html",
+                "https://www.verywellfit.com/how-to-do-dumbbell-lunges-3498297",
             )],
         );
 
@@ -1430,7 +1427,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "http://exrx.net/WeightExercises/DeltoidAnterior/DBShoulderPress.html",
+                "https://www.strengthlog.com/seated-dumbbell-shoulder-press/",
             )],
         );
 
@@ -1443,7 +1440,7 @@ impl Notes {
             "Don't use your legs or lean backwards."],
             vec![(
                 "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/standing-dumbbell-press-",
+                "https://ericrobertsfitness.com/how-to-do-dumbbell-shoulder-press-the-correct-guide/",
             )],
         );
 
@@ -1485,7 +1482,8 @@ impl Notes {
             "Squat down until rear knee is almost in contact with the floor.",
             "Return to original standing position.",
             "Difficulty can be increased by using a box or plates to prop up your front foot 2-4 inches."],
-    vec![("Link", "http://exrx.net/WeightExercises/Quadriceps/DBSingleLegSplitSquat.html"), ("Tougher", "https://www.t-nation.com/training/tip-make-the-bulgarian-split-squat-even-tougher")],
+    vec![("Link", "https://weighttraining.guide/exercises/dumbbell-one-leg-split-squat/"), 
+    ("Tougher", "https://www.t-nation.com/training/tip-make-the-bulgarian-split-squat-even-tougher")],
 );
 
         notes.add(
@@ -1508,7 +1506,7 @@ impl Notes {
             "Cross your arms across your chest.",
             "Raise your torso upwards.",
             "Difficulty can be increased by placing your hands behind your head (like a prisoner)."],
-    vec![("Link", "http://www.exrx.net/WeightExercises/ErectorSpinae/BWHyperextensionBallArmsCrossed.html")],
+    vec![("Link", "https://gethealthyu.com/exercise/stability-ball-back-extension/")],
 );
 
         notes.add("Exercise Ball Crunch",
@@ -1532,7 +1530,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "http://www.exrx.net/WeightExercises/Obliques/WTSideCrunchOnBall.html",
+                "https://www.exercise.com/exercises/swiss-ball-oblique-crunch/",
             )],
         );
 
@@ -2173,7 +2171,7 @@ impl Notes {
                     "Cues",
                     "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase2/pushup",
                 ),
-                ("Progression", "https://bit.ly/3qHoNtW"),
+                ("Progression", "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pushup/#wiki_recommended_progression"),
             ],
         );
 
@@ -2482,19 +2480,13 @@ impl Notes {
                 "Can help to try to screw heels inward.",
             ],
             vec![
-                (
-                    "The Definitive Guide",
-                    "http://strengtheory.com/how-to-squat/",
-                ),
+                ("The Definitive Guide", "https://stronglifts.com/squat/"),
                 (
                     "Candito Video",
                     "https://www.youtube.com/watch?v=zoZWgTrZLd8",
                 ),
                 ("Stronglifts", "http://stronglifts.com/squat/"),
-                (
-                    "Catching Squat up to Deadlift",
-                    "http://strengtheory.com/help-squat-catch-deadlift/",
-                ),
+                ("Problems", "https://www.trainuntamed.com/fix_your_squat/"),
             ],
         );
 
@@ -2834,7 +2826,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "http://bruteforcestrength.com/techniques/leg-training-pin-squats/",
+                "https://testifysc.com/articles/the-pin-squat-what-how-and-why",
             )],
         );
 
@@ -2915,7 +2907,7 @@ impl Notes {
                     "Cues",
                     "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pushup",
                 ),
-                ("Progression", "https://bit.ly/3qHoNtW"),
+                ("Progression", "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pushup/#wiki_recommended_progression"),
             ],
         );
 
@@ -2954,7 +2946,10 @@ impl Notes {
                 "Work towards taking 10s to lower yourself.",
             ],
             vec![
-                ("Link", "https://vimeo.com/76666801"),
+                (
+                    "Link",
+                    "https://www.fitstream.com/exercises/negative-pull-up-a6041",
+                ),
                 (
                     "Pullups",
                     "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pullup",
@@ -3005,7 +3000,7 @@ impl Notes {
             "To reduce shoulder strain keep your elbows tucked so that your upper arms form a 45 degree angle to your torso.",
             "Difficulty can be lessened by keeping knees on the floor or by placing hands on a support.",
             "Difficulty can be increased by placing feet on a bench."],
-    vec![("Video", "https://www.youtube.com/watch?v=4dF1DOWzf20&feature=youtu.be"), ("Link", "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pushup"), ("Cues", "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase2/pushup"), ("Progression", "https://bit.ly/3qHoNtW")],
+    vec![("Video", "https://www.youtube.com/watch?v=4dF1DOWzf20&feature=youtu.be"), ("Link", "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pushup"), ("Cues", "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase2/pushup"), ("Progression", "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pushup/#wiki_recommended_progression")],
 );
 
         notes.add("Pushup Plus",
@@ -3062,16 +3057,7 @@ impl Notes {
                 "Using a wide grip do chinups.",
                 "Difficulty can be increased by resting a dumbbell on hips.",
             ],
-            vec![
-                (
-                    "Link",
-                    "http://www.intensemuscle.com/archive/index.php/t-1463.html",
-                ),
-                (
-                    "Video",
-                    "http://straighttothebar.com/articles/2008/11/rack_chins/",
-                ),
-            ],
+            vec![("Video", "https://www.youtube.com/watch?v=6nmrFR_ulkY")],
         );
 
         notes.add("Rack Pulls",
@@ -3169,12 +3155,13 @@ impl Notes {
                 "Grab either handles or the sides of the bench.",
                 "Keeping your legs straight raise them to parallel or a bit higher.",
             ],
-            vec![(
-                "Link",
-                "http://www.exrx.net/WeightExercises/GluteusMaximus/BWReverseHyperextension.html"),
-                ("Video",
-                "https://www.youtube.com/watch?v=ZeRsNzFcQLQ&",
-            )],
+            vec![
+                (
+                    "Link",
+                    "https://www.thefittingrooms.london/2015/01/reverse-hypers/",
+                ),
+                ("Video", "https://www.youtube.com/watch?v=ZeRsNzFcQLQ&"),
+            ],
         );
 
         notes.add("Reverse Plank",
@@ -3740,7 +3727,7 @@ impl Notes {
             "Hold at the top for a second.",
             "Keep your back straight.",
             "Difficulty can be increased by elevating your body by placing one foot on a chair or bench."],
-    vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/single-leg-glute-bridge-"), ("Elevated Video", "https://www.youtube.com/watch?v=juyqMVIzDkQ")],
+    vec![("Link", "https://www.verywellfit.com/single-leg-bridge-exercise-3120739"), ("Elevated Video", "https://www.youtube.com/watch?v=juyqMVIzDkQ")],
 );
 
         notes.add("Single Leg Romanian Deadlift",
@@ -3831,7 +3818,7 @@ impl Notes {
                 ),
                 (
                     "Picture",
-                    "https://www.summitmedicalgroup.com/media/db/relayhealth-images/xbicepte_2.jpg",
+                    "https://www.espclinics.com/patients/stretches-exercises/sleeper-stretch/",
                 ),
             ],
         );
@@ -3977,13 +3964,18 @@ impl Notes {
     vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/standing-dumbbell-calf-raise")],
 );
 
-        notes.add("Standing IT Band Stretch",
-    vec![
-            "Stand up straight and cross one leg over the other.",
-            "Raise the arm on the same side as your back leg high into the air.",
-            "Bend towards the side with your arm down until you feel the stretch."],
-    vec![("Link", "https://www.msn.com/en-us/health/exercise/strength/standing-it-band-stretch/ss-BBtOhqi")],
-);
+        notes.add(
+            "Standing IT Band Stretch",
+            vec![
+                "Stand up straight and cross one leg over the other.",
+                "Raise the arm on the same side as your back leg high into the air.",
+                "Bend towards the side with your arm down until you feel the stretch.",
+            ],
+            vec![(
+                "Video",
+                "https://www.ogradyorthopaedics.com/video-collection/standing-it-band-stretch/",
+            )],
+        );
 
         notes.add(
             "Standing One Arm Cable Row",
@@ -4009,7 +4001,7 @@ impl Notes {
             ],
             vec![(
                 "Link",
-                "http://www.exrx.net/Stretches/Quadriceps/Standing.html",
+                "https://www.verywellfit.com/standing-quadriceps-stretch-3120301",
             )],
         );
 
@@ -4136,7 +4128,7 @@ impl Notes {
     vec![
             "Squeeze a rubber stress ball for either 10 reps or 30s.",
             "If you're doing Wrist Extension or Flexion then use that arm position."],
-    vec![("Link", "https://www.hip.fit/e/stress-ball-squeeze"), ("AAoS", "https://orthoinfo.aaos.org/globalassets/pdfs/a00790_therapeutic-exercise-program-for-epicondylitis_final.pdf")],
+    vec![("Link", "https://www.greencroft.org/Library/docLib/2020/04/5-Minute-Stress-Ball-Workout.pdf"), ("AAoS", "https://orthoinfo.aaos.org/globalassets/pdfs/a00790_therapeutic-exercise-program-for-epicondylitis_final.pdf")],
 );
 
         notes.add(
@@ -4203,7 +4195,7 @@ impl Notes {
             "Difficulty can be lessened by using a wider stance and by angling feet outward more.",
             "Work towards holding the squat for one minute for multiple reps."],
             vec![
-                ("Link", "http://thirdworldsquats.com/"),
+                ("Link", "https://www.physio-form.co.uk/article/improve-your-mobility-for-sport-and-everyday-life"),
                 ("Video", "https://vimeo.com/116283733"),
                 (
                     "Cues",
@@ -4257,7 +4249,7 @@ impl Notes {
                 ),
                 (
                     "Guide",
-                    "https://www.masterclass.com/articles/hex-bar-deadlift-guide",
+                    "https://www.garagegymreviews.com/trap-bar-deadlift",
                 ),
             ],
         );
@@ -4406,7 +4398,7 @@ impl Notes {
                     "Cues",
                     "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase2/pushup",
                 ),
-                ("Progression", "https://bit.ly/3qHoNtW"),
+                ("Progression", "https://www.reddit.com/r/bodyweightfitness/wiki/exercises/pushup/#wiki_recommended_progression"),
             ],
         );
 
@@ -4436,10 +4428,7 @@ impl Notes {
                 "Stand up straight with your arms ar your sides.",
                 "Bring one knee up, grab it with both hands, and gently pull it higher and in.",
             ],
-            vec![(
-                "Link",
-                "https://www.msn.com/en-us/health/exercise/strength/walking-knee-hugs/ss-BBtOl5z",
-            )],
+            vec![("Link", "https://blackbeltwiki.com/walking-knee-hugs")],
         );
 
         notes.add(
@@ -4746,16 +4735,30 @@ impl Notes {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use reqwest::blocking::Response;
+    use reqwest::Error;
+    use std::{
+        sync::mpsc::{channel, Sender},
+        time::{Duration, Instant},
+    };
+    use threadpool::ThreadPool;
 
     #[test]
     fn check_links() {
+        let now = Instant::now();
         let notes = Notes::new();
-        let client = reqwest::blocking::Client::new();
+
+        let (tx, rx) = channel();
+        let n_workers = 16; // threads will spend most of the time blocking so we can spin up quite a few
+        let pool = ThreadPool::new(n_workers);
         for link in notes.links.iter() {
-            let response = client
-                .head(link)
-                .header("User-Agent", "reddit-api-test (by u/jesse_vorisek)")
-                .send();
+            let tx = tx.clone();
+            let link = link.to_owned();
+            pool.execute(move || check_link(tx, link));
+        }
+
+        for _ in notes.links.iter() {
+            let (link, response) = rx.recv().unwrap();
             match response {
                 Ok(r) => {
                     let status = r.status();
@@ -4764,5 +4767,20 @@ mod tests {
                 Err(err) => assert!(false, "{err} for {link}"),
             }
         }
+        println!("elapsed: {}s", now.elapsed().as_secs());
+        assert!(false);
+    }
+
+    fn check_link(tx: Sender<(String, Result<Response, Error>)>, link: String) {
+        let mut client = reqwest::blocking::Client::new()
+            .head(link.clone())
+            .timeout(Duration::from_secs(10));
+        if link.contains("reddit") {
+            client = client.header("User-Agent", "reddit-api-test (by u/jesse_vorisek)");
+        } else {
+            client = client.header("User-Agent", "web-lifter");
+        }
+        let response = client.send();
+        tx.send((link, response)).unwrap();
     }
 }
