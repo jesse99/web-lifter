@@ -1,16 +1,17 @@
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::ExerciseName;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum CompletedSets {
     Durations(Vec<(i32, Option<f32>)>),
     Reps(Vec<(i32, Option<f32>)>),
 }
 
 /// Result of completing an exercise. Saved into [`History`].
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Record {
     pub program: String,
     pub workout: String,
@@ -21,6 +22,7 @@ pub struct Record {
 
 /// Records details about the completion of each exercise. Note that this is shared across
 /// workouts and programs.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct History {
     records: HashMap<ExerciseName, Vec<Record>>, // most recent record is last
     empty: Vec<Record>,

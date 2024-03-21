@@ -1,4 +1,5 @@
 use core::fmt;
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Formatter};
 
 // TODO Might want to support bumper plates though that would get quite annoying because
@@ -17,7 +18,7 @@ pub fn format_weight(weight: f32, suffix: &str) -> String {
     format!("{s}{suffix}")
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Plate {
     pub weight: f32,
     pub count: i32, // how many of this plate the user has
@@ -32,13 +33,6 @@ impl Plate {
 #[derive(Clone)]
 pub struct Weight {
     weight: InternalWeight,
-}
-
-#[derive(Clone)]
-enum InternalWeight {
-    Discrete(f32),
-    Error(String, f32),
-    Plates(Plates),
 }
 
 impl Weight {
@@ -90,7 +84,7 @@ impl Weight {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum WeightSet {
     /// Used for stuff like dumbbells and cable machines. Weights should be sorted from
     /// smallest to largest.
@@ -103,6 +97,7 @@ pub enum WeightSet {
 
 /// Collections of weight sets that are shared across programs, e.g. there could be sets
 /// for dummbells, a cable machine, and plates for a barbell.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Weights {
     sets: HashMap<String, WeightSet>,
 }
@@ -165,6 +160,13 @@ impl Weights {
             Weight::error(format!("There is no weight set named '{name}'"), target)
         }
     }
+}
+
+#[derive(Clone)]
+enum InternalWeight {
+    Discrete(f32),
+    Error(String, f32),
+    Plates(Plates),
 }
 
 #[derive(Clone)]

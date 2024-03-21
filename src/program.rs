@@ -1,10 +1,12 @@
 use super::*;
+use serde::{Deserialize, Serialize};
 
 pub enum ProgramOp {
     Add(Workout),
 }
 
 /// Set of [`Workout`]`s to perform.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Program {
     pub name: String,
     workouts: Vec<Workout>,

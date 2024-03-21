@@ -1,12 +1,13 @@
 use super::*;
 use chrono::{DateTime, Datelike, Duration};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub enum WorkoutOp {
     Add(Exercise),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Schedule {
     /// Workout can be done whenever.
     AnyDay,
@@ -53,6 +54,7 @@ pub enum Status {
 /// Set of [`Exercise`]s to perform all together. These are typically all performed
 /// together on one day, e.g. an upper body workout might be performed on Monday and
 /// Friday. Workouts are part of a [`Program`].
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Workout {
     pub name: String,
     pub schedule: Schedule,

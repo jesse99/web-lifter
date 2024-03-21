@@ -2,6 +2,8 @@ use crate::*;
 
 /// Global state passed into axum handlers.
 pub struct AppState {
+    pub major_version: i32, // file version (just in case we need it later)
+    pub minor_version: i32,
     pub engine: Handlebars<'static>,
     pub notes: Notes,
     pub history: History,

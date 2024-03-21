@@ -38,6 +38,8 @@ fn make_program() -> pages::AppState {
     let weights = creat_weight_sets();
     let notes = Notes::new();
     AppState {
+        major_version: 0,
+        minor_version: 1,
         engine: Handlebars::new(),
         notes,
         history,

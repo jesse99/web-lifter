@@ -1,12 +1,13 @@
 use crate::SetIndex;
+use serde::{Deserialize, Serialize};
 
 /// Used for stuff like 3x60s planks. Target is used to signal the user to increase
 /// difficulty (typically by switching to a harder variant of the exercise or adding
 /// weight).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DurationsExercise {
     secs: Vec<i32>,
-    // target_secs: Option<i32>,    // TODO: support this
+    target_secs: Option<i32>, // TODO: support this
 }
 
 impl DurationsExercise {
@@ -14,7 +15,7 @@ impl DurationsExercise {
     pub fn new(secs: Vec<i32>) -> DurationsExercise {
         DurationsExercise {
             secs,
-            // target_secs: None,
+            target_secs: None,
         }
     }
 

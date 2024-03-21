@@ -2,6 +2,7 @@
 //! shared across programs and workouts.
 use crate::*;
 use core::fmt;
+use serde::{Deserialize, Serialize};
 use std::fmt::Formatter;
 
 mod durations_exercise;
@@ -15,16 +16,16 @@ pub use variable_reps_exercise::*;
 /// Identifies an exercise. This is assigned by the user and will be something like
 /// "Light Squat". It's used when listing the exercise within a [`Workout`] and to
 /// persist history (across workouts and programs).
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct ExerciseName(pub String);
 
 /// The proper exercise name, e.g. "Low-bar Squat". This is used to show help for the
 /// exercise.
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct FormalName(pub String);
 
 /// Not all exercises will support all of these.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum SetIndex {
     Warmup(usize),
     Workset(usize),
@@ -41,7 +42,7 @@ impl SetIndex {
 }
 
 /// State shared across exercise types.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ExerciseData {
     pub name: ExerciseName,
     pub formal_name: FormalName,
@@ -53,7 +54,7 @@ pub struct ExerciseData {
     last_rest: Option<i32>, // overrides rest.last()
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Exercise {
     Durations(ExerciseData, DurationsExercise),
     FixedReps(ExerciseData, FixedRepsExercise),

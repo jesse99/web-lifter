@@ -1,24 +1,32 @@
 use crate::*;
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Notes {
-    // TODO will need a (per user) edited table that overrides the default table
-    // #[serde(default = "get_default_markup")]
-    table: HashMap<FormalName, String>, // values are markup
+    #[serde(default = "get_default_markup")]
+    defaults: HashMap<FormalName, String>, // values are markup
+
+    custom: HashMap<FormalName, String>, // values are markup
 }
 
 impl Notes {
     pub fn new() -> Notes {
         Notes {
-            table: get_default_markup(),
+            defaults: get_default_markup(),
+            custom: HashMap::new(),
         }
     }
 
     pub fn html(&self, name: &FormalName) -> String {
-        if let Some(markdown) = self.table.get(name) {
+        if let Some(markdown) = self.custom.get(name) {
             markdown::to_html(markdown)
         } else {
-            format!("{name} has no notes")
+            if let Some(markdown) = self.defaults.get(name) {
+                markdown::to_html(markdown)
+            } else {
+                format!("{name} has no notes")
+            }
         }
     }
 }

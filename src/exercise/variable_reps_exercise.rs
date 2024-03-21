@@ -1,6 +1,7 @@
 use crate::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct VariableReps {
     pub min: i32,
     pub max: i32,
@@ -15,7 +16,7 @@ impl VariableReps {
 }
 
 /// Used for stuff like 4-8 squats.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VariableRepsExercise {
     warmups: Vec<FixedReps>,
     worksets: Vec<VariableReps>,

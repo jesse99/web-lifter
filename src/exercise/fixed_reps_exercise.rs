@@ -1,7 +1,8 @@
 use crate::*;
+use serde::{Deserialize, Serialize};
 
 /// Reps to use for a set along with a percentage of weight.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FixedReps {
     pub reps: i32,
     pub percent: i32,
@@ -14,7 +15,7 @@ impl FixedReps {
 }
 
 /// Used for stuff like 3x12 crunches.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FixedRepsExercise {
     warmups: Vec<FixedReps>,
     worksets: Vec<FixedReps>,
@@ -22,6 +23,7 @@ pub struct FixedRepsExercise {
 
 impl FixedRepsExercise {
     // TODO: do we want a validator here?
+    #[test]
     pub fn with_reps(worksets: Vec<i32>) -> FixedRepsExercise {
         let worksets = worksets
             .iter()
