@@ -3,6 +3,7 @@ mod exercise;
 mod history;
 mod notes;
 mod pages;
+mod persist;
 mod program;
 mod weights;
 mod workout;
@@ -38,13 +39,13 @@ fn make_program() -> pages::AppState {
     let weights = creat_weight_sets();
     let notes = Notes::new();
     AppState {
-        major_version: 0,
-        minor_version: 1,
-        engine: Handlebars::new(),
-        notes,
-        history,
-        weights,
-        program,
+        handlebars: Handlebars::new(),
+        user: UserState {
+            notes,
+            history,
+            weights,
+            program,
+        },
     }
 }
 
@@ -260,6 +261,8 @@ fn creat_weight_sets() -> Weights {
 #[tokio::main]
 async fn main() {
     let state = make_program();
+
+    println!("{:?}", dirs::data_dir());
 
     tracing_subscriber::fmt::init();
 

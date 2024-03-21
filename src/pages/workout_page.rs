@@ -2,14 +2,14 @@ use crate::*;
 use anyhow::Context;
 
 pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, InternalError> {
-    let engine = &state.read().unwrap().engine;
-    let weights = &state.read().unwrap().weights;
-    let program = &state.read().unwrap().program;
+    let handlebars = &state.read().unwrap().handlebars;
+    let weights = &state.read().unwrap().user.weights;
+    let program = &state.read().unwrap().user.program;
 
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
     let template = include_str!("../../files/workout.html");
     let data = WorkoutData::new(weights, program, workout)?;
-    Ok(engine
+    Ok(handlebars
         .render_template(template, &data)
         .context("failed to render template")?)
 }

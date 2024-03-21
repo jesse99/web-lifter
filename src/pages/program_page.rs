@@ -5,13 +5,13 @@ pub fn get_program_page(state: SharedState) -> Result<String, InternalError> {
     // TODO: It'd be nice if handlers could call render_template outside the State lock.
     // Could call Handlebars::new() inside each handler though that looks fairly expensive.
     // Maybe use TLS?
-    let engine = &state.read().unwrap().engine;
-    let program = &state.read().unwrap().program;
+    let handlebars = &state.read().unwrap().handlebars;
+    let program = &state.read().unwrap().user.program;
 
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
     let template = include_str!("../../files/program.html");
     let data = ProgramData::new(program);
-    Ok(engine
+    Ok(handlebars
         .render_template(template, &data)
         .context("failed to render template")?)
 }

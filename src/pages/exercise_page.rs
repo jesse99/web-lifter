@@ -6,11 +6,11 @@ pub fn get_exercise_page(
     workout_name: &str,
     exercise_name: &str,
 ) -> Result<String, InternalError> {
-    let engine = &state.read().unwrap().engine;
-    let weights = &state.read().unwrap().weights;
-    let notes = &state.read().unwrap().notes;
-    let history = &state.read().unwrap().history;
-    let program = &state.read().unwrap().program;
+    let handlebars = &state.read().unwrap().handlebars;
+    let weights = &state.read().unwrap().user.weights;
+    let notes = &state.read().unwrap().user.notes;
+    let history = &state.read().unwrap().user.history;
+    let program = &state.read().unwrap().user.program;
 
     let template = include_str!("../../files/exercise.html");
     let workout = program
@@ -20,7 +20,7 @@ pub fn get_exercise_page(
         .find(&ExerciseName(exercise_name.to_owned()))
         .context("failed to find exercise")?;
     let data = ExerciseData::new(weights, notes, history, program, workout, exercise);
-    Ok(engine
+    Ok(handlebars
         .render_template(template, &data)
         .context("failed to render template")?)
 }
@@ -32,7 +32,7 @@ pub fn post_next_exercise_page(
     options: Option<VarRepsOptions>,
 ) -> Result<String, InternalError> {
     let finished = {
-        let program = &state.read().unwrap().program;
+        let program = &state.read().unwrap().user.program;
         let workout = program
             .find(&workout_name)
             .context("failed to find workout")?;
@@ -62,7 +62,7 @@ fn advance_set(
     options: Option<VarRepsOptions>,
 ) {
     fn just_started(state: &mut SharedState, workout_name: &str, exercise_name: &str) -> bool {
-        let program = &state.read().unwrap().program;
+        let program = &state.read().unwrap().user.program;
         let workout = program.find(&workout_name).unwrap();
         let exercise = workout
             .find(&ExerciseName(exercise_name.to_owned()))
@@ -84,7 +84,7 @@ fn advance_set(
     }
 
     fn in_workset(state: &mut SharedState, workout_name: &str, exercise_name: &str) -> bool {
-        let program = &state.read().unwrap().program;
+        let program = &state.read().unwrap().user.program;
         let workout = program.find(&workout_name).unwrap();
         let exercise = workout
             .find(&ExerciseName(exercise_name.to_owned()))
@@ -103,7 +103,7 @@ fn advance_set(
     }
 
     fn advance_current(state: &mut SharedState, workout_name: &str, exercise_name: &str) {
-        let program = &mut state.write().unwrap().program;
+        let program = &mut state.write().unwrap().user.program;
         let workout = program.find_mut(&workout_name).unwrap();
         let exercise = workout
             .find_mut(&ExerciseName(exercise_name.to_owned()))
@@ -155,7 +155,7 @@ fn advance_set(
     }
 
     fn get_new_record(state: &mut SharedState, workout_name: &str) -> Record {
-        let program = &state.read().unwrap().program;
+        let program = &state.read().unwrap().user.program;
 
         Record {
             program: program.name.clone(),
@@ -174,8 +174,8 @@ fn advance_set(
     ) {
         let name = ExerciseName(exercise_name.to_owned());
         let (duration, reps, weight) = {
-            let weights = &state.read().unwrap().weights;
-            let program = &state.read().unwrap().program;
+            let weights = &state.read().unwrap().user.weights;
+            let program = &state.read().unwrap().user.program;
             let workout = program.find(&workout_name).unwrap();
             let exercise = workout.find(&name).unwrap();
             match exercise {
@@ -203,10 +203,10 @@ fn advance_set(
             }
         };
         if let Some(duration) = duration {
-            let history = &mut state.write().unwrap().history;
+            let history = &mut state.write().unwrap().user.history;
             history.append_duration(&name, duration, weight.map(|w| w.value()));
         } else if let Some(reps) = reps {
-            let history = &mut state.write().unwrap().history;
+            let history = &mut state.write().unwrap().user.history;
             history.append_reps(&name, reps, weight.map(|w| w.value()));
         } else {
             panic!("expected duration or reps");
@@ -217,7 +217,7 @@ fn advance_set(
     if in_workset(state, workout_name, exercise_name) {
         if just_started(state, workout_name, exercise_name) {
             let record = get_new_record(state, workout_name);
-            let history = &mut state.write().unwrap().history;
+            let history = &mut state.write().unwrap().user.history;
             history.add(&name, record);
         }
 
@@ -235,7 +235,7 @@ fn complete_set(
     let exercise_name = ExerciseName(exercise_name.to_owned());
     {
         // Reset current set to start
-        let program = &mut state.write().unwrap().program;
+        let program = &mut state.write().unwrap().user.program;
         let workout = program.find_mut(&workout_name).unwrap();
         let exercise = workout.find_mut(&exercise_name).unwrap();
 
@@ -268,8 +268,8 @@ fn complete_set(
 
     if let Some(options) = options {
         let mut new_expected = {
-            let history = &state.read().unwrap().history;
-            let program = &state.read().unwrap().program;
+            let history = &state.read().unwrap().user.history;
+            let program = &state.read().unwrap().user.program;
             let workout = program.find(&workout_name).unwrap();
             let exercise = workout.find(&exercise_name).unwrap();
             get_var_reps_done(history, &exercise)
@@ -278,14 +278,14 @@ fn complete_set(
         if options.advance == 1 {
             // Advance weight (for VariableReps)
             let new_weight = {
-                let weights = &state.read().unwrap().weights;
-                let program = &state.read().unwrap().program;
+                let weights = &state.read().unwrap().user.weights;
+                let program = &state.read().unwrap().user.program;
                 let workout = program.find(&workout_name).unwrap();
                 let exercise = workout.find(&exercise_name).unwrap();
                 exercise.advance_weight(weights).map(|w| w.value())
             };
 
-            let program = &mut state.write().unwrap().program;
+            let program = &mut state.write().unwrap().user.program;
             let workout = program.find_mut(&workout_name).unwrap();
             let exercise = workout.find_mut(&exercise_name).unwrap();
             exercise.set_weight(new_weight);
@@ -296,7 +296,7 @@ fn complete_set(
         }
         if options.update == 1 {
             // Update expected (for VariableReps)
-            let program = &mut state.write().unwrap().program;
+            let program = &mut state.write().unwrap().user.program;
             let workout = program.find_mut(&workout_name).unwrap();
             let exercise = workout.find_mut(&exercise_name).unwrap();
             match exercise {
