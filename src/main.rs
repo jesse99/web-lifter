@@ -30,115 +30,12 @@ use weights::*;
 use workout::*;
 
 fn make_program() -> pages::AppState {
-    // exercises
-    let exercise = DurationsExercise::new(vec![20; 4]);
-    let name = ExerciseName("Quad Stretch".to_owned());
-    let formal_name = FormalName("Standing Quad Stretch".to_owned());
-    let exercise1 = BuildExercise::durations(name, formal_name, exercise)
-        .with_weight(10.0)
-        .with_rest(20)
-        .finalize();
+    let mut program = Program::new("Mine".to_owned());
+    program.apply(ProgramOp::Add(create_full_body_workout()));
+    program.apply(ProgramOp::Add(create_cardio_workout()));
 
-    let warmups = vec![FixedReps::new(5, 80), FixedReps::new(3, 90)];
-    let worksets = vec![
-        FixedReps::new(8, 100),
-        FixedReps::new(8, 100),
-        FixedReps::new(8, 100),
-    ];
-    let exercise = FixedRepsExercise::with_percent(warmups, worksets);
-    let name = ExerciseName("Side Leg Lift".to_owned());
-    let formal_name = FormalName("Side Lying Abduction".to_owned());
-    let exercise2 = BuildExercise::fixed_reps(name.clone(), formal_name, exercise)
-        .with_weight(12.0)
-        .with_rest(20)
-        .finalize();
-
-    let warmups = vec![FixedReps::new(5, 80), FixedReps::new(3, 90)];
-    let worksets = vec![VariableReps::new(4, 8, 100); 3];
-    let exercise = VariableRepsExercise::new(warmups, worksets);
-    let name = ExerciseName("Squat".to_owned());
-    let formal_name = FormalName("High bar Squat".to_owned());
-    let exercise3 = BuildExercise::variable_reps(name.clone(), formal_name, exercise)
-        .with_weightset("barbell".to_owned())
-        .with_weight(135.0)
-        // .with_rest(20)
-        .finalize();
-
-    // workouts
-    let mut workout1 = Workout::new("Full Body".to_owned(), Schedule::Every(2));
-    workout1.apply(WorkoutOp::Add(exercise1));
-    workout1.apply(WorkoutOp::Add(exercise2));
-    workout1.apply(WorkoutOp::Add(exercise3));
-
-    let workout2 = Workout::new("Cardio".to_owned(), Schedule::AnyDay);
-    let workout3 = Workout::new(
-        "Strong Lifts".to_owned(),
-        Schedule::Days(vec![Weekday::Mon, Weekday::Wed, Weekday::Fri]),
-    );
-
-    // program
-    let mut program = Program::new("My".to_owned());
-    program.apply(ProgramOp::Add(workout1));
-    program.apply(ProgramOp::Add(workout2));
-    program.apply(ProgramOp::Add(workout3));
-
-    let mut history = History::new();
-    let record = Record {
-        program: program.name.clone(),
-        workout: "Full Body".to_owned(),
-        date: Utc::now() - chrono::Duration::days(12),
-        sets: None,
-        comment: None,
-    };
-    history.add(&name, record);
-    history.append_reps(&name, 3, None);
-    history.append_reps(&name, 3, None);
-
-    let record = Record {
-        program: program.name.clone(),
-        workout: "Full Body".to_owned(),
-        date: Utc::now() - chrono::Duration::days(9),
-        sets: None,
-        comment: None,
-    };
-    history.add(&name, record);
-    history.append_reps(&name, 5, None);
-    history.append_reps(&name, 5, None);
-
-    let record = Record {
-        program: program.name.clone(),
-        workout: "Full Body".to_owned(),
-        date: Utc::now() - chrono::Duration::days(6),
-        sets: None,
-        comment: None,
-    };
-    history.add(&name, record);
-    history.append_reps(&name, 5, None);
-    history.append_reps(&name, 4, None);
-
-    let record = Record {
-        program: program.name.clone(),
-        workout: "Full Body".to_owned(),
-        date: Utc::now() - chrono::Duration::days(3),
-        sets: None,
-        comment: None,
-    };
-    history.add(&name, record);
-    history.append_reps(&name, 10, None);
-    history.append_reps(&name, 10, None);
-
-    let mut weights = Weights::new();
-    let set = WeightSet::DualPlates(
-        vec![
-            Plate::new(5.0, 6),
-            Plate::new(10.0, 6),
-            Plate::new(25.0, 4),
-            Plate::new(45.0, 4),
-        ],
-        Some(45.0),
-    );
-    weights.add("barbell".to_owned(), set);
-
+    let history = create_history();
+    let weights = creat_weight_sets();
     let notes = Notes::new();
     AppState {
         engine: Handlebars::new(),
@@ -147,6 +44,215 @@ fn make_program() -> pages::AppState {
         weights,
         program,
     }
+}
+
+fn create_cardio_workout() -> Workout {
+    let mut workout = Workout::new("Cardio".to_owned(), Schedule::AnyDay);
+
+    let exercise = DurationsExercise::new(vec![30 * 60]);
+    let name = ExerciseName("Elliptical".to_owned());
+    let formal_name = FormalName("Elliptical".to_owned());
+    let exercise = BuildExercise::durations(name, formal_name, exercise).finalize();
+    workout.apply(WorkoutOp::Add(exercise));
+
+    workout
+}
+
+fn create_history() -> History {
+    fn add(history: &mut History, name: &ExerciseName, reps: Vec<i32>, weight: f32, days_ago: i64) {
+        let record = Record {
+            program: "Mine".to_owned(),
+            workout: "Full Body".to_owned(),
+            date: Utc::now() - chrono::Duration::days(days_ago),
+            sets: None,
+            comment: None,
+        };
+        history.add(&name, record);
+        for rep in reps {
+            history.append_reps(&name, rep, Some(weight));
+        }
+    }
+
+    fn add_squat(history: &mut History) {
+        let name = ExerciseName("Squat".to_owned());
+        add(history, &name, vec![4, 3, 3], 175.0, 2);
+        add(history, &name, vec![5, 5, 5], 175.0, 5);
+        add(history, &name, vec![5, 5, 4], 175.0, 8);
+        add(history, &name, vec![5, 5, 4], 175.0, 13);
+        add(history, &name, vec![5, 4, 4], 175.0, 16);
+        add(history, &name, vec![5, 4, 3], 175.0, 19);
+    }
+
+    fn add_bench(history: &mut History) {
+        let name = ExerciseName("Bench Press".to_owned());
+        add(history, &name, vec![4, 4, 3], 150.0, 2);
+        add(history, &name, vec![4, 4, 3], 150.0, 5);
+        add(history, &name, vec![4, 4, 3], 150.0, 8);
+        add(history, &name, vec![4, 3, 3], 150.0, 13);
+        add(history, &name, vec![3, 3, 2], 150.0, 16);
+        add(history, &name, vec![3, 3, 3], 150.0, 19);
+    }
+
+    fn add_rdl(history: &mut History) {
+        let name = ExerciseName("RDL".to_owned());
+        add(history, &name, vec![8, 8, 8], 155.0, 2);
+        add(history, &name, vec![8, 8, 8], 145.0, 5);
+        add(history, &name, vec![8, 8, 8], 135.0, 8);
+    }
+
+    let mut history = History::new();
+    add_squat(&mut history);
+    add_bench(&mut history);
+    add_rdl(&mut history);
+    history
+}
+
+fn create_full_body_workout() -> Workout {
+    let mut workout = Workout::new("Full Body".to_owned(), Schedule::Every(3));
+
+    // Squat
+    let warmups = vec![
+        FixedReps::new(5, 0),
+        FixedReps::new(5, 50),
+        FixedReps::new(3, 70),
+        FixedReps::new(1, 90),
+    ];
+    let worksets = vec![VariableReps::new(3, 5, 100); 3];
+    let e = VariableRepsExercise::new(warmups, worksets);
+    let name = ExerciseName("Squat".to_owned());
+    let formal_name = FormalName("High bar Squat".to_owned());
+    let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
+        .with_weightset("Dual".to_owned())
+        .with_weight(175.0)
+        .with_rest(210)
+        .finalize();
+    workout.apply(WorkoutOp::Add(exercise));
+
+    // Dislocates
+    let worksets = vec![FixedReps::new(10, 100)];
+    let e = FixedRepsExercise::with_percent(vec![], worksets);
+    let name = ExerciseName("Dislocates".to_owned());
+    let formal_name = FormalName("Shoulder Dislocate (band)".to_owned());
+    let exercise = BuildExercise::fixed_reps(name.clone(), formal_name, e).finalize();
+    workout.apply(WorkoutOp::Add(exercise));
+
+    // Bench Press
+    let warmups = vec![
+        FixedReps::new(5, 50),
+        FixedReps::new(5, 70),
+        FixedReps::new(3, 80),
+        FixedReps::new(1, 90),
+    ];
+    let worksets = vec![VariableReps::new(3, 5, 100); 3];
+    let e = VariableRepsExercise::new(warmups, worksets);
+    let name = ExerciseName("Bench Press".to_owned());
+    let formal_name = FormalName("Bench Press".to_owned());
+    let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
+        .with_weightset("Dual".to_owned())
+        .with_weight(150.0)
+        .with_rest(210)
+        .finalize();
+    workout.apply(WorkoutOp::Add(exercise));
+
+    // Quad Stretch
+    let e = DurationsExercise::new(vec![20; 4]);
+    let name = ExerciseName("Quad Stretch".to_owned());
+    let formal_name = FormalName("Standing Quad Stretch".to_owned());
+    let exercise = BuildExercise::durations(name, formal_name, e).finalize();
+    workout.apply(WorkoutOp::Add(exercise));
+
+    // Cable Abduction
+    let warmups = vec![FixedReps::new(6, 75)];
+    let worksets = vec![VariableReps::new(6, 12, 100); 3];
+    let e = VariableRepsExercise::new(warmups, worksets);
+    let name = ExerciseName("Cable Abduction".to_owned());
+    let formal_name = FormalName("Cable Hip Abduction".to_owned());
+    let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
+        .with_weightset("Cable Machine".to_owned())
+        .with_weight(12.5)
+        .with_rest(120)
+        .finalize();
+    workout.apply(WorkoutOp::Add(exercise));
+
+    // RDL
+    let warmups = vec![
+        FixedReps::new(5, 60),
+        FixedReps::new(3, 80),
+        FixedReps::new(1, 90),
+    ];
+    let worksets = vec![VariableReps::new(4, 8, 100); 3];
+    let e = VariableRepsExercise::new(warmups, worksets);
+    let name = ExerciseName("RDL".to_owned());
+    let formal_name = FormalName("Romanian Deadlift".to_owned());
+    let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
+        .with_weightset("Deadlift".to_owned())
+        .with_weight(165.0)
+        .with_rest(180)
+        .with_last_rest(0)
+        .finalize();
+    workout.apply(WorkoutOp::Add(exercise));
+
+    workout
+}
+
+fn creat_weight_sets() -> Weights {
+    let mut weights = Weights::new();
+
+    let set = WeightSet::DualPlates(
+        vec![
+            Plate::new(5.0, 4),
+            Plate::new(10.0, 4),
+            Plate::new(25.0, 4),
+            Plate::new(35.0, 4),
+            Plate::new(45.0, 4),
+        ],
+        Some(45.0),
+    );
+    weights.add("Deadlift".to_owned(), set);
+
+    let set = WeightSet::DualPlates(
+        vec![
+            Plate::new(2.5, 4),
+            Plate::new(5.0, 4),
+            Plate::new(10.0, 4),
+            Plate::new(25.0, 4),
+            Plate::new(45.0, 4),
+        ],
+        Some(45.0),
+    );
+    weights.add("Dual".to_owned(), set);
+
+    let set = WeightSet::DualPlates(
+        vec![
+            Plate::new(5.0, 4),
+            Plate::new(10.0, 4),
+            Plate::new(25.0, 8),
+            Plate::new(35.0, 6),
+            Plate::new(45.0, 8),
+        ],
+        None,
+    );
+    weights.add("Single".to_owned(), set);
+
+    let set = WeightSet::Discrete((25..=975).step_by(50).map(|i| (i as f32) / 10.0).collect());
+    weights.add("Cable Machine".to_owned(), set);
+
+    let mut w1: Vec<_> = (125..=500).step_by(75).map(|i| (i as f32) / 10.0).collect();
+    let w2: Vec<_> = (550..=1300)
+        .step_by(50)
+        .map(|i| (i as f32) / 10.0)
+        .collect();
+    w1.extend(w2);
+    let set = WeightSet::Discrete(w1);
+    weights.add("Lat Pulldown".to_owned(), set);
+
+    let set = WeightSet::Discrete((5..=100).step_by(5).map(|i| i as f32).collect());
+    weights.add("Gym Dumbbells".to_owned(), set);
+
+    let set = WeightSet::Discrete(vec![9.0, 13.0, 18.0]);
+    weights.add("Kettlebell".to_owned(), set);
+
+    weights
 }
 
 #[tokio::main]

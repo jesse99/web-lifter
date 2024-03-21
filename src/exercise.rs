@@ -248,13 +248,13 @@ impl BuildExercise {
         BuildExercise { data, ..self }
     }
 
-    // pub fn with_last_rest(self, last: i32) -> SetsExercise {
-    //     let data = Sets {
-    //         last_rest: Some(last),
-    //         ..self.data
-    //     };
-    //     SetsExercise { data, ..self }
-    // }
+    pub fn with_last_rest(self, last: i32) -> BuildExercise {
+        let data = ExerciseData {
+            last_rest: Some(last),
+            ..self.data
+        };
+        BuildExercise { data, ..self }
+    }
 
     pub fn finalize(self) -> Exercise {
         match self.exercise {
