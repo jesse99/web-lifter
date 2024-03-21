@@ -1,14 +1,18 @@
 use crate::*;
 use anyhow::Context;
 
-pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, InternalError> {
+pub fn get_workout_page(
+    state: SharedState,
+    workout: &str,
+    error: String,
+) -> Result<String, InternalError> {
     let handlebars = &state.read().unwrap().handlebars;
     let weights = &state.read().unwrap().user.weights;
     let program = &state.read().unwrap().user.program;
 
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
     let template = include_str!("../../files/workout.html");
-    let data = WorkoutData::new(weights, program, workout)?;
+    let data = WorkoutData::new(weights, program, workout, error)?;
     Ok(handlebars
         .render_template(template, &data)
         .context("failed to render template")?)
@@ -18,10 +22,16 @@ pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, Int
 struct WorkoutData {
     workout_name: String,
     exercises: Vec<ExerciseData>,
+    error: String,
 }
 
 impl WorkoutData {
-    fn new(weights: &Weights, program: &Program, name: &str) -> Result<WorkoutData, anyhow::Error> {
+    fn new(
+        weights: &Weights,
+        program: &Program,
+        name: &str,
+        error: String,
+    ) -> Result<WorkoutData, anyhow::Error> {
         if let Some(workout) = program.find(name) {
             let exercises: Vec<ExerciseData> = workout
                 .exercises()
@@ -30,6 +40,7 @@ impl WorkoutData {
             Ok(WorkoutData {
                 workout_name: name.to_owned(),
                 exercises: exercises,
+                error,
             })
         } else {
             anyhow::bail!("Failed to find a workout named '{name}'");

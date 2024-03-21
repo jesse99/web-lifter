@@ -33,9 +33,12 @@ use workout::*;
 fn make_program() -> pages::AppState {
     let user = match persist::load() {
         Ok(u) => u,
-        Err(_) => {
-            println!("using default state");
-            let mut program = Program::new("Mine".to_owned());
+        Err(e) => {
+            // TODO need to better handle load errors
+            // probably by adding an error label to pages
+            // but that'll be easier once we support multiple users
+            let name = format!("Mine {e}");
+            let mut program = Program::new(name);
             program.apply(ProgramOp::Add(create_full_body_workout()));
             program.apply(ProgramOp::Add(create_cardio_workout()));
 
@@ -326,7 +329,8 @@ async fn get_workout(
     Path(name): Path<String>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let contents = get_workout_page(state, &name)?;
+    let error = String::new();
+    let contents = get_workout_page(state, &name, error)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
