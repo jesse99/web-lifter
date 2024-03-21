@@ -267,8 +267,6 @@ fn creat_weight_sets() -> Weights {
 async fn main() {
     let state = make_program();
 
-    println!("{:?}", dirs::data_dir());
-
     tracing_subscriber::fmt::init();
 
     let app = Router::new()
