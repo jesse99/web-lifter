@@ -6,6 +6,17 @@ use std::{collections::HashMap, fmt::Formatter};
 // and want 60 lbs we'd normally select 20 x3 (for single plates) but with bumpers we'd
 // want 15 bumper x4.
 
+pub fn format_weight(weight: f32, suffix: &str) -> String {
+    let mut s = format!("{weight:.3}");
+    while s.ends_with("0") {
+        s.remove(s.len() - 1);
+    }
+    if s.ends_with(".") {
+        s.remove(s.len() - 1);
+    }
+    format!("{s}{suffix}")
+}
+
 #[derive(Clone, Copy)]
 pub struct Plate {
     pub weight: f32,
@@ -463,17 +474,6 @@ fn find_discrete(target: f32, weights: &Vec<f32>) -> (f32, f32) {
     }
 
     (lower, upper)
-}
-
-fn format_weight(weight: f32, suffix: &str) -> String {
-    let mut s = format!("{weight:.3}");
-    while s.ends_with("0") {
-        s.remove(s.len() - 1);
-    }
-    if s.ends_with(".") {
-        s.remove(s.len() - 1);
-    }
-    format!("{s}{suffix}")
 }
 
 impl fmt::Debug for Plate {

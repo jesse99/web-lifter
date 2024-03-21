@@ -763,12 +763,11 @@ fn record_to_record(delta: i32, record: &Record) -> ExerciseDataRecord {
     text += &record.date.format("%-d %b %Y").to_string();
 
     if let Some(ref sets) = record.sets {
-        let labels: Vec<String> = match sets {
-            CompletedSets::Durations(s) => s.iter().map(|x| durations_to_str(x)).collect(),
-            CompletedSets::Reps(s) => s.iter().map(|x| reps_to_str(x)).collect(),
-        };
         text += ", ";
-        text += &join_labels(labels);
+        text += &match sets {
+            CompletedSets::Durations(s) => durations_to_str(s),
+            CompletedSets::Reps(s) => reps_to_str(s),
+        };
     }
 
     if let Some(ref comment) = record.comment {
@@ -791,22 +790,40 @@ fn record_to_record(delta: i32, record: &Record) -> ExerciseDataRecord {
     }
 }
 
-fn durations_to_str(entry: &(i32, Option<f32>)) -> String {
-    if let Some(w) = entry.1 {
-        format!("{} secs @ {:.1} lbs", entry.0, w) // TODO use a short or friendly time function, also a weight fn
-    } else {
-        format!("{} secs", entry.0)
-    }
+fn durations_to_str(sets: &Vec<(i32, Option<f32>)>) -> String {
+    num_to_str(sets, "secs") // TODO will need to also pass in a fn so we can get short times
 }
 
-fn reps_to_str(entry: &(i32, Option<f32>)) -> String {
-    if let Some(w) = entry.1 {
-        format!("{} reps @ {:.1} lbs", entry.0, w) // TODO use a weight fn
-    } else {
-        format!("{} reps", entry.0)
-    }
+fn reps_to_str(sets: &Vec<(i32, Option<f32>)>) -> String {
+    num_to_str(sets, "reps")
 }
 
+fn num_to_str(sets: &Vec<(i32, Option<f32>)>, unit: &str) -> String {
+    if sets.iter().all(|s| s.1.is_none()) {
+        let reps: Vec<_> = sets.iter().map(|x| format!("{}", x.0)).collect();
+        let reps = reps.join(", ");
+        reps + " " + unit
+    } else if !sets.is_empty() && sets[0].1.is_some() && sets.iter().all(|s| s.1 == sets[0].1) {
+        let reps: Vec<_> = sets.iter().map(|x| format!("{}", x.0)).collect();
+        let reps = reps.join(", ");
+        let weight = format_weight(sets[0].1.unwrap(), " lbs");
+        format!("{reps} {unit} @ {weight}")
+    } else {
+        join_labels(
+            sets.iter()
+                .map(|x| {
+                    let reps = format!("{}", x.0);
+                    if let Some(weight) = x.1 {
+                        let weight = format_weight(weight, " lbs");
+                        format!("{reps} @ {weight}")
+                    } else {
+                        reps
+                    }
+                })
+                .collect(),
+        )
+    }
+}
 fn get_var_reps_done(history: &History, e: &Exercise) -> Vec<i32> {
     let last = history.records(e.name()).last().map_or(&None, |r| &r.sets);
     match last {
