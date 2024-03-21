@@ -1,6 +1,7 @@
 use crate::*;
 
 /// State associated with a user.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UserState {
     pub notes: Notes,
     pub history: History,

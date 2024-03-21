@@ -31,21 +31,26 @@ use weights::*;
 use workout::*;
 
 fn make_program() -> pages::AppState {
-    let mut program = Program::new("Mine".to_owned());
-    program.apply(ProgramOp::Add(create_full_body_workout()));
-    program.apply(ProgramOp::Add(create_cardio_workout()));
+    let user = match persist::load() {
+        Ok(u) => u,
+        Err(_) => {
+            println!("using default state");
+            let mut program = Program::new("Mine".to_owned());
+            program.apply(ProgramOp::Add(create_full_body_workout()));
+            program.apply(ProgramOp::Add(create_cardio_workout()));
 
-    let history = create_history();
-    let weights = creat_weight_sets();
-    let notes = Notes::new();
+            UserState {
+                notes: Notes::new(),
+                history: create_history(),
+                weights: creat_weight_sets(),
+                program,
+            }
+        }
+    };
+
     AppState {
         handlebars: Handlebars::new(),
-        user: UserState {
-            notes,
-            history,
-            weights,
-            program,
-        },
+        user,
     }
 }
 

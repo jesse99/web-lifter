@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Notes {
-    #[serde(default = "get_default_markup")]
+    #[serde(skip_serializing, default = "get_default_markup")]
     defaults: HashMap<FormalName, String>, // values are markup
 
     custom: HashMap<FormalName, String>, // values are markup

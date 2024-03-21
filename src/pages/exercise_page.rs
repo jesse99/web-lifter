@@ -47,6 +47,14 @@ pub fn post_next_exercise_page(
     };
 
     if finished {
+        let user = &state.read().unwrap().user; // TODO pass error to workout page?
+        match persist::save(user) {
+            Ok(_) => println!("saved with no errors"),
+            Err(e) => println!("save had error {e}"),
+        }
+    }
+
+    if finished {
         complete_set(&mut state, workout_name, exercise_name, options);
         get_workout_page(state, workout_name)
     } else {
