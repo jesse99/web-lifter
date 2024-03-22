@@ -24,20 +24,29 @@ use notes::*;
 use pages::*;
 use program::*;
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, RwLock};
+use std::{
+    io::ErrorKind,
+    sync::{Arc, RwLock},
+};
 use tower::ServiceBuilder;
 use tower_http::add_extension::AddExtensionLayer;
 use weights::*;
 use workout::*;
 
 fn make_program() -> pages::AppState {
+    println!("calling load");
     let user = match persist::load() {
         Ok(u) => u,
         Err(e) => {
             // TODO need to better handle load errors
             // probably by adding an error label to pages
             // but that'll be easier once we support multiple users
-            let name = format!("Mine {e}");
+            println!("load had error {}", e.kind());
+            let name = if e.kind() == ErrorKind::NotFound {
+                "My".to_owned()
+            } else {
+                format!("My {e}")
+            };
             let mut program = Program::new(name);
             program.apply(ProgramOp::Add(create_full_body_workout()));
             program.apply(ProgramOp::Add(create_cardio_workout()));
@@ -72,7 +81,7 @@ fn create_cardio_workout() -> Workout {
 fn create_history() -> History {
     fn add(history: &mut History, name: &ExerciseName, reps: Vec<i32>, weight: f32, days_ago: i64) {
         let record = Record {
-            program: "Mine".to_owned(),
+            program: "My".to_owned(),
             workout: "Full Body".to_owned(),
             date: Utc::now() - chrono::Duration::days(days_ago),
             sets: None,
@@ -96,56 +105,67 @@ fn create_history() -> History {
 
     fn add_bench(history: &mut History) {
         let name = ExerciseName("Bench Press".to_owned());
-        add(history, &name, vec![4, 4, 3], 150.0, 2);
-        add(history, &name, vec![4, 4, 3], 150.0, 5);
-        add(history, &name, vec![4, 4, 3], 150.0, 8);
-        add(history, &name, vec![4, 3, 3], 150.0, 13);
-        add(history, &name, vec![3, 3, 2], 150.0, 16);
-        add(history, &name, vec![3, 3, 3], 150.0, 19);
+        add(history, &name, vec![3, 3, 3], 150.0, 1);
+        add(history, &name, vec![4, 4, 3], 150.0, 4);
+        add(history, &name, vec![4, 4, 3], 150.0, 6);
+        add(history, &name, vec![4, 4, 3], 150.0, 11);
+        add(history, &name, vec![4, 3, 3], 150.0, 14);
+        add(history, &name, vec![3, 3, 2], 150.0, 17);
+        add(history, &name, vec![3, 3, 3], 150.0, 20);
     }
 
     fn add_rdl(history: &mut History) {
         let name = ExerciseName("RDL".to_owned());
-        add(history, &name, vec![8, 8, 8], 155.0, 2);
-        add(history, &name, vec![8, 8, 8], 145.0, 5);
-        add(history, &name, vec![8, 8, 8], 135.0, 8);
+        add(history, &name, vec![8, 8, 8], 165.0, 1);
+        add(history, &name, vec![8, 8, 8], 155.0, 4);
+        add(history, &name, vec![8, 8, 8], 145.0, 7);
+        add(history, &name, vec![8, 8, 8], 135.0, 11);
+    }
+
+    fn add_abduction(history: &mut History) {
+        let name = ExerciseName("Cable Abduction".to_owned());
+        add(history, &name, vec![10, 10, 10], 12.5, 1);
+        add(history, &name, vec![10, 10, 10], 12.5, 4);
+        add(history, &name, vec![10, 10, 4], 17.5, 7);
+        add(history, &name, vec![10, 10, 10], 12.5, 11);
     }
 
     let mut history = History::new();
     add_squat(&mut history);
     add_bench(&mut history);
     add_rdl(&mut history);
+    add_abduction(&mut history);
     history
 }
 
 fn create_full_body_workout() -> Workout {
     let mut workout = Workout::new("Full Body".to_owned(), Schedule::Every(3));
 
-    // Squat
-    let warmups = vec![
-        FixedReps::new(5, 0),
-        FixedReps::new(5, 50),
-        FixedReps::new(3, 70),
-        FixedReps::new(1, 90),
-    ];
-    let worksets = vec![VariableReps::new(3, 5, 100); 3];
-    let e = VariableRepsExercise::new(warmups, worksets);
-    let name = ExerciseName("Squat".to_owned());
-    let formal_name = FormalName("High bar Squat".to_owned());
-    let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
-        .with_weightset("Dual".to_owned())
-        .with_weight(175.0)
-        .with_rest(210)
-        .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    // // Squat
+    // let warmups = vec![
+    //     FixedReps::new(5, 0),
+    //     FixedReps::new(5, 50),
+    //     FixedReps::new(3, 70),
+    //     FixedReps::new(1, 90),
+    // ];
+    // let worksets = vec![VariableReps::new(3, 5, 100); 3];
+    // let e = VariableRepsExercise::new(warmups, worksets);
+    // let name = ExerciseName("Squat".to_owned());
+    // let formal_name = FormalName("High bar Squat".to_owned());
+    // let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
+    //     .with_weightset("Dual".to_owned())
+    //     .with_weight(175.0)
+    //     .with_rest(210)
+    //     .finalize();
+    // workout.apply(WorkoutOp::Add(exercise));
 
-    // Dislocates
-    let worksets = vec![FixedReps::new(10, 100)];
-    let e = FixedRepsExercise::with_percent(vec![], worksets);
-    let name = ExerciseName("Dislocates".to_owned());
-    let formal_name = FormalName("Shoulder Dislocate (band)".to_owned());
-    let exercise = BuildExercise::fixed_reps(name.clone(), formal_name, e).finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    // // Dislocates
+    // let worksets = vec![FixedReps::new(10, 100)];
+    // let e = FixedRepsExercise::with_percent(vec![], worksets);
+    // let name = ExerciseName("Dislocates".to_owned());
+    // let formal_name = FormalName("Shoulder Dislocate (band)".to_owned());
+    // let exercise = BuildExercise::fixed_reps(name.clone(), formal_name, e).finalize();
+    // workout.apply(WorkoutOp::Add(exercise));
 
     // Bench Press
     let warmups = vec![
@@ -154,7 +174,7 @@ fn create_full_body_workout() -> Workout {
         FixedReps::new(3, 80),
         FixedReps::new(1, 90),
     ];
-    let worksets = vec![VariableReps::new(3, 5, 100); 3];
+    let worksets = vec![VariableReps::new(1, 3, 100); 3];
     let e = VariableRepsExercise::new(warmups, worksets);
     let name = ExerciseName("Bench Press".to_owned());
     let formal_name = FormalName("Bench Press".to_owned());
@@ -174,7 +194,7 @@ fn create_full_body_workout() -> Workout {
 
     // Cable Abduction
     let warmups = vec![FixedReps::new(6, 75)];
-    let worksets = vec![VariableReps::new(6, 12, 100); 3];
+    let worksets = vec![VariableReps::new(4, 8, 100); 3];
     let e = VariableRepsExercise::new(warmups, worksets);
     let name = ExerciseName("Cable Abduction".to_owned());
     let formal_name = FormalName("Cable Hip Abduction".to_owned());
@@ -191,13 +211,13 @@ fn create_full_body_workout() -> Workout {
         FixedReps::new(3, 80),
         FixedReps::new(1, 90),
     ];
-    let worksets = vec![VariableReps::new(4, 8, 100); 3];
+    let worksets = vec![VariableReps::new(1, 3, 100); 3];
     let e = VariableRepsExercise::new(warmups, worksets);
     let name = ExerciseName("RDL".to_owned());
     let formal_name = FormalName("Romanian Deadlift".to_owned());
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Deadlift".to_owned())
-        .with_weight(165.0)
+        .with_weight(175.0)
         .with_rest(180)
         .with_last_rest(0)
         .finalize();
@@ -289,7 +309,10 @@ async fn main() {
                 .into_inner(),
         );
 
-    // let listener = tokio::net::TcpListener::bind("10.0.0.75:80").await.unwrap(); // run with sudo
+    // TODO This is currently setup to use port forwarding so that, from the public
+    // Internet, clients can hit my router IP which will then forward to my Mac. But we'll
+    // need to do something different when/if we deploy for real. At a minimum switch to
+    // using port 80 (or 443).
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
