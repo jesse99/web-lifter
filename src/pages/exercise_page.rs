@@ -369,8 +369,8 @@ impl ExerciseData {
         records
             .iter()
             .enumerate()
-            .map(|(i, r)| (get_delta(&records, i), r))
-            .map(|(d, r)| record_to_record(d, r))
+            .map(|(i, r)| record_to_record(get_delta(&records, i), r))
+            .rev()
             .collect()
     }
 
@@ -706,8 +706,8 @@ fn reps_to_vec(reps: VariableReps) -> Vec<RepItem> {
 
 // Note that here records goes from newest to oldest.
 fn get_delta(records: &Vec<&Record>, i: usize) -> i32 {
-    if i + 1 < records.len() {
-        let older = records[i + 1];
+    if i > 0 {
+        let older = records[i - 1];
         let newer = records[i];
         let values = match newer.sets {
             Some(CompletedSets::Durations(ref new_sets)) => match older.sets {
@@ -722,9 +722,9 @@ fn get_delta(records: &Vec<&Record>, i: usize) -> i32 {
             Some(CompletedSets::Reps(ref new_sets)) => match older.sets {
                 Some(CompletedSets::Durations(_)) => None,
                 Some(CompletedSets::Reps(ref old_sets)) => {
-                    let new_durations = aggregate_reps(new_sets);
-                    let old_durations = aggregate_reps(old_sets);
-                    Some((new_durations, old_durations))
+                    let new_reps = aggregate_reps(new_sets);
+                    let old_reps = aggregate_reps(old_sets);
+                    Some((new_reps, old_reps))
                 }
                 None => None,
             },
