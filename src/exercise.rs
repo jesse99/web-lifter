@@ -8,10 +8,12 @@ use std::fmt::Formatter;
 mod durations_exercise;
 mod fixed_reps_exercise;
 mod variable_reps_exercise;
+mod variable_sets_exercise;
 
 pub use durations_exercise::*;
 pub use fixed_reps_exercise::*;
 pub use variable_reps_exercise::*;
+pub use variable_sets_exercise::*;
 
 /// Identifies an exercise. This is assigned by the user and will be something like
 /// "Light Squat". It's used when listing the exercise within a [`Workout`] and to
@@ -59,6 +61,7 @@ pub enum Exercise {
     Durations(ExerciseData, DurationsExercise),
     FixedReps(ExerciseData, FixedRepsExercise),
     VariableReps(ExerciseData, VariableRepsExercise),
+    VariableSets(ExerciseData, VariableSetsExercise),
 }
 
 impl Exercise {
@@ -67,6 +70,7 @@ impl Exercise {
             Exercise::Durations(d, _) => &d.name,
             Exercise::FixedReps(d, _) => &d.name,
             Exercise::VariableReps(d, _) => &d.name,
+            Exercise::VariableSets(d, _) => &d.name,
         }
     }
 
@@ -88,6 +92,13 @@ impl Exercise {
         match self {
             Exercise::VariableReps(d, e) => (d, e),
             _ => panic!("expected var reps"),
+        }
+    }
+
+    pub fn expect_var_sets(&self) -> (&ExerciseData, &VariableSetsExercise) {
+        match self {
+            Exercise::VariableSets(d, e) => (d, e),
+            _ => panic!("expected var sets"),
         }
     }
 
@@ -126,16 +137,17 @@ impl Exercise {
             Exercise::Durations(d, _) => d.weight = weight,
             Exercise::FixedReps(d, _) => d.weight = weight,
             Exercise::VariableReps(d, _) => d.weight = weight,
+            Exercise::VariableSets(d, _) => d.weight = weight,
         }
     }
 
     /// For the specified set, in seconds.
     pub fn rest(&self, index: SetIndex) -> Option<i32> {
-        fn get(index: usize, num: usize, s: &ExerciseData) -> Option<i32> {
-            if index + 1 == num && s.last_rest.is_some() {
-                s.last_rest
+        fn get(index: usize, num: usize, d: &ExerciseData) -> Option<i32> {
+            if index + 1 == num && d.last_rest.is_some() {
+                d.last_rest
             } else {
-                s.rest
+                d.rest
             }
         }
 
@@ -152,6 +164,7 @@ impl Exercise {
                 SetIndex::Workset(i) => get(i, e.num_worksets(), d),
                 _ => None,
             },
+            Exercise::VariableSets(d, _) => d.rest, // last_rest isn't used because we don't know the last set until it's done
         }
     }
 
@@ -166,6 +179,7 @@ impl Exercise {
                 let percent = e.expected_range(index).percent as f32;
                 (d.weight.map(|w| (percent * w) / 100.0), &d.weightset)
             }
+            Exercise::VariableSets(d, _) => (d.weight, &d.weightset),
         }
     }
 
@@ -174,6 +188,7 @@ impl Exercise {
             Exercise::Durations(d, _) => (d.weight, &d.weightset),
             Exercise::FixedReps(d, _) => (d.weight, &d.weightset),
             Exercise::VariableReps(d, _) => (d.weight, &d.weightset),
+            Exercise::VariableSets(d, _) => (d.weight, &d.weightset),
         }
     }
 }
@@ -225,6 +240,18 @@ impl BuildExercise {
         }
     }
 
+    pub fn variable_sets(
+        name: ExerciseName,
+        formal_name: FormalName,
+        exercise: VariableSetsExercise,
+    ) -> BuildExercise {
+        let data = ExerciseData::new(name, formal_name, SetIndex::Workset(0));
+        BuildExercise {
+            exercise: Exercise::VariableSets(data.clone(), exercise),
+            data,
+        }
+    }
+
     pub fn with_weightset(self, name: String) -> BuildExercise {
         let data = ExerciseData {
             weightset: Some(name),
@@ -262,6 +289,7 @@ impl BuildExercise {
             Exercise::Durations(_, exercise) => Exercise::Durations(self.data, exercise),
             Exercise::FixedReps(_, exercise) => Exercise::FixedReps(self.data, exercise),
             Exercise::VariableReps(_, exercise) => Exercise::VariableReps(self.data, exercise),
+            Exercise::VariableSets(_, exercise) => Exercise::VariableSets(self.data, exercise),
         }
     }
 }
