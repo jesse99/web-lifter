@@ -99,6 +99,18 @@ fn summarize(weights: &Weights, exercise: &Exercise) -> String {
                 }
             })
             .collect(),
+        Exercise::VariableSets(_, e) => {
+            let previous = e.get_previous().iter().sum();
+            vec![if previous == 0 {
+                format!("{} reps over 1+ sets", e.target())
+            } else if e.target() == previous {
+                format!("{} reps over {} sets", e.target(), e.get_previous().len())
+            } else if e.target() > previous {
+                format!("{} reps over {}+ sets", e.target(), e.get_previous().len())
+            } else {
+                format!("{} reps over {} sets", e.target(), e.get_previous().len())
+            }]
+        }
     };
     join_labels(sets)
 }

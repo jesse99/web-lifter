@@ -30,7 +30,7 @@ impl Plate {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Weight {
     weight: InternalWeight,
 }
@@ -162,7 +162,7 @@ impl Weights {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum InternalWeight {
     Discrete(f32),
     Error(String, f32),

@@ -43,6 +43,7 @@ pub fn post_next_exercise_page(
             Exercise::Durations(d, _) => d.finished,
             Exercise::FixedReps(d, _) => d.finished,
             Exercise::VariableReps(d, _) => d.finished,
+            Exercise::VariableSets(d, _) => d.finished,
         }
     };
 
@@ -90,6 +91,10 @@ fn advance_set(
                 SetIndex::Workset(i) => i == 0,
                 _ => false,
             },
+            Exercise::VariableSets(d, _) => match d.current_index {
+                SetIndex::Workset(i) => i == 0,
+                _ => false,
+            },
         }
     }
 
@@ -109,10 +114,17 @@ fn advance_set(
                 SetIndex::Workset(_) => true,
                 _ => false,
             },
+            Exercise::VariableSets(_, _) => true,
         }
     }
 
     fn advance_current(state: &mut SharedState, workout_name: &str, exercise_name: &str) {
+        let name = ExerciseName(exercise_name.to_owned());
+        let var_sets_done: i32 = {
+            let history = &state.read().unwrap().user.history;
+            get_var_reps_done(history, &name).iter().sum() // ok to call this if not var sets
+        };
+
         let program = &mut state.write().unwrap().user.program;
         let workout = program.find_mut(&workout_name).unwrap();
         let exercise = workout
@@ -160,6 +172,16 @@ fn advance_set(
                         d.current_index = SetIndex::Workset(i + 1);
                     }
                 }
+            },
+            Exercise::VariableSets(d, e) => match d.current_index {
+                SetIndex::Workset(i) => {
+                    if var_sets_done >= e.target() {
+                        d.finished = true;
+                    } else {
+                        d.current_index = SetIndex::Workset(i + 1);
+                    }
+                }
+                _ => panic!("Expected workset"),
             },
         }
     }
@@ -209,6 +231,11 @@ fn advance_set(
                         SetIndex::Warmup(_) => exercise.closest_weight(weights, d.current_index),
                         SetIndex::Workset(_) => exercise.lower_weight(weights, d.current_index),
                     },
+                ),
+                Exercise::VariableSets(d, _) => (
+                    None,
+                    options.map(|o| o.reps),
+                    exercise.lower_weight(weights, d.current_index),
                 ),
             }
         };
@@ -273,6 +300,11 @@ fn complete_set(
                 }
                 d.finished = false;
             }
+            Exercise::VariableSets(d, _) => {
+                assert!(options.is_some());
+                d.current_index = SetIndex::Workset(0);
+                d.finished = false;
+            }
         }
     }
 
@@ -282,7 +314,7 @@ fn complete_set(
             let program = &state.read().unwrap().user.program;
             let workout = program.find(&workout_name).unwrap();
             let exercise = workout.find(&exercise_name).unwrap();
-            get_var_reps_done(history, &exercise)
+            get_var_reps_done(history, &exercise.name())
         };
 
         if options.advance == 1 {
@@ -301,6 +333,7 @@ fn complete_set(
             exercise.set_weight(new_weight);
             new_expected = match exercise {
                 Exercise::VariableReps(_, e) => e.min_expected().clone(),
+                Exercise::VariableSets(_, _) => new_expected, // not sure what something better would be
                 _ => panic!("expected Exercise::VariableReps"),
             }
         }
@@ -313,7 +346,10 @@ fn complete_set(
                 Exercise::VariableReps(_, e) => {
                     e.set_expected(new_expected);
                 }
-                _ => panic!("expected Exercise::VariableReps"),
+                Exercise::VariableSets(_, e) => {
+                    e.set_previous(new_expected);
+                }
+                _ => panic!("expected Exercise::VariableReps or VariableSets"),
             }
         }
     }
@@ -370,7 +406,6 @@ impl ExerciseData {
             .iter()
             .enumerate()
             .map(|(i, r)| record_to_record(get_delta(&records, i), r))
-            .rev()
             .collect()
     }
 
@@ -536,6 +571,126 @@ impl ExerciseData {
         }
     }
 
+    fn with_var_sets(
+        weights: &Weights,
+        notes: &Notes,
+        history: &History,
+        program: &Program,
+        workout: &Workout,
+        exercise: &Exercise,
+    ) -> ExerciseData {
+        let (d, e) = exercise.expect_var_sets();
+        let num_sets = e.get_previous().len();
+        let exercise_set = if num_sets > 0 && !d.finished {
+            format!("Set {} of {}+", d.current_index.index() + 1, num_sets)
+        } else {
+            format!("Set {}", d.current_index.index() + 1,)
+        };
+
+        let w = exercise.lower_weight(weights, d.current_index);
+        let suffix = w
+            .clone()
+            .map_or("".to_owned(), |w| format!(" @ {}", w.text()));
+
+        let done: i32 = if d.current_index.index() > 0 {
+            get_var_reps_done(history, exercise.name()).iter().sum()
+        } else {
+            0
+        };
+        let remaining = if done < e.target() {
+            e.target() - done
+        } else {
+            0
+        };
+        let previous = e.previous(d.current_index);
+        let exercise_set_details = if d.finished {
+            "".to_owned()
+        } else if previous == 0 {
+            format!("{}+ reps{suffix}", remaining)
+        } else if previous < remaining {
+            format!("{}+ reps{suffix}", previous)
+        } else if previous == remaining {
+            format!("{} reps{suffix}", remaining)
+        } else {
+            format!("{}+ reps{suffix}", remaining)
+        };
+        let weight_details = w
+            .clone()
+            .map(|w| w.details())
+            .flatten()
+            .unwrap_or("".to_owned());
+
+        let wait = "0".to_owned(); // for durations
+        let rest = if d.finished {
+            "0".to_owned()
+        } else {
+            match d.current_index {
+                SetIndex::Warmup(_) => "0".to_owned(),
+                SetIndex::Workset(_) => exercise
+                    .rest(d.current_index)
+                    .map_or("0".to_owned(), |r| format!("{r}")),
+            }
+        };
+        let records = ExerciseData::get_records(history, program, workout, exercise);
+        let button_title = if d.finished {
+            "Exit".to_owned()
+        } else {
+            "Next".to_owned()
+        };
+
+        let notes = notes.html(&d.formal_name);
+
+        let hide_reps = if d.finished {
+            "hidden".to_owned()
+        } else {
+            "".to_owned()
+        };
+        let (expected, max) = if previous > 0 {
+            (previous, previous + 5)
+        } else if remaining < 5 {
+            (remaining, remaining + 5)
+        } else {
+            (5, 12)
+        };
+        let reps_title = reps_to_title(expected);
+        let rep_items = reps_to_vec(VariableReps::new(expected, max, 100));
+
+        let reps = get_var_reps_done(history, exercise.name());
+        let (update_hidden, update_value) = if d.finished && reps != *e.get_previous() {
+            ("".to_owned(), "1".to_owned())
+        } else {
+            ("hidden".to_owned(), "0".to_owned())
+        };
+
+        let (advance_hidden, advance_value) = if d.finished && w.is_some() && done >= e.target() {
+            ("".to_owned(), "1".to_owned())
+        } else {
+            ("hidden".to_owned(), "0".to_owned())
+        };
+
+        let workout = workout.name.clone();
+        let exercise = exercise.name().0.clone();
+        ExerciseData {
+            workout,
+            exercise,
+            exercise_set,
+            exercise_set_details,
+            weight_details,
+            wait,
+            rest,
+            records,
+            button_title,
+            hide_reps,
+            update_hidden,
+            advance_hidden,
+            update_value,
+            advance_value,
+            reps_title,
+            rep_items,
+            notes,
+        }
+    }
+
     fn with_var_reps(
         weights: &Weights,
         notes: &Notes,
@@ -616,10 +771,10 @@ impl ExerciseData {
             "".to_owned()
         };
         let expected = e.expected_range(d.current_index);
-        let reps_title = reps_to_title(expected);
+        let reps_title = reps_to_title(expected.min);
         let rep_items = reps_to_vec(expected);
 
-        let reps = get_var_reps_done(history, exercise);
+        let reps = get_var_reps_done(history, exercise.name());
         let (update_hidden, update_value) = if d.finished && reps != *e.expected() {
             ("".to_owned(), "1".to_owned())
         } else {
@@ -674,15 +829,18 @@ impl ExerciseData {
             Exercise::VariableReps(_, _) => {
                 ExerciseData::with_var_reps(weights, notes, history, program, workout, exercise)
             }
+            Exercise::VariableSets(_, _) => {
+                ExerciseData::with_var_sets(weights, notes, history, program, workout, exercise)
+            }
         }
     }
 }
 
-fn reps_to_title(reps: VariableReps) -> String {
-    if reps.min == 1 {
+fn reps_to_title(reps: i32) -> String {
+    if reps == 1 {
         "1 rep".to_owned()
     } else {
-        format!("{} reps", reps.min)
+        format!("{} reps", reps)
     }
 }
 
@@ -706,8 +864,8 @@ fn reps_to_vec(reps: VariableReps) -> Vec<RepItem> {
 
 // Note that here records goes from newest to oldest.
 fn get_delta(records: &Vec<&Record>, i: usize) -> i32 {
-    if i > 0 {
-        let older = records[i - 1];
+    if i + 1 < records.len() {
+        let older = records[i + 1];
         let newer = records[i];
         let values = match newer.sets {
             Some(CompletedSets::Durations(ref new_sets)) => match older.sets {
@@ -834,8 +992,9 @@ fn num_to_str(sets: &Vec<(i32, Option<f32>)>, unit: &str) -> String {
         )
     }
 }
-fn get_var_reps_done(history: &History, e: &Exercise) -> Vec<i32> {
-    let last = history.records(e.name()).last().map_or(&None, |r| &r.sets);
+
+fn get_var_reps_done(history: &History, name: &ExerciseName) -> Vec<i32> {
+    let last = history.records(name).last().map_or(&None, |r| &r.sets);
     match last {
         Some(CompletedSets::Reps(v)) => v.iter().map(|t| t.0).collect(),
         _ => Vec::new(),
