@@ -137,39 +137,39 @@ fn create_history() -> History {
 
     fn add_squat(history: &mut History) {
         let name = ExerciseName("Squat".to_owned());
-        add(history, &name, vec![4, 3, 3], 175.0, 2);
-        add(history, &name, vec![5, 5, 5], 175.0, 5);
-        add(history, &name, vec![5, 5, 4], 175.0, 8);
-        add(history, &name, vec![5, 5, 4], 175.0, 13);
-        add(history, &name, vec![5, 4, 4], 175.0, 16);
         add(history, &name, vec![5, 4, 3], 175.0, 19);
+        add(history, &name, vec![5, 4, 4], 175.0, 16);
+        add(history, &name, vec![5, 5, 4], 175.0, 13);
+        add(history, &name, vec![5, 5, 4], 175.0, 8);
+        add(history, &name, vec![5, 5, 5], 175.0, 5);
+        add(history, &name, vec![4, 3, 3], 175.0, 2);
     }
 
     fn add_bench(history: &mut History) {
         let name = ExerciseName("Heavy Bench".to_owned());
-        add(history, &name, vec![3, 3, 3], 150.0, 1);
-        add(history, &name, vec![4, 4, 3], 150.0, 4);
-        add(history, &name, vec![4, 4, 3], 150.0, 6);
-        add(history, &name, vec![4, 4, 3], 150.0, 11);
-        add(history, &name, vec![4, 3, 3], 150.0, 14);
-        add(history, &name, vec![3, 3, 2], 150.0, 17);
         add(history, &name, vec![3, 3, 3], 150.0, 20);
+        add(history, &name, vec![3, 3, 2], 150.0, 17);
+        add(history, &name, vec![4, 3, 3], 150.0, 14);
+        add(history, &name, vec![4, 4, 3], 150.0, 11);
+        add(history, &name, vec![4, 4, 3], 150.0, 6);
+        add(history, &name, vec![4, 4, 3], 150.0, 4);
+        add(history, &name, vec![3, 3, 3], 150.0, 1);
     }
 
     fn add_rdl(history: &mut History) {
         let name = ExerciseName("Heavy RDL".to_owned());
-        add(history, &name, vec![8, 8, 8], 165.0, 1);
-        add(history, &name, vec![8, 8, 8], 155.0, 4);
-        add(history, &name, vec![8, 8, 8], 145.0, 7);
         add(history, &name, vec![8, 8, 8], 135.0, 11);
+        add(history, &name, vec![8, 8, 8], 145.0, 7);
+        add(history, &name, vec![8, 8, 8], 155.0, 4);
+        add(history, &name, vec![8, 8, 8], 165.0, 1);
     }
 
     fn add_abduction(history: &mut History) {
         let name = ExerciseName("Cable Abduction".to_owned());
-        add(history, &name, vec![10, 10, 10], 12.5, 1);
-        add(history, &name, vec![10, 10, 10], 12.5, 4);
-        add(history, &name, vec![10, 10, 4], 17.5, 7);
         add(history, &name, vec![10, 10, 10], 12.5, 11);
+        add(history, &name, vec![10, 10, 4], 17.5, 7);
+        add(history, &name, vec![10, 10, 10], 12.5, 4);
+        add(history, &name, vec![10, 10, 10], 12.5, 1);
     }
 
     let mut history = History::new();
@@ -309,7 +309,13 @@ fn create_heavy_ohp() -> Workout {
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
-    // TODO add pullups
+    let e = VariableSetsExercise::new(8);
+    let name = ExerciseName("Chin-ups".to_owned());
+    let formal_name = FormalName("Chin-up".to_owned());
+    let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
+        .with_rest(210)
+        .finalize();
+    workout.apply(WorkoutOp::Add(exercise));
 
     // Face Pullls
     let warmups = vec![FixedReps::new(6, 75)];
