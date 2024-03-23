@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 pub enum ProgramOp {
     Add(Workout),
+    Del(String),
 }
 
 /// Set of [`Workout`]`s to perform.
@@ -33,6 +34,11 @@ impl Program {
                     err += "The workout name must be unique. ";
                 }
             }
+            ProgramOp::Del(name) => {
+                if self.workouts.iter().find(|&w| w.name == *name).is_none() {
+                    err += "The workout name doesn't exist. ";
+                }
+            }
         }
         err
     }
@@ -42,6 +48,10 @@ impl Program {
         match op {
             ProgramOp::Add(workout) => {
                 self.workouts.push(workout);
+            }
+            ProgramOp::Del(name) => {
+                let index = self.workouts.iter().position(|w| w.name == name).unwrap();
+                self.workouts.remove(index);
             }
         }
     }

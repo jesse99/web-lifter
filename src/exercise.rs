@@ -54,7 +54,7 @@ pub struct ExerciseData {
     last_rest: Option<i32>, // overrides rest.last()
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Exercise {
     Durations(ExerciseData, DurationsExercise),
     FixedReps(ExerciseData, FixedRepsExercise),

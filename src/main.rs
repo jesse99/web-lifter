@@ -34,28 +34,26 @@ use weights::*;
 use workout::*;
 
 fn make_program() -> pages::AppState {
-    println!("calling load");
+    let name = "My".to_owned();
+    let mut default_program = Program::new(name);
+    default_program.apply(ProgramOp::Add(create_full_body_workout()));
+    default_program.apply(ProgramOp::Add(create_cardio_workout()));
+
     let user = match persist::load() {
-        Ok(u) => u,
+        Ok(u) => merge_program(u, default_program),
         Err(e) => {
             // TODO need to better handle load errors
             // probably by adding an error label to pages
             // but that'll be easier once we support multiple users
             println!("load had error {}", e.kind());
-            let name = if e.kind() == ErrorKind::NotFound {
-                "My".to_owned()
-            } else {
-                format!("My {e}")
+            if e.kind() != ErrorKind::NotFound {
+                default_program.name = format!("{} {e}", default_program.name);
             };
-            let mut program = Program::new(name);
-            program.apply(ProgramOp::Add(create_full_body_workout()));
-            program.apply(ProgramOp::Add(create_cardio_workout()));
-
             UserState {
                 notes: Notes::new(),
                 history: create_history(),
                 weights: creat_weight_sets(),
-                program,
+                program: default_program,
             }
         }
     };
@@ -64,6 +62,49 @@ fn make_program() -> pages::AppState {
         handlebars: Handlebars::new(),
         user,
     }
+}
+
+fn merge_program(mut state: UserState, default_program: Program) -> UserState {
+    let loaded_names: Vec<_> = state.program.workouts().map(|w| w.name.clone()).collect();
+
+    for new_workout in default_program.workouts() {
+        if let Some(loaded_workout) = state.program.find_mut(&new_workout.name) {
+            let loaded_exercises: Vec<_> = loaded_workout
+                .exercises()
+                .map(|e| e.name().clone())
+                .collect();
+            for loaded_exercise in loaded_exercises {
+                if new_workout.find(&loaded_exercise).is_none() {
+                    println!(
+                        "removing old exercise '{}' from '{}'",
+                        loaded_exercise, new_workout.name
+                    );
+                    loaded_workout.apply(WorkoutOp::Del(loaded_exercise));
+                }
+            }
+            for new_exercise in new_workout.exercises() {
+                if loaded_workout.find(new_exercise.name()).is_none() {
+                    println!(
+                        "adding new exercise '{}' to '{}'",
+                        new_exercise.name(),
+                        new_workout.name
+                    );
+                    loaded_workout.apply(WorkoutOp::Add(new_exercise.clone()));
+                }
+            }
+        } else {
+            println!("adding new workout '{}'", new_workout.name);
+            state.program.apply(ProgramOp::Add(new_workout.clone()));
+        }
+    }
+
+    for loaded_workout in loaded_names {
+        if default_program.find(&loaded_workout).is_none() {
+            println!("removing old workout '{}'", loaded_workout);
+            state.program.apply(ProgramOp::Del(loaded_workout));
+        }
+    }
+    state
 }
 
 fn create_cardio_workout() -> Workout {

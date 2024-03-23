@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 pub enum WorkoutOp {
     Add(Exercise),
+    Del(ExerciseName),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -54,7 +55,7 @@ pub enum Status {
 /// Set of [`Exercise`]s to perform all together. These are typically all performed
 /// together on one day, e.g. an upper body workout might be performed on Monday and
 /// Friday. Workouts are part of a [`Program`].
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Workout {
     pub name: String,
     pub schedule: Schedule,
@@ -84,6 +85,11 @@ impl Workout {
                     err += "The exercise name must be unique. ";
                 }
             }
+            WorkoutOp::Del(name) => {
+                if self.exercises.iter().find(|e| e.name() == name).is_none() {
+                    err += "The exercise does not exist. ";
+                }
+            }
         }
         err
     }
@@ -93,6 +99,15 @@ impl Workout {
         match op {
             WorkoutOp::Add(exercise) => {
                 self.exercises.push(exercise);
+            }
+            WorkoutOp::Del(name) => {
+                let index = self
+                    .exercises
+                    .iter()
+                    .position(|e| *e.name() == name)
+                    .unwrap();
+                self.exercises.remove(index);
+                self.completed.remove(&name);
             }
         }
     }
