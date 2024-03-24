@@ -1,5 +1,5 @@
 use super::*;
-use chrono::{DateTime, Datelike, Duration};
+use chrono::{DateTime, Datelike, Duration, Local};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -60,7 +60,7 @@ pub struct Workout {
     pub name: String,
     pub schedule: Schedule,
     exercises: Vec<Exercise>,
-    completed: HashMap<ExerciseName, DateTime<Utc>>, // when the user last did an exercise, for this workout
+    completed: HashMap<ExerciseName, DateTime<Local>>, // when the user last did an exercise, for this workout
 }
 
 impl Workout {
@@ -124,19 +124,11 @@ impl Workout {
         self.exercises.iter_mut().find(|e| e.name() == name)
     }
 
-    // pub fn set_completed(&mut self, name: ExerciseName) {
-    //     // TODO: check that this is one of our exercises
-    //     // We use the Utc timezone instead of Local mostly because users can move across
-    //     // timezones. Also may be handy if we, for some reason, start comparing datetime's
-    //     // across users.
-    //     self.completed.insert(name, Utc::now());
-    // }
-
     pub fn status(&self) -> Status {
-        self.status_from(Utc::now())
+        self.status_from(Local::now())
     }
 
-    fn status_from(&self, now: DateTime<Utc>) -> Status {
+    fn status_from(&self, now: DateTime<Local>) -> Status {
         if self.exercises.is_empty() {
             return Status::Empty;
         }
@@ -216,7 +208,7 @@ impl Workout {
     }
 
     // Return the next day the weekday happens relative to now.
-    fn weekday_to_days(&self, now: DateTime<Utc>, wd: Weekday) -> Days {
+    fn weekday_to_days(&self, now: DateTime<Local>, wd: Weekday) -> Days {
         let today = now.weekday();
         let delta = (wd as i32) - (today as i32);
         if delta >= 0 {
@@ -233,9 +225,9 @@ impl Workout {
     // Return the date the next workout should happen on.
     fn next_scheduled_date(
         &self,
-        now: DateTime<Utc>,
+        now: DateTime<Local>,
         weekdays: &Vec<Weekday>,
-    ) -> Option<DateTime<Utc>> {
+    ) -> Option<DateTime<Local>> {
         if weekdays.len() == 1 && now.weekday() == weekdays[0] {
             return Some(now);
         }
@@ -258,8 +250,12 @@ impl Workout {
     }
 
     // Return the date the previous workout should have happened on.
-    fn last_scheduled_date(&self, now: DateTime<Utc>, weekdays: &Vec<Weekday>) -> DateTime<Utc> {
-        let mut candidates: Vec<DateTime<Utc>> = (1..8)
+    fn last_scheduled_date(
+        &self,
+        now: DateTime<Local>,
+        weekdays: &Vec<Weekday>,
+    ) -> DateTime<Local> {
+        let mut candidates: Vec<DateTime<Local>> = (1..8)
             .map(|n| now - Duration::days(n))
             .filter(|d| weekdays.contains(&d.weekday()))
             .collect();
@@ -288,17 +284,17 @@ mod tests {
         assert_eq!(workout.status(), Status::DueAnyTime);
 
         // completed two days ago
-        let date = Utc::now() - Duration::days(2);
+        let date = Local::now() - Duration::days(2);
         workout.completed.insert(name.clone(), date);
         assert_eq!(workout.status(), Status::DueAnyTime);
 
         // completed yesterday
-        let date = Utc::now() - Duration::days(1);
+        let date = Local::now() - Duration::days(1);
         workout.completed.insert(name.clone(), date);
         assert_eq!(workout.status(), Status::DueAnyTime);
 
         // completed today
-        let date = Utc::now();
+        let date = Local::now();
         workout.completed.insert(name.clone(), date);
         assert_eq!(workout.status(), Status::Completed);
     }
@@ -311,17 +307,17 @@ mod tests {
         assert_eq!(workout.status(), Status::Due(1));
 
         // completed two days ago
-        let date = Utc::now() - Duration::days(2);
+        let date = Local::now() - Duration::days(2);
         workout.completed.insert(name.clone(), date);
         assert_eq!(workout.status(), Status::Due(0));
 
         // completed yesterday
-        let date = Utc::now() - Duration::days(1);
+        let date = Local::now() - Duration::days(1);
         workout.completed.insert(name.clone(), date);
         assert_eq!(workout.status(), Status::Due(0));
 
         // completed today
-        let date = Utc::now();
+        let date = Local::now();
         workout.completed.insert(name.clone(), date);
         assert_eq!(workout.status(), Status::Completed);
     }
@@ -349,8 +345,8 @@ mod tests {
         workout.completed.insert(name.clone(), date);
         assert_eq!(workout.status_from(now), Status::Due(0));
 
-        // completed 1.25 days ago
-        let date = now - (Duration::days(1) + Duration::hours(6));
+        // completed 1.04 days ago
+        let date = now - (Duration::days(1) + Duration::hours(1));
         workout.completed.insert(name.clone(), date);
         assert_eq!(workout.status_from(now), Status::Due(1));
 
@@ -365,13 +361,13 @@ mod tests {
         assert_eq!(workout.status_from(now), Status::Due(1));
     }
 
-    fn date_from_day(wd: Weekday) -> DateTime<Utc> {
+    fn date_from_day(wd: Weekday) -> DateTime<Local> {
         let day = 11 + (wd as i32);
         let text = format!("2024-03-{day}T08:00:00Z");
         DateTime::parse_from_rfc3339(&text).unwrap().into()
     }
 
-    fn date_from_day_hour(wd: Weekday, hour: i32) -> DateTime<Utc> {
+    fn date_from_day_hour(wd: Weekday, hour: i32) -> DateTime<Local> {
         let day = 11 + (wd as i32);
         let text = format!("2024-03-{day}T{hour:02}:00:00Z");
         DateTime::parse_from_rfc3339(&text).unwrap().into()
@@ -563,6 +559,48 @@ mod tests {
         workout.completed.insert(name2.clone(), date);
         assert_eq!(workout.status_from(now), Status::Completed);
     }
+
+    #[test]
+    fn blocks_with_days() {
+        let days = vec![Weekday::Mon];
+        let (mut workout, name) = build_squat(Schedule::Days(days));
+
+        // completed Monday but two weeks ago
+        let date = date_from_day(Weekday::Mon) - Duration::days(14);
+        let now = date_from_day(Weekday::Mon);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Overdue(7));
+
+        let now = date_from_day(Weekday::Tue);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(6));
+
+        let now = date_from_day(Weekday::Wed);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(5));
+
+        // completed last Monday
+        let date = date_from_day_hour(Weekday::Mon, 8) - Duration::days(7);
+        let now = date_from_day_hour(Weekday::Mon, 9);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(0));
+
+        let now = date_from_day_hour(Weekday::Tue, 9);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(6));
+
+        // completed Monday
+        let date = date_from_day_hour(Weekday::Mon, 8);
+        let now = date_from_day_hour(Weekday::Mon, 9);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Completed);
+
+        // completed Tuesday
+        let now = date_from_day(Weekday::Tue);
+        assert_eq!(workout.status_from(now), Status::Due(6));
+    }
+
+    // TODO also test block with every N days
 
     fn build_squat(schedule: Schedule) -> (Workout, ExerciseName) {
         let name = ExerciseName("Squat".to_owned());

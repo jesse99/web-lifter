@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, DurationRound, TimeDelta, Utc};
+use chrono::{DateTime, Datelike, DurationRound, Local, TimeDelta};
 use std::fmt::{self, Formatter};
 use std::hash::Hash;
 use std::ops::{Add, Sub};
@@ -10,18 +10,8 @@ pub struct Days {
 }
 
 impl Days {
-    // /// Rounds the current date to the nearest day.
-    // pub fn now() -> Days {
-    //     Days {
-    //         value: Utc::now()
-    //             .duration_round(TimeDelta::days(1))
-    //             .unwrap()
-    //             .num_days_from_ce(),
-    //     }
-    // }
-
     /// Rounds the date to the nearest day.
-    pub fn new(date: DateTime<Utc>) -> Days {
+    pub fn new(date: DateTime<Local>) -> Days {
         Days {
             value: date
                 .duration_round(TimeDelta::days(1))
