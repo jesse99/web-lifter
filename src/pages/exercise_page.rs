@@ -389,6 +389,12 @@ impl ExerciseData {
         workout: &Workout,
         exercise: &Exercise,
     ) -> Vec<ExerciseDataRecord> {
+        let completed = history
+            .records(exercise.name())
+            .last()
+            .map(|r| r.completed)
+            .flatten();
+        let in_progress = completed.is_none();
         let records: Vec<&Record> = history
             .records(exercise.name())
             .rev()
@@ -398,7 +404,7 @@ impl ExerciseData {
         records
             .iter()
             .enumerate()
-            .map(|(i, r)| record_to_record(get_delta(&records, i), r))
+            .map(|(i, r)| record_to_record(get_delta(&records, i), r, i == 0 && in_progress))
             .collect()
     }
 
@@ -906,10 +912,12 @@ fn aggregate_reps(sets: &Vec<(i32, Option<f32>)>) -> f32 {
     })
 }
 
-fn record_to_record(delta: i32, record: &Record) -> ExerciseDataRecord {
+fn record_to_record(delta: i32, record: &Record, in_progress: bool) -> ExerciseDataRecord {
     let mut text = String::new();
 
-    let indicator = if delta > 0 {
+    let indicator = if in_progress {
+        "-  ".to_owned()
+    } else if delta > 0 {
         "▲ ".to_owned() // BLACK UP-POINTING TRIANGLE
     } else if delta < 0 {
         "▼ ".to_owned() // BLACK DOWN-POINTING TRIANGLE
@@ -936,9 +944,9 @@ fn record_to_record(delta: i32, record: &Record) -> ExerciseDataRecord {
         text += comment;
     }
 
-    let id = if delta > 0 {
+    let id = if delta > 0 && !in_progress {
         "better_record".to_owned()
-    } else if delta < 0 {
+    } else if delta < 0 && !in_progress {
         "worse_record".to_owned()
     } else {
         "same_record".to_owned()
