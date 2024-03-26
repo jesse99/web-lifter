@@ -3976,7 +3976,7 @@ vec![("Video", "https://www.youtube.com/watch?v=qIi5bsSjdw4"), ("Details", "http
         "Sliding Leg Curl",
         vec![
             "Lay down on your back.",
-            "Place valslides under your feet (or a towel if you have a smooth floor).",
+            "Place slides under your feet (or a towel if you have a smooth floor).",
             "Bring your feet in and raise your hips off the ground.",
             "Slide your feet all the way forward.",
             "Bring your feet back in until your shins are vertical.",
@@ -4910,7 +4910,23 @@ mod tests {
     }
 
     // #[test]          // TODO enable this every so often
+    #[allow(dead_code)]
     fn check_links() {
+        fn check_link(tx: Sender<(String, Result<Response, Error>)>, link: String) {
+            let mut client = reqwest::blocking::Client::new()
+                .head(link.clone())
+                .timeout(Duration::from_secs(10));
+            if link.contains("reddit") {
+                // reddit requires something like this
+                client = client.header("User-Agent", "reddit-api-test (by u/jesse_vorisek)");
+            } else {
+                // Sites like www.muscleandstrength.com requires a User-Agent
+                client = client.header("User-Agent", "web-lifter");
+            }
+            let response = client.send();
+            tx.send((link, response)).unwrap();
+        }
+            
         let now = Instant::now();
 
         let (tx, rx) = channel();
@@ -4934,20 +4950,5 @@ mod tests {
         }
         println!("elapsed: {}s", now.elapsed().as_secs());
         // assert!(false); // enable to measure runtime
-    }
-
-    fn check_link(tx: Sender<(String, Result<Response, Error>)>, link: String) {
-        let mut client = reqwest::blocking::Client::new()
-            .head(link.clone())
-            .timeout(Duration::from_secs(10));
-        if link.contains("reddit") {
-            // reddit requires something like this
-            client = client.header("User-Agent", "reddit-api-test (by u/jesse_vorisek)");
-        } else {
-            // Sites like www.muscleandstrength.com requires a User-Agent
-            client = client.header("User-Agent", "web-lifter");
-        }
-        let response = client.send();
-        tx.send((link, response)).unwrap();
     }
 }
