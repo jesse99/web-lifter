@@ -209,7 +209,8 @@ fn advance_set(
         Record {
             program: program.name.clone(),
             workout: workout_name.to_owned(),
-            date: Local::now(),
+            started: Local::now(),
+            completed: None,
             sets: None,
             comment: None,
         }
@@ -272,7 +273,7 @@ fn advance_set(
         if just_started(state, workout_name, exercise_name) {
             let record = get_new_record(state, workout_name);
             let history = &mut state.write().unwrap().user.history;
-            history.add(&name, record);
+            history.start(&name, record);
         }
 
         append_result(state, workout_name, exercise_name, options);
@@ -293,6 +294,11 @@ fn complete_set(
         let workout = program.find_mut(&workout_name).unwrap();
         let exercise = workout.find_mut(&exercise_name).unwrap();
         exercise.reset(None);
+    }
+
+    {
+        let history = &mut state.write().unwrap().user.history;
+        history.finish(&exercise_name);
     }
 
     if let Some(options) = options {
@@ -915,7 +921,7 @@ fn record_to_record(delta: i32, record: &Record) -> ExerciseDataRecord {
     // do we want to use stuff like "today", "yesterday", "3 days ago"?
     // wouldn't that get weird for stuff further back?
     // make this a setting?
-    text += &record.date.format("%-d %b %Y").to_string();
+    text += &record.started.format("%-d %b %Y").to_string();
 
     if let Some(ref sets) = record.sets {
         text += ", ";

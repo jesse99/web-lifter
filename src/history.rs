@@ -15,7 +15,8 @@ pub enum CompletedSets {
 pub struct Record {
     pub program: String,
     pub workout: String,
-    pub date: DateTime<Local>,
+    pub started: DateTime<Local>,
+    pub completed: Option<DateTime<Local>>,
     pub sets: Option<CompletedSets>,
     pub comment: Option<String>, // TODO this could be set when user edits a record
 }
@@ -36,8 +37,8 @@ impl History {
         }
     }
 
-    /// Used to add a record with no sets.
-    pub fn add(&mut self, name: &ExerciseName, record: Record) {
+    /// Adds a record with no sets.
+    pub fn start(&mut self, name: &ExerciseName, record: Record) {
         assert!(record.sets.is_none());
         let list = self.records.entry(name.clone()).or_insert(Vec::new());
         list.push(record);
@@ -67,6 +68,13 @@ impl History {
             Some(CompletedSets::Reps(ref mut sets)) => sets.push((reps, weight)),
             _ => panic!("expected Reps"),
         }
+    }
+
+    /// Appended all the sets.
+    pub fn finish(&mut self, name: &ExerciseName) {
+        let entries = self.records.get_mut(name).unwrap();
+        let last = entries.last_mut().unwrap();
+        last.completed = Some(Local::now());
     }
 
     /// Returns records from oldest to newest.

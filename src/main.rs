@@ -56,7 +56,10 @@ fn make_program() -> pages::AppState {
     default_program.apply(ProgramOp::Add(create_rest_workout()));
 
     let user = match persist::load() {
-        Ok(u) => merge_program(u, default_program),
+        Ok(u) => {
+            let v = fixup_program(u);
+            merge_program(v, default_program)
+        }
         Err(e) => {
             // TODO need to better handle load errors
             // probably by adding an error label to pages
@@ -78,6 +81,11 @@ fn make_program() -> pages::AppState {
         handlebars: Handlebars::new(),
         user,
     }
+}
+
+fn fixup_program(state: UserState) -> UserState {
+    // change state to `mut state` if need to fixup
+    state
 }
 
 fn merge_program(mut state: UserState, default_program: Program) -> UserState {
@@ -138,17 +146,20 @@ fn create_rest_workout() -> Workout {
 
 fn create_history() -> History {
     fn add(history: &mut History, name: &ExerciseName, reps: Vec<i32>, weight: f32, days_ago: i64) {
+        let date = Local::now() - chrono::Duration::days(days_ago);
         let record = Record {
             program: "My".to_owned(),
             workout: "Heavy Bench".to_owned(),
-            date: Local::now() - chrono::Duration::days(days_ago),
+            started: date,
+            completed: Some(date),
             sets: None,
             comment: None,
         };
-        history.add(&name, record);
+        history.start(&name, record);
         for rep in reps {
             history.append_reps(&name, rep, Some(weight));
         }
+        history.finish(&name);
     }
 
     fn add_squat(history: &mut History) {

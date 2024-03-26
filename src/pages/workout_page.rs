@@ -65,9 +65,14 @@ impl ExerciseData {
         workout: &Workout,
         exercise: &Exercise,
     ) -> ExerciseData {
-        let color = if let Some(last) = history.records(exercise.name()).last() {
-            let delta = Local::now() - last.date;
-            if delta.num_minutes() < 3 * 60 && exercise.is_reset() {
+        let color = if let Some(completed) = history
+            .records(exercise.name())
+            .last()
+            .map(|r| r.completed)
+            .flatten()
+        {
+            let delta = Local::now() - completed;
+            if delta.num_minutes() < 3 * 60 {
                 "text-secondary".to_owned()
             } else {
                 "".to_owned()

@@ -85,27 +85,6 @@ impl Exercise {
         }
     }
 
-    pub fn is_reset(&self) -> bool {
-        match self {
-            Exercise::Durations(d, _) => d.current_index == SetIndex::Workset(0),
-            Exercise::FixedReps(d, e) => {
-                if e.num_warmups() > 0 {
-                    d.current_index == SetIndex::Warmup(0)
-                } else {
-                    d.current_index == SetIndex::Workset(0)
-                }
-            }
-            Exercise::VariableReps(d, e) => {
-                if e.num_warmups() > 0 {
-                    d.current_index == SetIndex::Warmup(0)
-                } else {
-                    d.current_index == SetIndex::Workset(0)
-                }
-            }
-            Exercise::VariableSets(d, _) => d.current_index == SetIndex::Workset(0),
-        }
-    }
-
     pub fn reset(&mut self, new_start: Option<DateTime<Local>>) {
         match self {
             Exercise::Durations(d, _) => {
