@@ -1,11 +1,28 @@
 use crate::*;
 use anyhow::Context;
 
+fn reset_old(state: &SharedState, workout_name: &str, exercise_name: &str) {
+    let program = &mut state.write().unwrap().user.program;
+    let workout = program.find_mut(&workout_name).unwrap();
+    let exercise = workout
+        .find_mut(&ExerciseName(exercise_name.to_owned()))
+        .unwrap();
+    if let Some(started) = exercise.started() {
+        let now = Local::now();
+        let elapsed = now - started;
+        if elapsed.num_minutes() > 30 {
+            exercise.reset(Some(now));
+        }
+    }
+}
+
 pub fn get_exercise_page(
     state: SharedState,
     workout_name: &str,
     exercise_name: &str,
 ) -> Result<String, InternalError> {
+    reset_old(&state, workout_name, exercise_name);
+
     let handlebars = &state.read().unwrap().handlebars;
     let weights = &state.read().unwrap().user.weights;
     let notes = &state.read().unwrap().user.notes;
@@ -275,37 +292,7 @@ fn complete_set(
         let program = &mut state.write().unwrap().user.program;
         let workout = program.find_mut(&workout_name).unwrap();
         let exercise = workout.find_mut(&exercise_name).unwrap();
-
-        match exercise {
-            Exercise::Durations(d, _) => {
-                assert!(options.is_none());
-                d.current_index = SetIndex::Workset(0);
-                d.finished = false;
-            }
-            Exercise::FixedReps(d, e) => {
-                assert!(options.is_none());
-                if e.num_warmups() > 0 {
-                    d.current_index = SetIndex::Warmup(0);
-                } else {
-                    d.current_index = SetIndex::Workset(0);
-                }
-                d.finished = false;
-            }
-            Exercise::VariableReps(d, e) => {
-                assert!(options.is_some());
-                if e.num_warmups() > 0 {
-                    d.current_index = SetIndex::Warmup(0);
-                } else {
-                    d.current_index = SetIndex::Workset(0);
-                }
-                d.finished = false;
-            }
-            Exercise::VariableSets(d, _) => {
-                assert!(options.is_some());
-                d.current_index = SetIndex::Workset(0);
-                d.finished = false;
-            }
-        }
+        exercise.reset(None);
     }
 
     if let Some(options) = options {

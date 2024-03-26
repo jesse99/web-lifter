@@ -1,6 +1,7 @@
 //! Exercises are movements for the user to perform, e.g. a barbell squat. These may be
 //! shared across programs and workouts.
 use crate::*;
+use chrono::DateTime;
 use core::fmt;
 use serde::{Deserialize, Serialize};
 use std::fmt::Formatter;
@@ -48,6 +49,7 @@ impl SetIndex {
 pub struct ExerciseData {
     pub name: ExerciseName,
     pub formal_name: FormalName,
+    pub started: Option<DateTime<Local>>,
     pub finished: bool,
     pub current_index: SetIndex,
     weightset: Option<String>,
@@ -71,6 +73,48 @@ impl Exercise {
             Exercise::FixedReps(d, _) => &d.name,
             Exercise::VariableReps(d, _) => &d.name,
             Exercise::VariableSets(d, _) => &d.name,
+        }
+    }
+
+    pub fn started(&self) -> Option<DateTime<Local>> {
+        match self {
+            Exercise::Durations(d, _) => d.started,
+            Exercise::FixedReps(d, _) => d.started,
+            Exercise::VariableReps(d, _) => d.started,
+            Exercise::VariableSets(d, _) => d.started,
+        }
+    }
+
+    pub fn reset(&mut self, new_start: Option<DateTime<Local>>) {
+        match self {
+            Exercise::Durations(d, _) => {
+                d.current_index = SetIndex::Workset(0);
+                d.finished = false;
+                d.started = new_start;
+            }
+            Exercise::FixedReps(d, e) => {
+                if e.num_warmups() > 0 {
+                    d.current_index = SetIndex::Warmup(0);
+                } else {
+                    d.current_index = SetIndex::Workset(0);
+                }
+                d.finished = false;
+                d.started = new_start;
+            }
+            Exercise::VariableReps(d, e) => {
+                if e.num_warmups() > 0 {
+                    d.current_index = SetIndex::Warmup(0);
+                } else {
+                    d.current_index = SetIndex::Workset(0);
+                }
+                d.finished = false;
+                d.started = new_start;
+            }
+            Exercise::VariableSets(d, _) => {
+                d.current_index = SetIndex::Workset(0);
+                d.finished = false;
+                d.started = new_start;
+            }
         }
     }
 
@@ -300,6 +344,7 @@ impl ExerciseData {
         ExerciseData {
             name,
             formal_name,
+            started: None,
             finished: false,
             current_index: current_set,
             weightset: None,
