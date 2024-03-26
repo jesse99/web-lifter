@@ -28,7 +28,7 @@ pub struct ExerciseName(pub String);
 pub struct FormalName(pub String);
 
 /// Not all exercises will support all of these.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum SetIndex {
     Warmup(usize),
     Workset(usize),
@@ -82,6 +82,27 @@ impl Exercise {
             Exercise::FixedReps(d, _) => d.started,
             Exercise::VariableReps(d, _) => d.started,
             Exercise::VariableSets(d, _) => d.started,
+        }
+    }
+
+    pub fn is_reset(&self) -> bool {
+        match self {
+            Exercise::Durations(d, _) => d.current_index == SetIndex::Workset(0),
+            Exercise::FixedReps(d, e) => {
+                if e.num_warmups() > 0 {
+                    d.current_index == SetIndex::Warmup(0)
+                } else {
+                    d.current_index == SetIndex::Workset(0)
+                }
+            }
+            Exercise::VariableReps(d, e) => {
+                if e.num_warmups() > 0 {
+                    d.current_index == SetIndex::Warmup(0)
+                } else {
+                    d.current_index == SetIndex::Workset(0)
+                }
+            }
+            Exercise::VariableSets(d, _) => d.current_index == SetIndex::Workset(0),
         }
     }
 

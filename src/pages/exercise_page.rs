@@ -1,21 +1,6 @@
 use crate::*;
 use anyhow::Context;
 
-fn reset_old(state: &SharedState, workout_name: &str, exercise_name: &str) {
-    let program = &mut state.write().unwrap().user.program;
-    let workout = program.find_mut(&workout_name).unwrap();
-    let exercise = workout
-        .find_mut(&ExerciseName(exercise_name.to_owned()))
-        .unwrap();
-    if let Some(started) = exercise.started() {
-        let now = Local::now();
-        let elapsed = now - started;
-        if elapsed.num_minutes() > 30 {
-            exercise.reset(Some(now));
-        }
-    }
-}
-
 pub fn get_exercise_page(
     state: SharedState,
     workout_name: &str,
@@ -80,6 +65,21 @@ pub fn post_next_exercise_page(
     } else {
         advance_set(&mut state, workout_name, exercise_name, options);
         get_exercise_page(state, workout_name, exercise_name)
+    }
+}
+
+fn reset_old(state: &SharedState, workout_name: &str, exercise_name: &str) {
+    let program = &mut state.write().unwrap().user.program;
+    let workout = program.find_mut(&workout_name).unwrap();
+    let exercise = workout
+        .find_mut(&ExerciseName(exercise_name.to_owned()))
+        .unwrap();
+    if let Some(started) = exercise.started() {
+        let now = Local::now();
+        let elapsed = now - started;
+        if elapsed.num_minutes() > 30 {
+            exercise.reset(Some(now));
+        }
     }
 }
 

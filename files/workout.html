@@ -33,9 +33,11 @@
         <tbody>
             {{#each exercises}}
             <tr>
-                <th scope="row"><a href="/exercise/{{workout_name}}/{{this.name}}">{{this.name}}</a></th>
+                <th scope="row"><a class="{{this.color}}"
+                        href="/exercise/{{workout_name}}/{{this.name}}">{{this.name}}</a>
+                </th>
                 <td>
-                    <span>{{this.summary}}</span>
+                    <span class="{{this.color}}">{{this.summary}}</span>
                 </td>
             </tr>
             {{/each}}

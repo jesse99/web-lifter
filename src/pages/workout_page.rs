@@ -9,10 +9,11 @@ pub fn get_workout_page(
     let handlebars = &state.read().unwrap().handlebars;
     let weights = &state.read().unwrap().user.weights;
     let program = &state.read().unwrap().user.program;
+    let history = &state.read().unwrap().user.history;
 
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
     let template = include_str!("../../files/workout.html");
-    let data = WorkoutData::new(weights, program, workout, error)?;
+    let data = WorkoutData::new(history, weights, program, workout, error)?;
     Ok(handlebars
         .render_template(template, &data)
         .context("failed to render template")?)
@@ -27,6 +28,7 @@ struct WorkoutData {
 
 impl WorkoutData {
     fn new(
+        history: &History,
         weights: &Weights,
         program: &Program,
         name: &str,
@@ -35,7 +37,7 @@ impl WorkoutData {
         if let Some(workout) = program.find(name) {
             let exercises: Vec<ExerciseData> = workout
                 .exercises()
-                .map(|e| ExerciseData::new(weights, workout, e))
+                .map(|e| ExerciseData::new(history, weights, workout, e))
                 .collect();
             Ok(WorkoutData {
                 workout_name: name.to_owned(),
@@ -50,14 +52,31 @@ impl WorkoutData {
 
 #[derive(Serialize, Deserialize)]
 struct ExerciseData {
+    color: String,
     workout_name: String,
     name: String,
     summary: String,
 }
 
 impl ExerciseData {
-    fn new(weights: &Weights, workout: &Workout, exercise: &Exercise) -> ExerciseData {
+    fn new(
+        history: &History,
+        weights: &Weights,
+        workout: &Workout,
+        exercise: &Exercise,
+    ) -> ExerciseData {
+        let color = if let Some(last) = history.records(exercise.name()).last() {
+            let delta = Local::now() - last.date;
+            if delta.num_minutes() < 3 * 60 && exercise.is_reset() {
+                "text-secondary".to_owned()
+            } else {
+                "".to_owned()
+            }
+        } else {
+            "".to_owned()
+        };
         ExerciseData {
+            color,
             workout_name: workout.name.clone(),
             name: exercise.name().0.clone(),
             summary: summarize(weights, exercise),
