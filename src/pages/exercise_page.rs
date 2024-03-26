@@ -192,7 +192,7 @@ fn advance_set(
         Record {
             program: program.name.clone(),
             workout: workout_name.to_owned(),
-            date: Utc::now(),
+            date: Local::now(),
             sets: None,
             comment: None,
         }

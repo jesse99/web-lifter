@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -15,7 +15,7 @@ pub enum CompletedSets {
 pub struct Record {
     pub program: String,
     pub workout: String,
-    pub date: DateTime<Utc>,
+    pub date: DateTime<Local>,
     pub sets: Option<CompletedSets>,
     pub comment: Option<String>, // TODO this could be set when user edits a record
 }
