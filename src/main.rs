@@ -282,6 +282,19 @@ fn create_heavy_bench() -> Workout {
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
+    // Test Bench
+    let warmups = vec![FixedReps::new(5, 50), FixedReps::new(3, 80)];
+    let worksets = vec![VariableReps::new(1, 3, 100); 2];
+    let e = VariableRepsExercise::new(warmups, worksets);
+    let name = ExerciseName("Test Bench".to_owned());
+    let formal_name = FormalName("Bench Press".to_owned());
+    let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
+        .with_weightset("Dual Plates".to_owned())
+        .with_weight(150.0)
+        .with_rest(210)
+        .finalize();
+    workout.apply(WorkoutOp::Add(exercise));
+
     workout
 }
 

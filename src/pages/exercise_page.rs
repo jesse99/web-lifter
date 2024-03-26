@@ -650,7 +650,7 @@ impl ExerciseData {
         };
 
         let (advance_hidden, advance_value) = if d.finished && w.is_some() && done >= e.target() {
-            ("".to_owned(), "1".to_owned())
+            ("".to_owned(), "0".to_owned())
         } else {
             ("hidden".to_owned(), "0".to_owned())
         };
@@ -770,7 +770,7 @@ impl ExerciseData {
 
         let (advance_hidden, advance_value) =
             if d.finished && w.is_some() && reps >= e.max_expected() {
-                ("".to_owned(), "1".to_owned())
+                ("".to_owned(), "0".to_owned())
             } else {
                 ("hidden".to_owned(), "0".to_owned())
             };
