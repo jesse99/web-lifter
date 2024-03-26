@@ -6,7 +6,28 @@ pub fn get_exercise_page(
     workout_name: &str,
     exercise_name: &str,
 ) -> Result<String, InternalError> {
-    reset_old(&state, workout_name, exercise_name);
+    fn get_new_record(state: &SharedState, workout_name: &str) -> Record {
+        let program = &state.read().unwrap().user.program;
+
+        Record {
+            program: program.name.clone(),
+            workout: workout_name.to_owned(),
+            started: Local::now(),
+            completed: None,
+            sets: None,
+            comment: None,
+        }
+    }
+
+    let exercise_name = ExerciseName(exercise_name.to_owned());
+    let reset = reset_old(&state, workout_name, &exercise_name.0);
+    {
+        let record = get_new_record(&state, workout_name);
+        let history = &mut state.write().unwrap().user.history;
+        if reset || history.is_completed(&exercise_name) {
+            history.start(&exercise_name, record);
+        }
+    }
 
     let handlebars = &state.read().unwrap().handlebars;
     let weights = &state.read().unwrap().user.weights;
@@ -19,7 +40,7 @@ pub fn get_exercise_page(
         .find(&workout_name)
         .context("failed to find workout")?;
     let exercise = workout
-        .find(&ExerciseName(exercise_name.to_owned()))
+        .find(&exercise_name)
         .context("failed to find exercise")?;
     let data = ExerciseData::new(weights, notes, history, program, workout, exercise);
     Ok(handlebars
@@ -68,7 +89,7 @@ pub fn post_next_exercise_page(
     }
 }
 
-fn reset_old(state: &SharedState, workout_name: &str, exercise_name: &str) {
+fn reset_old(state: &SharedState, workout_name: &str, exercise_name: &str) -> bool {
     let program = &mut state.write().unwrap().user.program;
     let workout = program.find_mut(&workout_name).unwrap();
     let exercise = workout
@@ -77,10 +98,12 @@ fn reset_old(state: &SharedState, workout_name: &str, exercise_name: &str) {
     if let Some(started) = exercise.started() {
         let now = Local::now();
         let elapsed = now - started;
-        if elapsed.num_minutes() > 30 {
+        if elapsed.num_minutes() > 60 {
             exercise.reset(Some(now));
+            return true;
         }
     }
+    false
 }
 
 fn advance_set(
@@ -89,32 +112,6 @@ fn advance_set(
     exercise_name: &str,
     options: Option<VarRepsOptions>,
 ) {
-    fn just_started(state: &mut SharedState, workout_name: &str, exercise_name: &str) -> bool {
-        let program = &state.read().unwrap().user.program;
-        let workout = program.find(&workout_name).unwrap();
-        let exercise = workout
-            .find(&ExerciseName(exercise_name.to_owned()))
-            .unwrap();
-        match exercise {
-            Exercise::Durations(d, _) => match d.current_index {
-                SetIndex::Workset(i) => i == 0,
-                _ => false,
-            },
-            Exercise::FixedReps(d, _) => match d.current_index {
-                SetIndex::Workset(i) => i == 0, // OK because this isn't called when in warmups
-                _ => false,
-            },
-            Exercise::VariableReps(d, _) => match d.current_index {
-                SetIndex::Workset(i) => i == 0,
-                _ => false,
-            },
-            Exercise::VariableSets(d, _) => match d.current_index {
-                SetIndex::Workset(i) => i == 0,
-                _ => false,
-            },
-        }
-    }
-
     fn in_workset(state: &mut SharedState, workout_name: &str, exercise_name: &str) -> bool {
         let program = &state.read().unwrap().user.program;
         let workout = program.find(&workout_name).unwrap();
@@ -203,19 +200,6 @@ fn advance_set(
         }
     }
 
-    fn get_new_record(state: &mut SharedState, workout_name: &str) -> Record {
-        let program = &state.read().unwrap().user.program;
-
-        Record {
-            program: program.name.clone(),
-            workout: workout_name.to_owned(),
-            started: Local::now(),
-            completed: None,
-            sets: None,
-            comment: None,
-        }
-    }
-
     fn append_result(
         state: &mut SharedState,
         workout_name: &str,
@@ -268,14 +252,7 @@ fn advance_set(
         }
     }
 
-    let name = ExerciseName(exercise_name.to_owned());
     if in_workset(state, workout_name, exercise_name) {
-        if just_started(state, workout_name, exercise_name) {
-            let record = get_new_record(state, workout_name);
-            let history = &mut state.write().unwrap().user.history;
-            history.start(&name, record);
-        }
-
         append_result(state, workout_name, exercise_name, options);
     }
     advance_current(state, workout_name, exercise_name);

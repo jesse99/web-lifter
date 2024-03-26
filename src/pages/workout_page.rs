@@ -56,6 +56,7 @@ struct ExerciseData {
     workout_name: String,
     name: String,
     summary: String,
+    duration: String,
 }
 
 impl ExerciseData {
@@ -65,26 +66,31 @@ impl ExerciseData {
         workout: &Workout,
         exercise: &Exercise,
     ) -> ExerciseData {
-        let color = if let Some(completed) = history
-            .records(exercise.name())
-            .last()
-            .map(|r| r.completed)
-            .flatten()
-        {
-            let delta = Local::now() - completed;
-            if delta.num_minutes() < 3 * 60 {
-                "text-secondary".to_owned()
+        let (color, duration) = if history.recently_completed(exercise.name()) {
+            let last = history.records(exercise.name()).last().unwrap(); // unwraps are OK because of the above
+            let started = last.started;
+            let completed = last.completed.unwrap();
+            let s = (completed - started).num_seconds();
+            let m = (completed - started).num_minutes();
+            let mins = if s == 0 {
+                "".to_owned() // history before we actually had completed
+            } else if m == 0 {
+                format!("{s} secs")
+            } else if m == 1 {
+                "1 min".to_owned()
             } else {
-                "".to_owned()
-            }
+                format!("{m} mins")
+            };
+            ("text-secondary".to_owned(), mins)
         } else {
-            "".to_owned()
+            ("".to_owned(), "".to_owned())
         };
         ExerciseData {
             color,
             workout_name: workout.name.clone(),
             name: exercise.name().0.clone(),
             summary: summarize(weights, exercise),
+            duration,
         }
     }
 }

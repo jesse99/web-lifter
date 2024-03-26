@@ -1,107 +1,142 @@
 {\rtf1\ansi\ansicpg1252\cocoartf2709
 \cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fswiss\fcharset0 Helvetica;\f2\fswiss\fcharset0 ArialMT;
 \f3\fswiss\fcharset0 Helvetica-Bold;}
-{\colortbl;\red255\green255\blue255;\red203\green0\blue77;\red60\green60\blue59;\red117\green66\blue151;
-\red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;\red117\green66\blue151;\red9\green76\blue116;
-\red2\green2\blue2;\red25\green28\blue31;\red130\green130\blue130;\red0\green0\blue0;}
-{\*\expandedcolortbl;;\cssrgb\c84314\c0\c37255;\cssrgb\c30196\c30196\c29804;\cssrgb\c53725\c34902\c65882;
-\cssrgb\c30196\c30196\c29804;\cssrgb\c84314\c0\c37255;\cssrgb\c0\c37255\c52941;\cssrgb\c53725\c34902\c65882;\cssrgb\c0\c37255\c52941;
-\csgenericrgb\c784\c784\c784;\cssrgb\c12941\c14510\c16078;\cssrgb\c58039\c58039\c58039;\cssrgb\c0\c0\c0;}
+{\colortbl;\red255\green255\blue255;\red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;
+\red117\green66\blue151;\red203\green74\blue5;\red130\green130\blue130;\red60\green60\blue59;\red203\green0\blue77;
+\red117\green66\blue151;\red9\green76\blue116;\red2\green2\blue2;\red25\green28\blue31;\red130\green130\blue130;
+\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c30196\c30196\c29804;\cssrgb\c84314\c0\c37255;\cssrgb\c0\c37255\c52941;
+\cssrgb\c53725\c34902\c65882;\cssrgb\c84314\c37255\c0;\cssrgb\c58039\c58039\c58039;\cssrgb\c30196\c30196\c29804;\cssrgb\c84314\c0\c37255;
+\cssrgb\c53725\c34902\c65882;\cssrgb\c0\c37255\c52941;\csgenericrgb\c784\c784\c784;\cssrgb\c12941\c14510\c16078;\cssrgb\c58039\c58039\c58039;
+\cssrgb\c0\c0\c0;}
 \deftab720
 \pard\pardeftab720\partightenfactor0
 
-\f0\fs36 \cf2 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  FixedReps \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 reps\cf3 \strokec3 : i32,\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 percent\cf3 \strokec3 : i32,\
+\f0\fs32 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2     \cf3 \strokec3 fn\cf2 \strokec2  \cf4 \strokec4 just_started\cf2 \strokec2 (\cf5 \strokec5 state\cf2 \strokec2 : &\cf3 \strokec3 mut\cf2 \strokec2  SharedState, \cf5 \strokec5 workout_name\cf2 \strokec2 : &str, \cf5 \strokec5 exercise_name\cf2 \strokec2 : &str) -> bool \{\
+        \cf3 \strokec3 let\cf2 \strokec2  \cf5 \strokec5 program\cf2 \strokec2  = &\cf5 \strokec5 state\cf2 \strokec2 .\cf4 \strokec4 read\cf2 \strokec2 ().\cf4 \strokec4 unwrap\cf2 \strokec2 ().user.program;\
+        \cf3 \strokec3 let\cf2 \strokec2  \cf5 \strokec5 workout\cf2 \strokec2  = \cf5 \strokec5 program\cf2 \strokec2 .\cf4 \strokec4 find\cf2 \strokec2 (&\cf5 \strokec5 workout_name\cf2 \strokec2 ).\cf4 \strokec4 unwrap\cf2 \strokec2 ();\
+        \cf3 \strokec3 let\cf2 \strokec2  \cf5 \strokec5 exercise\cf2 \strokec2  = \cf5 \strokec5 workout\cf2 \strokec2 \
+            .\cf4 \strokec4 find\cf2 \strokec2 (&\cf4 \strokec4 ExerciseName\cf2 \strokec2 (\cf5 \strokec5 exercise_name\cf2 \strokec2 .\cf4 \strokec4 to_owned\cf2 \strokec2 ()))\
+            .\cf4 \strokec4 unwrap\cf2 \strokec2 ();\
+        \cf3 \strokec3 match\cf2 \strokec2  \cf5 \strokec5 exercise\cf2 \strokec2  \{\
+            Exercise::\cf4 \strokec4 Durations\cf2 \strokec2 (\cf5 \strokec5 d\cf2 \strokec2 , \cf5 \strokec5 _\cf2 \strokec2 ) => \cf3 \strokec3 match\cf2 \strokec2  \cf5 \strokec5 d\cf2 \strokec2 .current_index \{\
+                SetIndex::\cf4 \strokec4 Workset\cf2 \strokec2 (\cf5 \strokec5 i\cf2 \strokec2 ) => \cf5 \strokec5 i\cf2 \strokec2  == \cf6 \strokec6 0\cf2 \strokec2 ,\
+                \cf5 \strokec5 _\cf2 \strokec2  => \cf6 \strokec6 false\cf2 \strokec2 ,\
+            \},\
+            Exercise::\cf4 \strokec4 FixedReps\cf2 \strokec2 (\cf5 \strokec5 d\cf2 \strokec2 , \cf5 \strokec5 _\cf2 \strokec2 ) => \cf3 \strokec3 match\cf2 \strokec2  \cf5 \strokec5 d\cf2 \strokec2 .current_index \{\
+                SetIndex::\cf4 \strokec4 Workset\cf2 \strokec2 (\cf5 \strokec5 i\cf2 \strokec2 ) => \cf5 \strokec5 i\cf2 \strokec2  == \cf6 \strokec6 0\cf2 \strokec2 , \cf7 \strokec7 // OK because this isn't called when in warmups\cf2 \strokec2 \
+                \cf5 \strokec5 _\cf2 \strokec2  => \cf6 \strokec6 false\cf2 \strokec2 ,\
+            \},\
+            Exercise::\cf4 \strokec4 VariableReps\cf2 \strokec2 (\cf5 \strokec5 d\cf2 \strokec2 , \cf5 \strokec5 _\cf2 \strokec2 ) => \cf3 \strokec3 match\cf2 \strokec2  \cf5 \strokec5 d\cf2 \strokec2 .current_index \{\
+                SetIndex::\cf4 \strokec4 Workset\cf2 \strokec2 (\cf5 \strokec5 i\cf2 \strokec2 ) => \cf5 \strokec5 i\cf2 \strokec2  == \cf6 \strokec6 0\cf2 \strokec2 ,\
+                \cf5 \strokec5 _\cf2 \strokec2  => \cf6 \strokec6 false\cf2 \strokec2 ,\
+            \},\
+            Exercise::\cf4 \strokec4 VariableSets\cf2 \strokec2 (\cf5 \strokec5 d\cf2 \strokec2 , \cf5 \strokec5 _\cf2 \strokec2 ) => \cf3 \strokec3 match\cf2 \strokec2  \cf5 \strokec5 d\cf2 \strokec2 .current_index \{\
+                SetIndex::\cf4 \strokec4 Workset\cf2 \strokec2 (\cf5 \strokec5 i\cf2 \strokec2 ) => \cf5 \strokec5 i\cf2 \strokec2  == \cf6 \strokec6 0\cf2 \strokec2 ,\
+                \cf5 \strokec5 _\cf2 \strokec2  => \cf6 \strokec6 false\cf2 \strokec2 ,\
+            \},\
+        \}\
+    \}\
+\
+\
+\
 \pard\pardeftab720\partightenfactor0
 
-\fs40 \cf5 \outl0\strokewidth0 \
+\fs36 \cf3 \strokec3 \
+\
+\
+pub\cf2 \strokec2  \cf3 \strokec3 struct\cf2 \strokec2  FixedReps \{\
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf5 \strokec5 reps\cf2 \strokec2 : i32,\
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf5 \strokec5 percent\cf2 \strokec2 : i32,\
 \pard\pardeftab720\partightenfactor0
 
-\fs36 \cf6 impl\cf5  FixedRepsExercise \{\
-\pard\pardeftab720\partightenfactor0
-\cf3 \outl0\strokewidth0 \strokec3     \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 num_warmups\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> usize \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 num_worksets\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> usize \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 set\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 , \cf4 \strokec4 index\cf3 \strokec3 : SetIndex) -> &FixedReps \{\
+\fs40 \cf8 \outl0\strokewidth0 \
 \pard\pardeftab720\partightenfactor0
 
-\fs40 \cf6 \outl0\strokewidth0 \
+\fs36 \cf9 impl\cf8  FixedRepsExercise \{\
+\pard\pardeftab720\partightenfactor0
+\cf2 \outl0\strokewidth0 \strokec2     \cf3 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 fn\cf2 \strokec2  \cf4 \strokec4 num_warmups\cf2 \strokec2 (&\cf5 \strokec5 self\cf2 \strokec2 ) -> usize \{\
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 fn\cf2 \strokec2  \cf4 \strokec4 num_worksets\cf2 \strokec2 (&\cf5 \strokec5 self\cf2 \strokec2 ) -> usize \{\
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 fn\cf2 \strokec2  \cf4 \strokec4 set\cf2 \strokec2 (&\cf5 \strokec5 self\cf2 \strokec2 , \cf5 \strokec5 index\cf2 \strokec2 : SetIndex) -> &FixedReps \{\
 \pard\pardeftab720\partightenfactor0
 
-\fs36 \cf6 pub\cf5  \cf6 struct\cf5  DurationsExercise \{\
-    \cf8 secs\cf5 : Vec<i32>,\
-    \cf8 target_secs\cf5 : Option<i32>,\
+\fs40 \cf9 \outl0\strokewidth0 \
 \pard\pardeftab720\partightenfactor0
 
-\fs32 \cf3 \outl0\strokewidth0 \strokec3 \
+\fs36 \cf9 pub\cf8  \cf9 struct\cf8  DurationsExercise \{\
+    \cf10 secs\cf8 : Vec<i32>,\
+    \cf10 target_secs\cf8 : Option<i32>,\
 \pard\pardeftab720\partightenfactor0
 
-\fs36 \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 enum\cf3 \strokec3  SetIndex \{\
-    \cf7 \strokec7 Warmup\cf3 \strokec3 (usize),\
-    \cf7 \strokec7 Workset\cf3 \strokec3 (usize),\
-    \cf7 \strokec7 Backoff\cf3 \strokec3 (usize),\
+\fs32 \cf2 \outl0\strokewidth0 \strokec2 \
 \pard\pardeftab720\partightenfactor0
 
-\fs32 \cf3 \
+\fs36 \cf3 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 enum\cf2 \strokec2  SetIndex \{\
+    \cf4 \strokec4 Warmup\cf2 \strokec2 (usize),\
+    \cf4 \strokec4 Workset\cf2 \strokec2 (usize),\
+    \cf4 \strokec4 Backoff\cf2 \strokec2 (usize),\
 \pard\pardeftab720\partightenfactor0
 
-\fs36 \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  Sets \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 finished\cf3 \strokec3 : bool,\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 current_index\cf3 \strokec3 : SetIndex,\
+\fs32 \cf2 \
 \pard\pardeftab720\partightenfactor0
-\cf5 \outl0\strokewidth0 \
-\cf6 pub\cf5  \cf6 enum\cf5  Exercise \{\
-    \cf9 Durations\cf5 (ExerciseName, FormalName, DurationsExercise, Sets),\
-    \cf9 FixedReps\cf5 (ExerciseName, FormalName, FixedRepsExercise, Sets),\
+
+\fs36 \cf3 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 struct\cf2 \strokec2  Sets \{\
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf5 \strokec5 finished\cf2 \strokec2 : bool,\
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf5 \strokec5 current_index\cf2 \strokec2 : SetIndex,\
+\pard\pardeftab720\partightenfactor0
+\cf8 \outl0\strokewidth0 \
+\cf9 pub\cf8  \cf9 enum\cf8  Exercise \{\
+    \cf11 Durations\cf8 (ExerciseName, FormalName, DurationsExercise, Sets),\
+    \cf11 FixedReps\cf8 (ExerciseName, FormalName, FixedRepsExercise, Sets),\
 	\
 \pard\pardeftab720\partightenfactor0
-\cf2 \outl0\strokewidth0 \strokec2 impl\cf3 \strokec3  Exercise \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 current_set\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> (SetIndex, usize) \{\
+\cf3 \outl0\strokewidth0 \strokec3 impl\cf2 \strokec2  Exercise \{\
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 fn\cf2 \strokec2  \cf4 \strokec4 current_set\cf2 \strokec2 (&\cf5 \strokec5 self\cf2 \strokec2 ) -> (SetIndex, usize) \{\
 \
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 weight\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 , \cf4 \strokec4 index\cf3 \strokec3 : SetIndex) -> Option<f32> \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 rest\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 , \cf4 \strokec4 index\cf3 \strokec3 : SetIndex) -> Option<i32> \{
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 fn\cf2 \strokec2  \cf4 \strokec4 weight\cf2 \strokec2 (&\cf5 \strokec5 self\cf2 \strokec2 , \cf5 \strokec5 index\cf2 \strokec2 : SetIndex) -> Option<f32> \{\
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 fn\cf2 \strokec2  \cf4 \strokec4 rest\cf2 \strokec2 (&\cf5 \strokec5 self\cf2 \strokec2 , \cf5 \strokec5 index\cf2 \strokec2 : SetIndex) -> Option<i32> \{
 \fs32 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
+\f1\fs48 \cf12 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
 \pard\pardeftab720\partightenfactor0
 
-\f0\fs36 \cf2 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  Weight \{\
-    \cf4 \strokec4 weight\cf3 \strokec3 : InternalWeight,\
+\f0\fs36 \cf3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 struct\cf2 \strokec2  Weight \{\
+    \cf5 \strokec5 weight\cf2 \strokec2 : InternalWeight,\
 \
-\cf2 \strokec2 impl\cf3 \strokec3  Weight \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 value\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> f32 \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 text\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> String \{     // \cf12 \outl0\strokewidth0 \'93165 lbs"\cf3 \outl0\strokewidth0 \strokec3 \
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 details\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> Option<String> \{  // \cf12 \outl0\strokewidth0 \'9345 + 10 + 5"
-\fs32 \cf3 \outl0\strokewidth0 \strokec3 \
+\cf3 \strokec3 impl\cf2 \strokec2  Weight \{\
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 fn\cf2 \strokec2  \cf4 \strokec4 value\cf2 \strokec2 (&\cf5 \strokec5 self\cf2 \strokec2 ) -> f32 \{\
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 fn\cf2 \strokec2  \cf4 \strokec4 text\cf2 \strokec2 (&\cf5 \strokec5 self\cf2 \strokec2 ) -> String \{     // \cf14 \outl0\strokewidth0 \'93165 lbs"\cf2 \outl0\strokewidth0 \strokec2 \
+    \cf3 \strokec3 pub\cf2 \strokec2  \cf3 \strokec3 fn\cf2 \strokec2  \cf4 \strokec4 details\cf2 \strokec2 (&\cf5 \strokec5 self\cf2 \strokec2 ) -> Option<String> \{  // \cf14 \outl0\strokewidth0 \'9345 + 10 + 5"
+\fs32 \cf2 \outl0\strokewidth0 \strokec2 \
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0    \
+\f1\fs48 \cf12 \kerning1\expnd0\expndtw0 \outl0\strokewidth0    \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 localhost:3000/\
+\cf12 localhost:3000/\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
 \f2 \cf0 \expnd0\expndtw0\kerning0
 73.140.78.74
-\f1 \cf10 \kerning1\expnd0\expndtw0 :3000/     \cf10 https://ip4.me (https://superuser.com/a/1629435)\
+\f1 \cf12 \kerning1\expnd0\expndtw0 :3000/     \cf12 https://ip4.me (https://superuser.com/a/1629435)\
 	same mar 21-25      have to connect using 5G (or from public internet)\
 \
 \
-\'95\'a0History shouldn\'92t have an indicator when exercise is in progress\
-	- i.e. if history record is not complete\
 \'95\'a0History should have started and completed dates\
 	- history view could show elapsed times\
 	- add some sort of was_completed_recently function\
 		workout page should use this too (when graying)\
-\'95\'a0Elliptical is set to 5 hours\
+\'95 Would be nice to have total duration\
+	- should be last completed - first started\
 \'95\'a0Should hide reps button when resting in last set\
 	- or when doing any rest?\
 \'95\'a0Set label flaked out for a second after finishing last set\
 	- think it said Set 1\
 	- may want to add a bit of delay\
+\'95\'a0Elliptical is set to 5 hours\
 \'95 Block scheduling isn\'92t right\
 	- can we move now to the block start, do normal scheduling, and then\
 	  use the delta from that to the real now?\
@@ -115,25 +150,25 @@
 \'95 Should we use bigger fonts on mobile?\
 \'95\'a0Switch to medium RDL at some point\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Track how long workouts take\
+\cf12 \'95\'a0Track how long workouts take\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95 Should be a way to reset an exercise\
+\cf12 \'95 Should be a way to reset an exercise\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95 Do timers work when switch to a new page and then back?\
+\cf12 \'95 Do timers work when switch to a new page and then back?\
 \'95\'a0Add some logging/tracing\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95 Add support for rest weeks\
+\cf12 \'95 Add support for rest weeks\
 	- maybe treat this as a periodization variant\
 \'95 DO something with favicon\
 \'95 Should there be a way to manually start a timer?\
 \'95 Use a redirect when after posting\
 	- should allow back butto to work better\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Replace www.bodybuilding.com links with something else\
+\cf12 \'95\'a0Replace www.bodybuilding.com links with something else\
 	- think www.bodybuilding.com has some aggresive throttling\
 \'95\'a0Should be able to edit exercises\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Should all mutates go through an enum op?\
+\cf12 \'95\'a0Should all mutates go through an enum op?\
 	- could persist those instead of struct instances\
 	- how messy would that get, e.g. modify\
 		reps in a set in an exercise\
@@ -141,52 +176,52 @@
 \'95 Add a /health_check edpoint\
 	- or maybe /status, could include connections/sec, num active users, etc)\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Should be able to edit workouts\
+\cf12 \'95\'a0Should be able to edit workouts\
 \'95\'a0Should be able to edit programs\
 \'95 May want an option for bootstrap\'92s dark theme\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Need a setting to configure font sizes. Maybe font name too.\
+\cf12 \'95\'a0Need a setting to configure font sizes. Maybe font name too.\
 \'95\'a0Should log ops.\
 \'95\'a0May want a way to replay ops.\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95 Support editing weight sets\
+\cf12 \'95 Support editing weight sets\
 	- maybe via a settings option in hamburger\
 	- or a settings button/dropdown\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Need to restart the server if it dies due to a panic. Or maybe\
+\cf12 \'95\'a0Need to restart the server if it dies due to a panic. Or maybe\
 restart a thread. Might be some tower thing for this.\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95 Variable reps needs to support backoff sets\
+\cf12 \'95 Variable reps needs to support backoff sets\
 \'95 Should fixed reps support backoff sets?\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \
+\cf12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f0\fs36 \cf6 \expnd0\expndtw0\kerning0
+\f0\fs36 \cf9 \expnd0\expndtw0\kerning0
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f3\b\fs48 \cf10 \kerning1\expnd0\expndtw0 \
+\f3\b\fs48 \cf12 \kerning1\expnd0\expndtw0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f1\b0 \cf10          \cf10 \ul \ulc10 Full Body Exercises\cf10 \ulnone \
+\f1\b0 \cf12          \cf12 \ul \ulc12 Full Body Exercises\cf12 \ulnone \
 \
 \
          Side Leg Lift
-\f3\b \cf10             
-\f1\b0 \cf10 \
+\f3\b \cf12             
+\f1\b0 \cf12 \
          \
          \
             Set 1 of 2
-\f3\b \cf10               
-\f1\b0 \cf10 \
+\f3\b \cf12               
+\f1\b0 \cf12 \
                
-\fs36 \cf10 10 reps
-\f3\b\fs48 \cf10                  
-\f1\b0 \cf10 \
+\fs36 \cf12 10 reps
+\f3\b\fs48 \cf12                  
+\f1\b0 \cf12 \
             \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \ul \ulc10 Next\ulnone                        \ul Reset
+\cf12 \ul \ulc12 Next\ulnone                        \ul Reset
 \f3\b \ulnone  
 \f1\b0 \ul \
 \ulnone \
@@ -199,21 +234,21 @@ restart a thread. Might be some tower thing for this.\
 2x10   Mar 6, 2024\
 2x10   Mar 1, 2024\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \
+\cf12 \
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 https://www.shuttle.rs/blog/2023/12/06/using-axum-rustJeremy Chone has a good axum tutorial\
+\cf12 https://www.shuttle.rs/blog/2023/12/06/using-axum-rustJeremy Chone has a good axum tutorial\
 Jeremy Chone has a good axum tutorial\
 		\
 http://localhost:3000/
-\f0\fs32 \cf5 \expnd0\expndtw0\kerning0
+\f0\fs32 \cf8 \expnd0\expndtw0\kerning0
 \
 \pard\pardeftab720\partightenfactor0
-\cf5 \
+\cf8 \
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f1\fs48 \cf10 https://squatuniversity.com/2017/05/30/how-to-fix-it-band-pain/\cf10 \kerning1\expnd0\expndtw0 \
+\f1\fs48 \cf12 https://squatuniversity.com/2017/05/30/how-to-fix-it-band-pain/\cf12 \kerning1\expnd0\expndtw0 \
 foam roll \
 \
 Eloquent JavaScript 4th edition\

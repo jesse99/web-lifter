@@ -83,8 +83,9 @@ fn make_program() -> pages::AppState {
     }
 }
 
-fn fixup_program(state: UserState) -> UserState {
+fn fixup_program(mut state: UserState) -> UserState {
     // change state to `mut state` if need to fixup
+    state.history.fixup();
     state
 }
 
