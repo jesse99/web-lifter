@@ -96,17 +96,26 @@
 \outl0\strokewidth0 \strokec3 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95 Add support for periodization\
-	- maybe program has cycles\
-		` ordered list of workouts\
-			with how many days to do them\
-		` current week number (1 based)\
-			or day? but how do we line things up?\
-			or next workout due? but what if others appear earlier?\
-		` maybe also (uneditable) num weeks label\
+\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95 Do a commit\
+\'95\'a0Heavy bench and RDL didn\'92t have warmups.\
+\'95 Block scheduling isn\'92t right\
+	- can we move now to the block start, do normal scheduling, and then\
+	  use the delta from that to the real now?\
+	- would have to special case active block to handle case where now is\
+	  after last scheduled workout\
+\'95\'a0Update weight should be disabled by default\
+\'95\'a0Should hide reps button when resting in last set\
+	- or when doing any rest?\
+\'95\'a0History shouldn\'92t have an indicator when exercise is in progress\
+\'95\'a0Set label flaked out for a second after finishing last set\
+	- think it said Set 1\
+\'95\'a0In workout page gray out exercises that have been completed\
+\'95\'a0Move default program into its own file\
+\'95\'a0Replace with_rest with with_rest_secs ans with_rest_mins?\
 \'95 Work on new workouts\
 	- would be nice if exercises had an optional label\
 \'95 Should we use bigger fonts on mobile?\
+\'95\'a0medium RDL\
 \'95 Can we do a buzz or other haptic when timer finishes? Post alert?\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 \cf10 \'95\'a0Track how long workouts take\

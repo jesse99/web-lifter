@@ -3,6 +3,12 @@ use std::fmt::{self, Formatter};
 use std::hash::Hash;
 use std::ops::{Add, Sub};
 
+pub fn date_to_days(date: DateTime<Local>) -> i32 {
+    date.duration_round(TimeDelta::days(1))
+        .unwrap()
+        .num_days_from_ce()
+}
+
 /// Represents number of days since year 1 day 1.
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Days {
@@ -13,10 +19,7 @@ impl Days {
     /// Rounds the date to the nearest day.
     pub fn new(date: DateTime<Local>) -> Days {
         Days {
-            value: date
-                .duration_round(TimeDelta::days(1))
-                .unwrap()
-                .num_days_from_ce(),
+            value: date_to_days(date),
         }
     }
 }

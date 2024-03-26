@@ -212,6 +212,7 @@ impl BuildExercise {
         }
     }
 
+    #[allow(dead_code)]
     pub fn fixed_reps(
         name: ExerciseName,
         formal_name: FormalName,

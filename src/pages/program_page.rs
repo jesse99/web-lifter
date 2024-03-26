@@ -24,7 +24,10 @@ struct ProgramData {
 
 impl ProgramData {
     fn new(program: &Program) -> ProgramData {
-        let workouts = program.workouts().map(|w| WorkoutData::new(w)).collect();
+        let workouts = program
+            .workouts()
+            .map(|w| WorkoutData::new(program, w))
+            .collect();
         ProgramData {
             name: program.name.clone(),
             workouts,
@@ -40,8 +43,9 @@ struct WorkoutData {
 }
 
 impl WorkoutData {
-    fn new(workout: &Workout) -> WorkoutData {
-        let status = workout.status();
+    fn new(program: &Program, workout: &Workout) -> WorkoutData {
+        let bschedule = program.block_schedule();
+        let status = workout.status(bschedule);
         WorkoutData {
             name: workout.name.clone(),
             status_class: status.to_class().to_owned(),
