@@ -23,6 +23,7 @@ pub fn get_workout_page(
 struct WorkoutData {
     workout_name: String,
     exercises: Vec<ExerciseData>,
+    total_duration: String,
     error: String,
 }
 
@@ -39,9 +40,25 @@ impl WorkoutData {
                 .exercises()
                 .map(|e| ExerciseData::new(history, weights, workout, e))
                 .collect();
+            let total_duration = if let Some(started) = history.first_started(name) {
+                if let Some(finished) = history.last_completed(name) {
+                    let delta = finished - started;
+                    let mins = delta.num_minutes();
+                    if mins > 60 {
+                        format!("{:.1} hours", (mins as f32) / 60.0)
+                    } else {
+                        format!("{mins} mins")
+                    }
+                } else {
+                    "".to_owned()
+                }
+            } else {
+                "".to_owned()
+            };
             Ok(WorkoutData {
                 workout_name: name.to_owned(),
                 exercises: exercises,
+                total_duration,
                 error,
             })
         } else {
@@ -66,25 +83,25 @@ impl ExerciseData {
         workout: &Workout,
         exercise: &Exercise,
     ) -> ExerciseData {
-        let (color, duration) = if history.recently_completed(exercise.name()) {
-            let last = history.records(exercise.name()).last().unwrap(); // unwraps are OK because of the above
-            let started = last.started;
-            let completed = last.completed.unwrap();
-            let s = (completed - started).num_seconds();
-            let m = (completed - started).num_minutes();
-            let mins = if s == 0 {
-                "".to_owned() // history before we actually had completed
-            } else if m == 0 {
-                format!("{s} secs")
-            } else if m == 1 {
-                "1 min".to_owned()
+        let (color, duration) =
+            if let Some(record) = history.recently_completed(&workout.name, exercise.name()) {
+                let started = record.started;
+                let completed = record.completed.unwrap();
+                let s = (completed - started).num_seconds();
+                let m = (completed - started).num_minutes();
+                let mins = if s == 0 {
+                    "".to_owned() // history before we actually had completed
+                } else if m == 0 {
+                    format!("{s} secs")
+                } else if m == 1 {
+                    "1 min".to_owned()
+                } else {
+                    format!("{m} mins")
+                };
+                ("text-secondary".to_owned(), mins)
             } else {
-                format!("{m} mins")
+                ("".to_owned(), "".to_owned())
             };
-            ("text-secondary".to_owned(), mins)
-        } else {
-            ("".to_owned(), "".to_owned())
-        };
         ExerciseData {
             color,
             workout_name: workout.name.clone(),

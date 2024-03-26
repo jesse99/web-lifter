@@ -4,6 +4,8 @@ use std::collections::HashMap;
 
 use crate::ExerciseName;
 
+const RECENT_MINS: i64 = 3 * 60;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum CompletedSets {
     Durations(Vec<(i32, Option<f32>)>),
@@ -119,12 +121,75 @@ impl History {
             .is_some()
     }
 
-    pub fn recently_completed(&self, name: &ExerciseName) -> bool {
-        if let Some(completed) = self.records(name).last().map(|r| r.completed).flatten() {
-            let delta = Local::now() - completed;
-            delta.num_minutes() < 3 * 60
-        } else {
-            false
+    pub fn recently_completed(&self, workout: &str, name: &ExerciseName) -> Option<&Record> {
+        if let Some(records) = self.records.get(name) {
+            for record in records.iter().rev() {
+                if let Some(completed) = record.completed {
+                    let delta = Local::now() - completed;
+                    if delta.num_minutes() < RECENT_MINS {
+                        if record.workout == workout {
+                            return Some(record);
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
         }
+        None
+    }
+
+    /// Returns the earliest date at which a recently completed exercise in workout was
+    /// started.
+    pub fn first_started(&self, workout: &str) -> Option<DateTime<Local>> {
+        let mut date = None;
+        for (_, records) in self.records.iter() {
+            for record in records.iter().rev() {
+                if let Some(completed) = record.completed {
+                    let delta = Local::now() - completed;
+                    if delta.num_minutes() < RECENT_MINS {
+                        if record.workout == workout {
+                            if let Some(previous) = date {
+                                if record.started < previous {
+                                    date = Some(record.started);
+                                }
+                            } else {
+                                date = Some(record.started);
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        date
+    }
+
+    /// Returns the latest date at which a recently completed exercise in workout was
+    /// finished.
+    pub fn last_completed(&self, workout: &str) -> Option<DateTime<Local>> {
+        let mut date = None;
+        for (_, records) in self.records.iter() {
+            for record in records.iter() {
+                if let Some(completed) = record.completed {
+                    let delta = Local::now() - completed;
+                    if delta.num_minutes() < RECENT_MINS {
+                        if record.workout == workout {
+                            if let Some(previous) = date {
+                                if completed > previous {
+                                    date = Some(completed);
+                                }
+                            } else {
+                                date = Some(completed);
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        date
     }
 }
