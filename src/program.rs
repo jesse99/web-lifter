@@ -118,6 +118,18 @@ impl Program {
         }
     }
 
+    pub fn fixup(&mut self) {
+        // if let Some(workout) = self.find_mut("Heavy Bench") {
+        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Heavy RDL".to_owned())) {
+        //         exercise.set_weight(Some(225.0));
+        //     } else {
+        //         panic!("didn't find Heavy RDL");
+        //     }
+        // } else {
+        //     panic!("didn't find Heavy Bench workout");
+        // }
+    }
+
     pub fn validate(&mut self, op: &ProgramOp) -> String {
         let mut err = String::new();
         match op {
