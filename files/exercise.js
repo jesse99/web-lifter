@@ -80,6 +80,9 @@ function start_resting() {
     const rest = parseInt(body.getAttribute("data-rest"));
     if (rest > 0) {
         // Start resting
+        const update = document.getElementById('reps_div');
+        update.setAttribute("hidden", true);
+
         let button = document.getElementById('next_button');
         button.innerHTML = "Stop Resting";
 

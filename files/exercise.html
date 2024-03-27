@@ -35,10 +35,11 @@
 
         <div id="timer_text" class="fs-3 mt-3"></div>
 
-        <div {{hide_reps}} class="btn-group mt-3">
-            <button {{hide_reps}} id="reps_button" type="button" class="btn btn-success dropdown-toggle"
-                data-bs-toggle="dropdown" aria-expanded="false">{{reps_title}}</button>
-            <ul {{hide_reps}} class="dropdown-menu">
+        <!-- reps dropdown -->
+        <div {{hide_reps}} class="btn-group mt-3" id="reps_div">
+            <button id="reps_button" type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown"
+                aria-expanded="false">{{reps_title}}</button>
+            <ul class="dropdown-menu">
                 {{#each rep_items}}
                 <li><button onclick="on_click_reps(event, '{{this.title}}')"
                         class="dropdown-item rep_item {{this.active}}" type="button">{{this.title}}</button></li>
@@ -46,6 +47,7 @@
             </ul>
         </div>
 
+        <!-- update reps -->
         <div class="form-check mt-4" id="update_expected_div" {{update_hidden}}>
             <input onclick="update_clicked()" class="form-check-input" type="checkbox" value="{{update_value}}"
                 id="update_button" checked>
@@ -54,6 +56,7 @@
             </label>
         </div>
 
+        <!-- advance weight -->
         <div class="form-checkmt-1" id="advance_weight_div" {{advance_hidden}}>
             <input onclick="advance_clicked()" class="form-check-input" type="checkbox" value="{{advance_value}}"
                 id="advance_button">
@@ -62,6 +65,7 @@
             </label>
         </div>
 
+        <!-- next button -->
         <div class="mt-4">
             <button type="button" class="btn btn-primary" onclick="on_next(event)"
                 id="next_button">{{button_title}}</button>
