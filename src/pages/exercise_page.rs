@@ -95,15 +95,19 @@ fn reset_old(state: &SharedState, workout_name: &str, exercise_name: &str) -> bo
     let exercise = workout
         .find_mut(&ExerciseName(exercise_name.to_owned()))
         .unwrap();
+    let now = Local::now();
     if let Some(started) = exercise.started() {
-        let now = Local::now();
         let elapsed = now - started;
         if elapsed.num_minutes() > 60 {
             exercise.reset(Some(now));
-            return true;
+            true
+        } else {
+            false
         }
+    } else {
+        exercise.reset(Some(now));
+        true
     }
-    false
 }
 
 fn advance_set(
