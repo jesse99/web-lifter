@@ -313,9 +313,9 @@ impl BuildExercise {
         BuildExercise { data, ..self }
     }
 
-    pub fn with_rest(self, rest: i32) -> BuildExercise {
+    pub fn with_rest_mins(self, rest: f32) -> BuildExercise {
         let data = ExerciseData {
-            rest: Some(rest),
+            rest: Some((60.0 * rest) as i32),
             ..self.data
         };
         BuildExercise { data, ..self }

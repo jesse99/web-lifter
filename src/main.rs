@@ -226,7 +226,7 @@ fn create_heavy_bench() -> Workout {
     // let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
     //     .with_weightset("Dual Plates".to_owned())
     //     .with_weight(175.0)
-    //     .with_rest(210)
+    //     .with_rest_mins(3.5)
     //     .finalize();
     // workout.apply(WorkoutOp::Add(exercise));
 
@@ -252,7 +252,7 @@ fn create_heavy_bench() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Dual Plates".to_owned())
         .with_weight(150.0)
-        .with_rest(210)
+        .with_rest_mins(3.5)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -272,7 +272,7 @@ fn create_heavy_bench() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Cable Machine".to_owned())
         .with_weight(12.5)
-        .with_rest(120)
+        .with_rest_mins(2.0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -289,7 +289,7 @@ fn create_heavy_bench() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Deadlift".to_owned())
         .with_weight(205.0)
-        .with_rest(180)
+        .with_rest_mins(3.0)
         .with_last_rest(0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
@@ -303,7 +303,7 @@ fn create_heavy_bench() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Dual Plates".to_owned())
         .with_weight(150.0)
-        .with_rest(210)
+        .with_rest_mins(3.5)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -328,7 +328,7 @@ fn create_heavy_ohp() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Dual Plates".to_owned())
         .with_weight(75.0)
-        .with_rest(210)
+        .with_rest_mins(3.5)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -346,7 +346,7 @@ fn create_heavy_ohp() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Dual Plates".to_owned())
         .with_weight(160.0)
-        .with_rest(210)
+        .with_rest_mins(3.5)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -354,7 +354,7 @@ fn create_heavy_ohp() -> Workout {
     let name = ExerciseName("Chin-ups".to_owned());
     let formal_name = FormalName("Chin-up".to_owned());
     let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
-        .with_rest(210)
+        .with_rest_mins(3.5)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -367,7 +367,7 @@ fn create_heavy_ohp() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Cable Machine".to_owned())
         .with_weight(17.5)
-        .with_rest(120)
+        .with_rest_mins(2.0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -392,7 +392,7 @@ fn create_medium_bench() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Dual Plates".to_owned())
         .with_weight(135.0)
-        .with_rest(210)
+        .with_rest_mins(3.5)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -412,7 +412,7 @@ fn create_medium_bench() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Cable Machine".to_owned())
         .with_weight(12.5)
-        .with_rest(120)
+        .with_rest_mins(2.0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -429,7 +429,7 @@ fn create_medium_bench() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Deadlift".to_owned())
         .with_weight(205.0)
-        .with_rest(180)
+        .with_rest_mins(3.0)
         .with_last_rest(0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
@@ -455,7 +455,7 @@ fn create_medium_ohp() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Dual Plates".to_owned())
         .with_weight(75.0)
-        .with_rest(210)
+        .with_rest_mins(3.5)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -473,7 +473,7 @@ fn create_medium_ohp() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Machine Plates".to_owned())
         .with_weight(160.0)
-        .with_rest(210)
+        .with_rest_mins(3.5)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -481,7 +481,7 @@ fn create_medium_ohp() -> Workout {
     let name = ExerciseName("Medium Chin-ups".to_owned());
     let formal_name = FormalName("Chin-up".to_owned());
     let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
-        .with_rest(210)
+        .with_rest_mins(3.5)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -494,7 +494,7 @@ fn create_medium_ohp() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Cable Machine".to_owned())
         .with_weight(17.5)
-        .with_rest(120)
+        .with_rest_mins(2.0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
