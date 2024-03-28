@@ -379,7 +379,7 @@ impl ExerciseData {
         let records: Vec<&Record> = history
             .records(exercise.name())
             .rev()
-            .filter(|r| r.program == program.name && r.workout == workout.name) // TODO add a way to disable this?
+            .filter(|r| r.program == program.name && r.workout == workout.name && r.sets.is_some()) // TODO add a way to disable this?
             .take(100) // TODO add a button to pull down another 100 of history?
             .collect();
         records
@@ -896,7 +896,7 @@ fn aggregate_reps(sets: &Vec<(i32, Option<f32>)>) -> f32 {
 fn record_to_record(delta: i32, record: &Record, in_progress: bool) -> ExerciseDataRecord {
     let mut text = String::new();
 
-    let indicator = if in_progress {
+    let indicator = if in_progress && record.completed.is_none() {
         "-  ".to_owned()
     } else if delta > 0 {
         "▲ ".to_owned() // BLACK UP-POINTING TRIANGLE
