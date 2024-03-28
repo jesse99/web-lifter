@@ -405,7 +405,17 @@ impl ExerciseData {
             .clone()
             .map_or("".to_owned(), |w| format!(" @ {}", w.text()));
         let exercise_set_details = format!("{}s{suffix}", e.set(d.current_index));
-        let weight_details = w.map(|w| w.details()).flatten().unwrap_or("".to_owned());
+
+        let wdetails = w.map(|w| w.details()).flatten().unwrap_or("".to_owned());
+        let tdetails = e
+            .target()
+            .map(|t| format!("target is {t}s"))
+            .unwrap_or("".to_owned());
+        let weight_details = if wdetails.is_empty() {
+            tdetails
+        } else {
+            format!("{wdetails} ({tdetails})") // kinda lame formatting (tho this will likely be rare)
+        };
 
         let wait = if d.finished {
             "0".to_owned()

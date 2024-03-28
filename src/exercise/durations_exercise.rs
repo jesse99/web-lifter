@@ -1,3 +1,5 @@
+use std::option;
+
 use crate::SetIndex;
 use serde::{Deserialize, Serialize};
 
@@ -28,6 +30,10 @@ impl DurationsExercise {
 
     pub fn num_sets(&self) -> usize {
         self.secs.len()
+    }
+
+    pub fn target(&self) -> Option<i32> {
+        self.target_secs
     }
 
     pub fn set(&self, index: SetIndex) -> i32 {
