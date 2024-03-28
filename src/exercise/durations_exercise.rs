@@ -19,12 +19,12 @@ impl DurationsExercise {
         }
     }
 
-    // pub fn with_target_secs(self, secs: i32) -> DurationsExercise {
-    //     DurationsExercise {
-    //         target_secs: Some(secs),
-    //         ..self
-    //     }
-    // }
+    pub fn with_target_secs(self, secs: i32) -> DurationsExercise {
+        DurationsExercise {
+            target_secs: Some(secs),
+            ..self
+        }
+    }
 
     pub fn num_sets(&self) -> usize {
         self.secs.len()
