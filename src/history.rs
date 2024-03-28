@@ -139,16 +139,16 @@ impl History {
         None
     }
 
-    /// Returns the earliest date at which a recently completed exercise in workout was
+    /// Returns the oldest date at which a recently completed exercise in workout was
     /// started.
     pub fn first_started(&self, workout: &str) -> Option<DateTime<Local>> {
         let mut date = None;
         for (_, records) in self.records.iter() {
             for record in records.iter().rev() {
-                if let Some(completed) = record.completed {
-                    let delta = Local::now() - completed;
-                    if delta.num_minutes() < RECENT_MINS {
-                        if record.workout == workout {
+                if record.workout == workout {
+                    if let Some(completed) = record.completed {
+                        let delta = Local::now() - completed;
+                        if delta.num_minutes() < RECENT_MINS {
                             if let Some(previous) = date {
                                 if record.started < previous {
                                     date = Some(record.started);
@@ -157,7 +157,6 @@ impl History {
                                 date = Some(record.started);
                             }
                         }
-                    } else {
                         break;
                     }
                 }
@@ -166,16 +165,16 @@ impl History {
         date
     }
 
-    /// Returns the latest date at which a recently completed exercise in workout was
+    /// Returns the newest date at which a recently completed exercise in workout was
     /// finished.
     pub fn last_completed(&self, workout: &str) -> Option<DateTime<Local>> {
         let mut date = None;
         for (_, records) in self.records.iter() {
-            for record in records.iter() {
-                if let Some(completed) = record.completed {
-                    let delta = Local::now() - completed;
-                    if delta.num_minutes() < RECENT_MINS {
-                        if record.workout == workout {
+            for record in records.iter().rev() {
+                if record.workout == workout {
+                    if let Some(completed) = record.completed {
+                        let delta = Local::now() - completed;
+                        if delta.num_minutes() < RECENT_MINS {
                             if let Some(previous) = date {
                                 if completed > previous {
                                     date = Some(completed);
@@ -184,7 +183,6 @@ impl History {
                                 date = Some(completed);
                             }
                         }
-                    } else {
                         break;
                     }
                 }

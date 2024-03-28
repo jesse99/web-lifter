@@ -50,10 +50,10 @@ impl WorkoutData {
                         format!("{mins} mins")
                     }
                 } else {
-                    "".to_owned()
+                    "-".to_owned()
                 }
             } else {
-                "".to_owned()
+                "-".to_owned()
             };
             Ok(WorkoutData {
                 workout_name: name.to_owned(),
@@ -100,7 +100,7 @@ impl ExerciseData {
                 };
                 ("text-secondary".to_owned(), mins)
             } else {
-                ("".to_owned(), "".to_owned())
+                ("".to_owned(), "-".to_owned())
             };
         ExerciseData {
             color,
