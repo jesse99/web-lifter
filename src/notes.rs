@@ -822,13 +822,14 @@ vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/box-squat
         vec![
             "Kneel below a high pulley with a rope attachment.",
             "Lower the rope until your hands are next to your face.",
-            "Allow the weight to hyper-extend your back.",
-            "Flex abs and lower your torso.",
+            "Keep your back straight throughout.",
+            "Tuck chin.",
+            "Flex abs and lower your torso keeping arms and hips still.",
             "Elbows should be lowered to mind-thighs.",
         ],
         vec![(
             "Link",
-            "https://www.bodybuilding.com/exercises/detail/view/name/cable-crunch",
+            "https://steelsupplements.com/blogs/steel-blog/how-to-do-casble-crunches-form-benefits",
         )],
     );
 
