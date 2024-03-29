@@ -21,6 +21,7 @@ pub fn make_program() -> pages::AppState {
     default_program.apply(ProgramOp::Add(create_medium_bench()));
     default_program.apply(ProgramOp::Add(create_medium_ohp()));
     default_program.apply(ProgramOp::Add(create_light()));
+    default_program.apply(ProgramOp::Add(create_test()));
 
     let user = match persist::load() {
         Ok(u) => {
@@ -48,6 +49,34 @@ pub fn make_program() -> pages::AppState {
         handlebars: Handlebars::new(),
         user,
     }
+}
+
+fn create_test() -> Workout {
+    let mut workout = Workout::new("Test".to_owned(), Schedule::AnyDay);
+
+    // Test Bench
+    let warmups = vec![FixedReps::new(5, 50), FixedReps::new(3, 80)];
+    let worksets = vec![VariableReps::new(1, 3, 100); 2];
+    let e = VariableRepsExercise::new(warmups, worksets);
+    let name = ExerciseName("Test Bench".to_owned());
+    let formal_name = FormalName("Bench Press".to_owned());
+    let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
+        .with_weightset("Dual Plates".to_owned())
+        .with_weight(150.0)
+        .with_rest_mins(3.5)
+        .finalize();
+    workout.apply(WorkoutOp::Add(exercise));
+
+    // Test Chin-ups
+    let e = VariableSetsExercise::new(16);
+    let name = ExerciseName("Test Chin-ups".to_owned());
+    let formal_name = FormalName("Chin-up".to_owned());
+    let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
+        .with_rest_mins(3.5)
+        .finalize();
+    workout.apply(WorkoutOp::Add(exercise));
+
+    workout
 }
 
 fn create_heavy_bench() -> Workout {
@@ -136,19 +165,6 @@ fn create_heavy_bench() -> Workout {
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
-    // Test Bench
-    let warmups = vec![FixedReps::new(5, 50), FixedReps::new(3, 80)];
-    let worksets = vec![VariableReps::new(1, 3, 100); 2];
-    let e = VariableRepsExercise::new(warmups, worksets);
-    let name = ExerciseName("Test Bench".to_owned());
-    let formal_name = FormalName("Bench Press".to_owned());
-    let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
-        .with_weightset("Dual Plates".to_owned())
-        .with_weight(150.0)
-        .with_rest_mins(3.5)
-        .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
-
     workout
 }
 
@@ -192,6 +208,7 @@ fn create_heavy_ohp() -> Workout {
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
+    // Chin-ups
     let e = VariableSetsExercise::new(16);
     let name = ExerciseName("Chin-ups".to_owned());
     let formal_name = FormalName("Chin-up".to_owned());
