@@ -119,14 +119,44 @@ impl Program {
     }
 
     pub fn fixup(&mut self) {
-        // if let Some(workout) = self.find_mut("Heavy Bench") {
-        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Heavy RDL".to_owned())) {
-        //         exercise.set_weight(Some(225.0));
+        // if let Some(workout) = self.find_mut("Heavy OHP") {
+        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Chin-ups".to_owned())) {
+        //         let (_, e) = exercise.expect_var_sets_mut();
+        //         e.set_target(16);
         //     } else {
-        //         panic!("didn't find Heavy RDL");
+        //         panic!("didn't find Chin-ups");
+        //     }
+        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Face Pulls".to_owned())) {
+        //         exercise.set_weight(Some(37.5));
+        //     } else {
+        //         panic!("didn't find Face Pulls");
         //     }
         // } else {
-        //     panic!("didn't find Heavy Bench workout");
+        //     panic!("didn't find Heavy OHP workout");
+        // }
+        // if let Some(workout) = self.find_mut("Medium OHP") {
+        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Medium Chin-ups".to_owned())) {
+        //         let (_, e) = exercise.expect_var_sets_mut();
+        //         e.set_target(16);
+        //     } else {
+        //         panic!("didn't find Medium Chin-ups");
+        //     }
+        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Face Pulls".to_owned())) {
+        //         exercise.set_weight(Some(37.5));
+        //     } else {
+        //         panic!("didn't find Face Pulls");
+        //     }
+        // } else {
+        //     panic!("didn't find Medium OHP workout");
+        // }
+        // if let Some(workout) = self.find_mut("Light") {
+        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Face Pulls".to_owned())) {
+        //         exercise.set_weight(Some(37.5));
+        //     } else {
+        //         panic!("didn't find Face Pulls");
+        //     }
+        // } else {
+        //     panic!("didn't find Light workout");
         // }
     }
 

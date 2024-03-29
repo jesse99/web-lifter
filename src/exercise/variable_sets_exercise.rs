@@ -21,6 +21,10 @@ impl VariableSetsExercise {
         self.target
     }
 
+    pub fn set_target(&mut self, target: i32) {
+        self.target = target;
+    }
+
     pub fn set_previous(&mut self, previous: Vec<i32>) {
         if !previous.is_empty() {
             self.target = previous.iter().sum();

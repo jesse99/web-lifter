@@ -98,7 +98,15 @@
 \cf14 \strokec14 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95 Do something with target secs on exercise page\
+\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95 History should join reps\
+\'95\'a0How should advancement be handled in var sets?\
+	- may want to add a test workout\
+\'95\'a0Timer can say \'931 mins\'94\
+\'95 Block scheduling isn\'92t right\
+	- can we move now to the block start, do normal scheduling, and then\
+	  use the delta from that to the real now?\
+	- would have to special case active block to handle case where now is\
+	  after last scheduled workout\
 \'95 Add a light workout\
 	- add chin-ups (adjust target reps based on workout results)\
 	- add face pulls (adjust weight based on workout results)\
@@ -149,18 +157,16 @@ fn get_result() -> Option<u64> \{
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf10 	- think it said Set 1\
 	- may want to add a bit of delay\
-\'95\'a0Elliptical is set to 5 hours\
-\'95 Block scheduling isn\'92t right\
-	- can we move now to the block start, do normal scheduling, and then\
-	  use the delta from that to the real now?\
-	- would have to special case active block to handle case where now is\
-	  after last scheduled workout\
-\'95 Can we do a buzz or other haptic when timer finishes? Post alert?\
+\'95 Can we do a buzz or other haptic when timer finishes? \
+	- there\'92s a vibration API but it doesn\'92t work on iOS\
+	- also a notification API which needs permission from user and https\
 \'95\'a0Move default program into its own file\
 \'95 Use a redirect when after posting\
 	- should allow back button to work better\
 \'95 Should we use bigger fonts on mobile?\
 \'95\'a0Switch to medium RDL at some point\
+\'95 Turn this into a Progressive Web App (PWA)? \
+	- would allow it to be added to the app store\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 \cf10 \'95\'a0Track how long workouts take\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0

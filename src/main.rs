@@ -144,26 +144,26 @@ fn create_light_workout() -> Workout {
     workout.apply(WorkoutOp::Add(exercise));
 
     // Face Pulls
-    // let warmups = vec![FixedReps::new(6, 75)];
-    // let worksets = vec![VariableReps::new(6, 12, 100); 3];
-    // let e = VariableRepsExercise::new(warmups, worksets);
-    // let name = ExerciseName("Face Pulls".to_owned());
-    // let formal_name = FormalName("Face Pull".to_owned());
-    // let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
-    //     .with_weightset("Cable Machine".to_owned())
-    //     .with_weight(12.5)
-    //     .with_rest_mins(2.0)
-    //     .finalize();
-    // workout.apply(WorkoutOp::Add(exercise));
+    let warmups = vec![FixedReps::new(6, 75)];
+    let worksets = vec![VariableReps::new(6, 12, 100); 3];
+    let e = VariableRepsExercise::new(warmups, worksets);
+    let name = ExerciseName("Face Pulls".to_owned());
+    let formal_name = FormalName("Face Pull".to_owned());
+    let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
+        .with_weightset("Cable Machine".to_owned())
+        .with_weight(37.5)
+        .with_rest_mins(2.0)
+        .finalize();
+    workout.apply(WorkoutOp::Add(exercise));
 
     // Light Chin-ups
-    // let e = VariableSetsExercise::new(4);
-    // let name = ExerciseName("Light Chin-ups".to_owned());
-    // let formal_name = FormalName("Chin-up".to_owned());
-    // let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
-    //     .with_rest_mins(3.0)
-    //     .finalize();
-    // workout.apply(WorkoutOp::Add(exercise));
+    let e = VariableSetsExercise::new(12);
+    let name = ExerciseName("Light Chin-ups".to_owned());
+    let formal_name = FormalName("Chin-up".to_owned());
+    let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
+        .with_rest_mins(3.0)
+        .finalize();
+    workout.apply(WorkoutOp::Add(exercise));
 
     // Cable Crunchs
     let warmups = vec![FixedReps::new(6, 75)];
@@ -386,7 +386,7 @@ fn create_heavy_ohp() -> Workout {
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
-    let e = VariableSetsExercise::new(8);
+    let e = VariableSetsExercise::new(16);
     let name = ExerciseName("Chin-ups".to_owned());
     let formal_name = FormalName("Chin-up".to_owned());
     let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
@@ -394,7 +394,7 @@ fn create_heavy_ohp() -> Workout {
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
-    // Face Pullls
+    // Face Pulls
     let warmups = vec![FixedReps::new(6, 75)];
     let worksets = vec![VariableReps::new(8, 12, 100); 3];
     let e = VariableRepsExercise::new(warmups, worksets);
@@ -402,7 +402,7 @@ fn create_heavy_ohp() -> Workout {
     let formal_name = FormalName("Face Pull".to_owned());
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Cable Machine".to_owned())
-        .with_weight(17.5)
+        .with_weight(37.5)
         .with_rest_mins(2.0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
@@ -529,7 +529,7 @@ fn create_medium_ohp() -> Workout {
     let formal_name = FormalName("Face Pull".to_owned());
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Cable Machine".to_owned())
-        .with_weight(17.5)
+        .with_weight(37.5)
         .with_rest_mins(2.0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
