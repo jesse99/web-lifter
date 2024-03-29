@@ -961,11 +961,11 @@ fn reps_to_str(sets: &Vec<(i32, Option<f32>)>) -> String {
 fn num_to_str(sets: &Vec<(i32, Option<f32>)>, unit: &str) -> String {
     if sets.iter().all(|s| s.1.is_none()) {
         let reps: Vec<_> = sets.iter().map(|x| format!("{}", x.0)).collect();
-        let reps = reps.join(", ");
+        let reps = join_labels(reps);
         reps + " " + unit
     } else if !sets.is_empty() && sets[0].1.is_some() && sets.iter().all(|s| s.1 == sets[0].1) {
         let reps: Vec<_> = sets.iter().map(|x| format!("{}", x.0)).collect();
-        let reps = reps.join(", ");
+        let reps = join_labels(reps);
         let weight = format_weight(sets[0].1.unwrap(), " lbs");
         format!("{reps} {unit} @ {weight}")
     } else {
