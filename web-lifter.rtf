@@ -1,6 +1,6 @@
 {\rtf1\ansi\ansicpg1252\cocoartf2709
 \cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fswiss\fcharset0 Helvetica;\f2\fswiss\fcharset0 ArialMT;
-\f3\froman\fcharset0 Times-Roman;\f4\fswiss\fcharset0 Helvetica-Bold;}
+\f3\fswiss\fcharset0 Helvetica-Bold;\f4\froman\fcharset0 Times-Roman;}
 {\colortbl;\red255\green255\blue255;\red203\green0\blue77;\red60\green60\blue59;\red117\green66\blue151;
 \red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;\red117\green66\blue151;\red9\green76\blue116;
 \red2\green2\blue2;\red25\green28\blue31;\red130\green130\blue130;\red0\green0\blue0;\red95\green124\blue3;
@@ -96,16 +96,9 @@
 \outl0\strokewidth0 \strokec3 \
 \pard\pardeftab720\partightenfactor0
 \cf14 \strokec14 \
-\pard\pardeftab720\partightenfactor0
-\cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 join_labels\cf3 \strokec3 (\cf4 \strokec4 labels\cf3 \strokec3 : Vec<String>) -> String \{\
-\
-            CompletedSets::\cf7 \strokec7 Durations\cf3 \strokec3 (\cf4 \strokec4 s\cf3 \strokec3 ) => \cf7 \strokec7 durations_to_str\cf3 \strokec3 (\cf4 \strokec4 s\cf3 \strokec3 ),\
-            CompletedSets::\cf7 \strokec7 Reps\cf3 \strokec3 (\cf4 \strokec4 s\cf3 \strokec3 ) => \cf7 \strokec7 reps_to_str\cf3 \strokec3 (\cf4 \strokec4 s\cf3 \strokec3 ),\
-\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95 History should join reps\
-\'95\'a0How should advancement be handled in var sets?\
+\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95\'a0How should advancement be handled in var sets?\
 	- may want to add a test workout\
 \'95\'a0Timer can say \'931 mins\'94\
 \'95 Block scheduling isn\'92t right\
@@ -113,78 +106,91 @@
 	  use the delta from that to the real now?\
 	- would have to special case active block to handle case where now is\
 	  after last scheduled workout\
-\'95 Add a light workout\
-	- add chin-ups (adjust target reps based on workout results)\
-	- add face pulls (adjust weight based on workout results)\
-\'95\'a0To avoid annoying if let chains, can\
+\'95\'a0Move default program into its own file\
+\'95 Use a redirect when after posting\
+	- should allow back button to work better\
+\'95\'a0Supporting editing:\
+	- add a hambuger drop down in upper right\
+	- edit common (i.e. ExerciseData)\
+		` for now 
+\f3\b weight and rests
+\f1\b0 \
+	- edit special (durations, reps, etc)\
+	- edit note\
+	- start timer?\
+	- 
+\f3\b reset exercise
+\f1\b0 \
+	- options (eg font scaling, save keyed with device name)\
+		` options would also be availble in program and workout pages\
+	- click should edit 
+\f3\b history record
+\f1\b0 \
+\'95 Should there be a way to manually start a timer?\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 \'95 Do timers work when switch to a new page and then back?\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+\cf10 \'95\'a0To avoid annoying if let chains, can\
 	- match a tuple\
 	- extract to a function and use ? operator (if the lets all want the same type)\
 
 \fs52 		
-\f3\fs30\fsmilli15333 \cf15 \expnd0\expndtw0\kerning0
+\f4\fs30\fsmilli15333 \cf15 \expnd0\expndtw0\kerning0
 fn get_result() -> Option<u64> \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 let i = func1()?;
+\f4\fs30\fsmilli15333 \cf15 \'a0 let i = func1()?;
 \f1\fs33\fsmilli16667 \cf0 \
 \pard\pardeftab720\partightenfactor0
 \cf0 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 let j = func2(i)?;
+\f4\fs30\fsmilli15333 \cf15 \'a0 let j = func2(i)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 let k = func3(j)?;
+\f4\fs30\fsmilli15333 \cf15 \'a0 let k = func3(j)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 func3(k)
+\f4\fs30\fsmilli15333 \cf15 \'a0 func3(k)
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \}
+\f4\fs30\fsmilli15333 \cf15 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0
+\f4\fs30\fsmilli15333 \cf15 \'a0
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 fn main() \{
+\f4\fs30\fsmilli15333 \cf15 fn main() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 if let Some(result) = get_result() \{
+\f4\fs30\fsmilli15333 \cf15 \'a0 if let Some(result) = get_result() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0\'a0\'a0 // do something
+\f4\fs30\fsmilli15333 \cf15 \'a0\'a0\'a0 // do something
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 \}
+\f4\fs30\fsmilli15333 \cf15 \'a0 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \}\
+\f4\fs30\fsmilli15333 \cf15 \}\
 \pard\pardeftab720\partightenfactor0
 
 \f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \'95\'a0Set label flaked out for a second after finishing last set\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf10 	- think it said Set 1\
 	- may want to add a bit of delay\
-\'95 Can we do a buzz or other haptic when timer finishes? \
-	- there\'92s a vibration API but it doesn\'92t work on iOS\
-	- also a notification API which needs permission from user and https\
-\'95\'a0Move default program into its own file\
-\'95 Use a redirect when after posting\
-	- should allow back button to work better\
 \'95 Should we use bigger fonts on mobile?\
+	- might want options\
 \'95\'a0Switch to medium RDL at some point\
 \'95 Turn this into a Progressive Web App (PWA)? \
 	- would allow it to be added to the app store\
+\'95 Can we do a buzz or other haptic when timer finishes? \
+	- there\'92s a vibration API but it doesn\'92t work on iOS\
+	- also a notification API which needs permission from user and https\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Track how long workouts take\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95 Should be a way to reset an exercise\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95 Do timers work when switch to a new page and then back?\
-\'95\'a0Add some logging/tracing\
+\cf10 \'95\'a0Add some logging/tracing\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf10 \'95 Add support for rest weeks\
 	- maybe treat this as a periodization variant\
 \'95 Do something with favicon\
-\'95 Should there be a way to manually start a timer?\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf10 \'95\'a0Replace www.bodybuilding.com links with something else\
 	- think www.bodybuilding.com has some aggresive throttling\
@@ -223,35 +229,35 @@ restart a thread. Might be some tower thing for this.\
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f4\b\fs48 \cf10 \kerning1\expnd0\expndtw0 \
+\f3\b\fs48 \cf10 \kerning1\expnd0\expndtw0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
 \f1\b0 \cf10          \cf10 \ul \ulc10 Full Body Exercises\cf10 \ulnone \
 \
 \
          Side Leg Lift
-\f4\b \cf10             
+\f3\b \cf10             
 \f1\b0 \cf10 \
          \
          \
             Set 1 of 2
-\f4\b \cf10               
+\f3\b \cf10               
 \f1\b0 \cf10 \
                
 \fs36 \cf10 10 reps
-\f4\b\fs48 \cf10                  
+\f3\b\fs48 \cf10                  
 \f1\b0 \cf10 \
             \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 \cf10 \ul \ulc10 Next\ulnone                        \ul Reset
-\f4\b \ulnone  
+\f3\b \ulnone  
 \f1\b0 \ul \
 \ulnone \
                \ul Start Timer?\
                \
                \
 
-\f4\b \ulnone History
+\f3\b \ulnone History
 \f1\b0  | Chart | Notes | Edit\
 2x10   Mar 6, 2024\
 2x10   Mar 1, 2024\
