@@ -4076,12 +4076,14 @@ vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/spider-cu
 
     add(t, "Stack Complex",
 vec![
-        "[Push Press](https://www.stack.com/a/dumbbell-push-press)",
-        "[Front Squat](https://www.bodybuilding.com/exercises/dumbbell-front-squat)",
-        "[Romanian Deadlift](https://www.bodybuilding.com/exercises/detail/view/name/romanian-deadlift-with-dumbbells)",
-        "[Bent-over Row](https://www.bodybuilding.com/exercises/detail/view/name/bent-over-two-dumbbell-row)",
-        "[Elevated Pushups](https://www.youtube.com/watch?v=8enS53b5OFw)",
-        "[Bike Sprints](https://www.t-nation.com/training/4-dumbest-forms-of-cardio)"],
+    "Do 8 reps.",
+    "[Push Press](https://greatist.com/health/dumbbell-push-press#how-to-do-a-dumbbell-push-press)",
+        "[Front Squat](https://www.nasm.org/exercise-library/dumbbell-front-squat)",
+        "[Romanian Deadlift](https://www.nasm.org/exercise-library/dumbbell-romanian-deadlift)",
+        "[Bent-over Row](https://www.muscleandstrength.com/exercises/bent-over-dumbbell-row.html)",
+        "[Elevated Pushups](https://www.livestrong.com/article/13771062-dumbbell-push-ups/)",
+        "Rest for 30s.",
+        "[30s Bike Sprints](https://www.t-nation.com/training/4-dumbest-forms-of-cardio)"],
 vec![("Link", "https://www.stack.com/a/a-dumbbell-complex-workout-to-build-muscle-and-quickly-shed-fat")],
 );
 
