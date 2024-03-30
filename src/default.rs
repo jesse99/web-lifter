@@ -12,7 +12,7 @@ pub fn make_program() -> pages::AppState {
             vec!["Medium Bench".to_owned(), "Medium OHP".to_owned()],
             1,
         ),
-        Block::new("Rest".to_owned(), vec!["Rest".to_owned()], 1),
+        Block::new("Light".to_owned(), vec!["Light".to_owned()], 1),
     ];
     let name = "My".to_owned();
     let mut default_program = Program::with_blocks(name, blocks, Local::now(), 1);
