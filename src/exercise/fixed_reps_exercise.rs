@@ -23,6 +23,7 @@ pub struct FixedRepsExercise {
 
 impl FixedRepsExercise {
     // TODO: do we want a validator here?
+    #[cfg(test)]
     pub fn with_reps(worksets: Vec<i32>) -> FixedRepsExercise {
         let worksets = worksets
             .iter()
@@ -34,9 +35,9 @@ impl FixedRepsExercise {
         }
     }
 
-    pub fn with_percent(warmups: Vec<FixedReps>, worksets: Vec<FixedReps>) -> FixedRepsExercise {
-        FixedRepsExercise { warmups, worksets }
-    }
+    // pub fn with_percent(warmups: Vec<FixedReps>, worksets: Vec<FixedReps>) -> FixedRepsExercise {
+    //     FixedRepsExercise { warmups, worksets }
+    // }
 
     pub fn num_warmups(&self) -> usize {
         self.warmups.len()

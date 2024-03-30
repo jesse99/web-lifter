@@ -1,5 +1,3 @@
-use std::option;
-
 use crate::SetIndex;
 use serde::{Deserialize, Serialize};
 

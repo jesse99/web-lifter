@@ -146,12 +146,12 @@ impl Exercise {
         }
     }
 
-    pub fn expect_var_sets_mut(&mut self) -> (&mut ExerciseData, &mut VariableSetsExercise) {
-        match self {
-            Exercise::VariableSets(d, e) => (d, e),
-            _ => panic!("expected var sets"),
-        }
-    }
+    // pub fn expect_var_sets_mut(&mut self) -> (&mut ExerciseData, &mut VariableSetsExercise) {
+    //     match self {
+    //         Exercise::VariableSets(d, e) => (d, e),
+    //         _ => panic!("expected var sets"),
+    //     }
+    // }
 
     /// Used for warmup sets, returned weight may be over expected weight.
     pub fn closest_weight(&self, weights: &Weights, index: SetIndex) -> Option<Weight> {

@@ -342,7 +342,6 @@ mod tests {
     #[test]
     fn every_1_days() {
         let (mut workout, name) = build_squat(Schedule::Every(1)); // bit silly
-        let bschedule = BlockSchedule { spans: Vec::new() };
 
         // not completed
         assert_eq!(workout.status_from(Local::now()), Status::Due(1));
