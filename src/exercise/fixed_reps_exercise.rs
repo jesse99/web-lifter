@@ -23,7 +23,6 @@ pub struct FixedRepsExercise {
 
 impl FixedRepsExercise {
     // TODO: do we want a validator here?
-    #[cfg(test)]
     pub fn with_reps(worksets: Vec<i32>) -> FixedRepsExercise {
         let worksets = worksets
             .iter()

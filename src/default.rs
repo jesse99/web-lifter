@@ -161,7 +161,7 @@ fn create_heavy_bench() -> Workout {
         .with_weightset("Deadlift".to_owned())
         .with_weight(205.0)
         .with_rest_mins(3.0)
-        .with_last_rest(0)
+        .with_last_rest_mins(0.0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -289,7 +289,7 @@ fn create_medium_bench() -> Workout {
         .with_weightset("Deadlift".to_owned())
         .with_weight(205.0)
         .with_rest_mins(3.0)
-        .with_last_rest(0)
+        .with_last_rest_mins(0.0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -393,16 +393,37 @@ fn create_light() -> Workout {
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
-    // Cable Crunchs
-    let warmups = vec![FixedReps::new(6, 75)];
-    let worksets = vec![VariableReps::new(6, 12, 100); 3];
-    let e = VariableRepsExercise::new(warmups, worksets);
-    let name = ExerciseName("Cable Crunchs".to_owned());
-    let formal_name = FormalName("Cable Crunch".to_owned());
-    let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
-        .with_weightset("Cable Machine".to_owned())
-        .with_weight(17.5)
-        .with_rest_mins(2.0)
+    // // Cable Crunchs
+    // let worksets = vec![VariableReps::new(6, 12, 100); 3];
+    // let e = VariableRepsExercise::new(warmups, worksets);
+    // let name = ExerciseName("Cable Crunchs".to_owned());
+    // let formal_name = FormalName("Cable Crunch".to_owned());
+    // let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
+    //     .with_weightset("Cable Machine".to_owned())
+    //     .with_weight(17.5)
+    //     .with_rest_mins(2.0)
+    //     .finalize();
+    // workout.apply(WorkoutOp::Add(exercise));
+
+    // Stack Complex 1
+    let sets = vec![1; 4];
+    let e = FixedRepsExercise::with_reps(sets);
+    let name = ExerciseName("Stack Complex 1".to_owned());
+    let formal_name = FormalName("Stack Complex".to_owned());
+    let exercise = BuildExercise::fixed_reps(name, formal_name, e)
+        .with_rest_secs(45)
+        .with_last_rest_mins(3.0)
+        .finalize();
+    workout.apply(WorkoutOp::Add(exercise));
+
+    // Stack Complex 2
+    let sets = vec![1; 4];
+    let e = FixedRepsExercise::with_reps(sets);
+    let name = ExerciseName("Stack Complex 2".to_owned());
+    let formal_name = FormalName("Stack Complex".to_owned());
+    let exercise = BuildExercise::fixed_reps(name, formal_name, e)
+        .with_rest_secs(45)
+        .with_last_rest_mins(0.0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 

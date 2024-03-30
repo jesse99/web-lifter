@@ -328,9 +328,17 @@ impl BuildExercise {
         BuildExercise { data, ..self }
     }
 
-    pub fn with_last_rest(self, last: i32) -> BuildExercise {
+    pub fn with_rest_secs(self, rest: i32) -> BuildExercise {
         let data = ExerciseData {
-            last_rest: Some(last),
+            rest: Some(rest),
+            ..self.data
+        };
+        BuildExercise { data, ..self }
+    }
+
+    pub fn with_last_rest_mins(self, rest: f32) -> BuildExercise {
+        let data = ExerciseData {
+            last_rest: Some((60.0 * rest) as i32),
             ..self.data
         };
         BuildExercise { data, ..self }
