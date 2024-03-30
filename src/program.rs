@@ -26,6 +26,7 @@ impl Block {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct BlockSpan {
     workouts: Vec<String>,
     begin: DateTime<Local>, // week start, i.e. Monday
@@ -33,8 +34,9 @@ pub struct BlockSpan {
 }
 
 /// Used by [`Workout`] to create the next scheduled label in the program page.
+#[derive(Debug, Clone)]
 pub struct BlockSchedule {
-    spans: Vec<BlockSpan>, // active workout (will typically start in the past), next workout, next next, ends with next scheduled active workout
+    pub spans: Vec<BlockSpan>, // active workout (will typically start in the past), next workout, next next, ends with next scheduled active workout
 }
 
 impl BlockSchedule {
@@ -258,112 +260,3 @@ impl Program {
         BlockSchedule { spans }
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     // use chrono::{DurationRound, TimeDelta};
-
-//     use super::*;
-
-//     #[test]
-//     fn no_blocks() {
-//         let now = date_from_day(Weekday::Tue);
-//         let program = Program::new("Test".to_owned());
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 0);
-
-//         let now = now + Duration::weeks(1);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 0);
-
-//         let now = now + Duration::weeks(1);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 0);
-//     }
-
-//     #[test]
-//     fn weekly() {
-//         let blocks = vec![
-//             Block::new("Heavy".to_owned(), vec!["Heavy Bench".to_owned()], 1),
-//             Block::new("Medium".to_owned(), vec!["Medium Bench".to_owned()], 1),
-//             Block::new("Cardio".to_owned(), vec!["Elliptical".to_owned()], 1),
-//         ];
-//         let now = date_from_day(Weekday::Tue);
-//         let program = Program::with_blocks("Test".to_owned(), blocks, now, 1);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 6);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 13);
-
-//         let now = now + Duration::weeks(1);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 6);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 13);
-
-//         let now = now + Duration::weeks(1);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 6);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 13);
-//     }
-
-//     #[test]
-//     fn weekly2() {
-//         let blocks = vec![
-//             Block::new("Heavy".to_owned(), vec!["Heavy Bench".to_owned()], 1),
-//             Block::new("Medium".to_owned(), vec!["Medium Bench".to_owned()], 1),
-//             Block::new("Cardio".to_owned(), vec!["Elliptical".to_owned()], 1),
-//         ];
-//         let now = date_from_day(Weekday::Sun);
-//         let program = Program::with_blocks("Test".to_owned(), blocks, now, 1);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 1);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 8);
-//     }
-
-//     #[test]
-//     fn biweekly() {
-//         let blocks = vec![
-//             Block::new("Heavy".to_owned(), vec!["Heavy Bench".to_owned()], 2),
-//             Block::new("Medium".to_owned(), vec!["Medium Bench".to_owned()], 2),
-//             Block::new("Cardio".to_owned(), vec!["Elliptical".to_owned()], 1),
-//         ];
-//         let now = date_from_day(Weekday::Tue);
-//         let program = Program::with_blocks("Test".to_owned(), blocks, now, 1);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 13);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 27);
-
-//         let now = now + Duration::weeks(1);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 6);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 20);
-
-//         let now = now + Duration::weeks(1);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 13);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 20);
-
-//         let now = now + Duration::weeks(1);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 6);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 13);
-
-//         let now = now + Duration::weeks(1);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 6);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 20);
-
-//         let now = now + Duration::weeks(1);
-//         assert_eq!(program.days_to_block_start_from(now, "Heavy Bench"), 0);
-//         assert_eq!(program.days_to_block_start_from(now, "Medium Bench"), 13);
-//         assert_eq!(program.days_to_block_start_from(now, "Elliptical"), 27);
-//     }
-
-//     fn date_from_day(wd: Weekday) -> DateTime<Local> {
-//         let day = 11 + (wd as i32);
-//         let text = format!("2024-03-{day}T08:00:00Z");
-//         DateTime::parse_from_rfc3339(&text).unwrap().into()
-//     }
-// }

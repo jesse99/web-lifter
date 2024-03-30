@@ -305,330 +305,329 @@ impl Workout {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-
-//     #[test]
-//     fn empty() {
-//         let workout = Workout::new("test".to_owned(), Schedule::AnyDay);
-//         assert_eq!(workout.status(0), Status::Empty);
-//         // can't test complete because there are no exercises to complete
-//     }
-
-//     #[test]
-//     fn any_day() {
-//         let (mut workout, name) = build_squat(Schedule::AnyDay);
-
-//         // not completed
-//         assert_eq!(workout.status(0), Status::DueAnyTime);
-
-//         // completed two days ago
-//         let date = Local::now() - Duration::days(2);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status(0), Status::DueAnyTime);
-
-//         // completed yesterday
-//         let date = Local::now() - Duration::days(1);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status(0), Status::DueAnyTime);
-
-//         // completed today
-//         let date = Local::now();
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status(0), Status::Completed);
-//     }
-
-//     #[test]
-//     fn every_1_days() {
-//         let (mut workout, name) = build_squat(Schedule::Every(1)); // bit silly
-
-//         // not completed
-//         assert_eq!(workout.status(0), Status::Due(1));
-
-//         // completed two days ago
-//         let date = Local::now() - Duration::days(2);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status(0), Status::Due(0));
-
-//         // completed yesterday
-//         let date = Local::now() - Duration::days(1);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status(0), Status::Due(0));
-
-//         // completed today
-//         let date = Local::now();
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status(0), Status::Completed);
-//     }
-
-//     #[test]
-//     fn every_2_days() {
-//         let (mut workout, name) = build_squat(Schedule::Every(2));
-
-//         // not completed
-//         let now = date_from_day_hour(Weekday::Mon, 20);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(2));
-
-//         // completed three days ago
-//         let date = now - Duration::days(3);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Overdue(1));
-
-//         // completed two days ago
-//         let date = now - Duration::days(2);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(0));
-
-//         // completed 1.8 days ago
-//         let date = now - (Duration::days(1) + Duration::hours(19));
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(0));
-
-//         // completed 1.04 days ago
-//         let date = now - (Duration::days(1) + Duration::hours(1));
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-
-//         // completed yesterday
-//         let date = now - Duration::days(1);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-
-//         // completed 0.8 days ago
-//         let date = now - Duration::hours(19);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-//     }
-
-//     fn date_from_day(wd: Weekday) -> DateTime<Local> {
-//         let day = 11 + (wd as i32);
-//         let text = format!("2024-03-{day}T08:00:00Z");
-//         DateTime::parse_from_rfc3339(&text).unwrap().into()
-//     }
-
-//     fn date_from_day_hour(wd: Weekday, hour: i32) -> DateTime<Local> {
-//         let day = 11 + (wd as i32);
-//         let text = format!("2024-03-{day}T{hour:02}:00:00Z");
-//         DateTime::parse_from_rfc3339(&text).unwrap().into()
-//     }
-
-//     #[test]
-//     fn days_not_completed1() {
-//         // due Monday
-//         let days = vec![Weekday::Mon];
-//         let (workout, _) = build_squat(Schedule::Days(days));
-
-//         let now = date_from_day(Weekday::Mon);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(0));
-
-//         let now = date_from_day(Weekday::Tue);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(6));
-
-//         let now = date_from_day(Weekday::Sat);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(2));
-
-//         // due Friday
-//         let days = vec![Weekday::Fri];
-//         let (workout, _) = build_squat(Schedule::Days(days));
-
-//         let now = date_from_day(Weekday::Mon);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(4));
-
-//         let now = date_from_day(Weekday::Tue);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(3));
-
-//         let now = date_from_day(Weekday::Fri);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(0));
-
-//         let now = date_from_day(Weekday::Sat);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(6));
-//     }
-
-//     #[test]
-//     fn days_not_completed3() {
-//         let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
-//         let (workout, _) = build_squat(Schedule::Days(days));
-
-//         let now = date_from_day(Weekday::Mon);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(0));
-
-//         let now = date_from_day(Weekday::Tue);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-
-//         let now = date_from_day(Weekday::Wed);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(0));
-
-//         let now = date_from_day(Weekday::Sat);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(2));
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty() {
+        let workout = Workout::new("test".to_owned(), Schedule::AnyDay);
+        assert_eq!(workout.status_from(Local::now()), Status::Empty);
+        // can't test complete because there are no exercises to complete
+    }
+
+    #[test]
+    fn any_day() {
+        let (mut workout, name) = build_squat(Schedule::AnyDay);
+
+        // not completed
+        assert_eq!(workout.status_from(Local::now()), Status::DueAnyTime);
+
+        // completed two days ago
+        let date = Local::now() - Duration::days(2);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(Local::now()), Status::DueAnyTime);
+
+        // completed yesterday
+        let date = Local::now() - Duration::days(1);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(Local::now()), Status::DueAnyTime);
+
+        // completed today
+        let date = Local::now();
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(Local::now()), Status::Completed);
+    }
+
+    #[test]
+    fn every_1_days() {
+        let (mut workout, name) = build_squat(Schedule::Every(1)); // bit silly
+        let bschedule = BlockSchedule { spans: Vec::new() };
+
+        // not completed
+        assert_eq!(workout.status_from(Local::now()), Status::Due(1));
+
+        // completed two days ago
+        let date = Local::now() - Duration::days(2);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(Local::now()), Status::Due(0));
+
+        // completed yesterday
+        let date = Local::now() - Duration::days(1);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(Local::now()), Status::Due(0));
+
+        // completed today
+        let date = Local::now();
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(Local::now()), Status::Completed);
+    }
+
+    #[test]
+    fn every_2_days() {
+        let (mut workout, name) = build_squat(Schedule::Every(2));
+
+        // not completed
+        let now = date_from_day_hour(Weekday::Mon, 20);
+        assert_eq!(workout.status_from(now), Status::Due(2));
+
+        // completed three days ago
+        let date = now - Duration::days(3);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Overdue(1));
+
+        // completed two days ago
+        let date = now - Duration::days(2);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(0));
+
+        // completed 1.8 days ago
+        let date = now - (Duration::days(1) + Duration::hours(19));
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(0));
+
+        // completed 1.04 days ago
+        let date = now - (Duration::days(1) + Duration::hours(1));
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+
+        // completed yesterday
+        let date = now - Duration::days(1);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+
+        // completed 0.8 days ago
+        let date = now - Duration::hours(19);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+    }
+
+    fn date_from_day(wd: Weekday) -> DateTime<Local> {
+        let day = 11 + (wd as i32);
+        let text = format!("2024-03-{day}T08:00:00Z");
+        DateTime::parse_from_rfc3339(&text).unwrap().into()
+    }
+
+    fn date_from_day_hour(wd: Weekday, hour: i32) -> DateTime<Local> {
+        let day = 11 + (wd as i32);
+        let text = format!("2024-03-{day}T{hour:02}:00:00Z");
+        DateTime::parse_from_rfc3339(&text).unwrap().into()
+    }
+
+    #[test]
+    fn days_not_completed1() {
+        // due Monday
+        let days = vec![Weekday::Mon];
+        let (workout, _) = build_squat(Schedule::Days(days));
+
+        let now = date_from_day(Weekday::Mon);
+        assert_eq!(workout.status_from(now), Status::Due(0));
+
+        let now = date_from_day(Weekday::Tue);
+        assert_eq!(workout.status_from(now), Status::Due(6));
+
+        let now = date_from_day(Weekday::Sat);
+        assert_eq!(workout.status_from(now), Status::Due(2));
+
+        // due Friday
+        let days = vec![Weekday::Fri];
+        let (workout, _) = build_squat(Schedule::Days(days));
+
+        let now = date_from_day(Weekday::Mon);
+        assert_eq!(workout.status_from(now), Status::Due(4));
+
+        let now = date_from_day(Weekday::Tue);
+        assert_eq!(workout.status_from(now), Status::Due(3));
+
+        let now = date_from_day(Weekday::Fri);
+        assert_eq!(workout.status_from(now), Status::Due(0));
+
+        let now = date_from_day(Weekday::Sat);
+        assert_eq!(workout.status_from(now), Status::Due(6));
+    }
+
+    #[test]
+    fn days_not_completed3() {
+        let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
+        let (workout, _) = build_squat(Schedule::Days(days));
+
+        let now = date_from_day(Weekday::Mon);
+        assert_eq!(workout.status_from(now), Status::Due(0));
+
+        let now = date_from_day(Weekday::Tue);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+
+        let now = date_from_day(Weekday::Wed);
+        assert_eq!(workout.status_from(now), Status::Due(0));
+
+        let now = date_from_day(Weekday::Sat);
+        assert_eq!(workout.status_from(now), Status::Due(2));
+
+        let now = date_from_day(Weekday::Sun);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+    }
+
+    #[test]
+    fn days1() {
+        let days = vec![Weekday::Mon];
+        let (mut workout, name) = build_squat(Schedule::Days(days));
+
+        // completed Monday but two weeks ago
+        let date = date_from_day(Weekday::Mon) - Duration::days(14);
+        let now = date_from_day(Weekday::Mon);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Overdue(7));
 
-//         let now = date_from_day(Weekday::Sun);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-//     }
-
-//     #[test]
-//     fn days1() {
-//         let days = vec![Weekday::Mon];
-//         let (mut workout, name) = build_squat(Schedule::Days(days));
-
-//         // completed Monday but two weeks ago
-//         let date = date_from_day(Weekday::Mon) - Duration::days(14);
-//         let now = date_from_day(Weekday::Mon);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Overdue(7));
+        let now = date_from_day(Weekday::Tue);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(6));
 
-//         let now = date_from_day(Weekday::Tue);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(6));
-
-//         let now = date_from_day(Weekday::Wed);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(5));
-
-//         // completed last Monday
-//         let date = date_from_day_hour(Weekday::Mon, 8) - Duration::days(7);
-//         let now = date_from_day_hour(Weekday::Mon, 9);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(0));
-
-//         let now = date_from_day_hour(Weekday::Tue, 9);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(6));
-
-//         // completed Monday
-//         let date = date_from_day_hour(Weekday::Mon, 8);
-//         let now = date_from_day_hour(Weekday::Mon, 9);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Completed);
-
-//         // completed Tuesday
-//         let now = date_from_day(Weekday::Tue);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(6));
-//     }
-
-//     #[test]
-//     fn days3() {
-//         let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
-//         let (mut workout, name) = build_squat(Schedule::Days(days));
-
-//         // completed Monday but two weeks ago
-//         let date = date_from_day(Weekday::Mon) - Duration::days(14);
-//         let now = date_from_day(Weekday::Mon);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Overdue(11));
-
-//         let now = date_from_day(Weekday::Tue);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-
-//         let now = date_from_day(Weekday::Wed);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Overdue(14));
-
-//         // completed Monday but a week ago
-//         let date = date_from_day_hour(Weekday::Mon, 8) - Duration::days(7);
-//         let now = date_from_day_hour(Weekday::Mon, 9);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Overdue(4));
-
-//         let now = date_from_day(Weekday::Tue);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-
-//         let now = date_from_day(Weekday::Wed);
-//         assert_eq!(workout.status_from(now, 0), Status::Overdue(7));
-
-//         let now = date_from_day(Weekday::Thu);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-
-//         let now = date_from_day(Weekday::Fri);
-//         assert_eq!(workout.status_from(now, 0), Status::Overdue(9));
-
-//         // completed Monday
-//         let date = date_from_day_hour(Weekday::Mon, 8);
-//         let now = date_from_day_hour(Weekday::Mon, 9);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Completed);
-
-//         let now = date_from_day(Weekday::Tue);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-
-//         let now = date_from_day(Weekday::Wed);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(0));
-
-//         let now = date_from_day(Weekday::Thu);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-
-//         let now = date_from_day(Weekday::Fri);
-//         assert_eq!(workout.status_from(now, 0), Status::Overdue(2));
-
-//         // completed last Fri
-//         let date = date_from_day_hour(Weekday::Fri, 8) - Duration::days(7);
-//         let now = date_from_day_hour(Weekday::Mon, 9);
-//         workout.completed.insert(name.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(0));
-
-//         let now = date_from_day(Weekday::Tue);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-
-//         let now = date_from_day(Weekday::Wed);
-//         assert_eq!(workout.status_from(now, 0), Status::Overdue(3));
-
-//         let now = date_from_day(Weekday::Thu);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(1));
-
-//         let now = date_from_day(Weekday::Fri);
-//         assert_eq!(workout.status_from(now, 0), Status::Overdue(5));
-//     }
-
-//     #[test]
-//     fn multiple() {
-//         let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
-//         let (mut workout, name1, name2) = build_squat_bench(Schedule::Days(days));
-
-//         // not completed
-//         let now = date_from_day(Weekday::Mon);
-//         assert_eq!(workout.status_from(now, 0), Status::Due(0));
-
-//         // complete one
-//         let date = date_from_day_hour(Weekday::Mon, 8);
-//         workout.completed.insert(name1.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::PartiallyCompleted);
-
-//         // complete both
-//         let date = date_from_day_hour(Weekday::Mon, 9);
-//         workout.completed.insert(name2.clone(), date);
-//         assert_eq!(workout.status_from(now, 0), Status::Completed);
-//     }
-
-//     // TODO also test block with every N days
-
-//     fn build_squat(schedule: Schedule) -> (Workout, ExerciseName) {
-//         let name = ExerciseName("Squat".to_owned());
-//         let formal_name = FormalName("Low-bar Squat".to_owned());
-//         let exercise = FixedRepsExercise::with_reps(vec![5; 3]);
-//         let exercise = BuildExercise::fixed_reps(name.clone(), formal_name, exercise).finalize();
-
-//         let mut workout = Workout::new("Full Body".to_owned(), schedule);
-//         workout.apply(WorkoutOp::Add(exercise));
-
-//         (workout, name)
-//     }
-
-//     fn build_squat_bench(schedule: Schedule) -> (Workout, ExerciseName, ExerciseName) {
-//         let name1 = ExerciseName("Squat".to_owned());
-//         let formal_name = FormalName("Low-bar Squat".to_owned());
-//         let exercise = FixedRepsExercise::with_reps(vec![5; 3]);
-//         let exercise1 = BuildExercise::fixed_reps(name1.clone(), formal_name, exercise).finalize();
-
-//         let name2 = ExerciseName("Bench".to_owned());
-//         let formal_name = FormalName("Bench Press".to_owned());
-//         let exercise = FixedRepsExercise::with_reps(vec![5; 3]);
-//         let exercise2 = BuildExercise::fixed_reps(name2.clone(), formal_name, exercise).finalize();
-
-//         let mut workout = Workout::new("Full Body".to_owned(), schedule);
-//         workout.apply(WorkoutOp::Add(exercise1));
-//         workout.apply(WorkoutOp::Add(exercise2));
-
-//         (workout, name1, name2)
-//     }
-// }
+        let now = date_from_day(Weekday::Wed);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(5));
+
+        // completed last Monday
+        let date = date_from_day_hour(Weekday::Mon, 8) - Duration::days(7);
+        let now = date_from_day_hour(Weekday::Mon, 9);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(0));
+
+        let now = date_from_day_hour(Weekday::Tue, 9);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(6));
+
+        // completed Monday
+        let date = date_from_day_hour(Weekday::Mon, 8);
+        let now = date_from_day_hour(Weekday::Mon, 9);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Completed);
+
+        // completed Tuesday
+        let now = date_from_day(Weekday::Tue);
+        assert_eq!(workout.status_from(now), Status::Due(6));
+    }
+
+    #[test]
+    fn days3() {
+        let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
+        let (mut workout, name) = build_squat(Schedule::Days(days));
+
+        // completed Monday but two weeks ago
+        let date = date_from_day(Weekday::Mon) - Duration::days(14);
+        let now = date_from_day(Weekday::Mon);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Overdue(11));
+
+        let now = date_from_day(Weekday::Tue);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+
+        let now = date_from_day(Weekday::Wed);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Overdue(14));
+
+        // completed Monday but a week ago
+        let date = date_from_day_hour(Weekday::Mon, 8) - Duration::days(7);
+        let now = date_from_day_hour(Weekday::Mon, 9);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Overdue(4));
+
+        let now = date_from_day(Weekday::Tue);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+
+        let now = date_from_day(Weekday::Wed);
+        assert_eq!(workout.status_from(now), Status::Overdue(7));
+
+        let now = date_from_day(Weekday::Thu);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+
+        let now = date_from_day(Weekday::Fri);
+        assert_eq!(workout.status_from(now), Status::Overdue(9));
+
+        // completed Monday
+        let date = date_from_day_hour(Weekday::Mon, 8);
+        let now = date_from_day_hour(Weekday::Mon, 9);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Completed);
+
+        let now = date_from_day(Weekday::Tue);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+
+        let now = date_from_day(Weekday::Wed);
+        assert_eq!(workout.status_from(now), Status::Due(0));
+
+        let now = date_from_day(Weekday::Thu);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+
+        let now = date_from_day(Weekday::Fri);
+        assert_eq!(workout.status_from(now), Status::Overdue(2));
+
+        // completed last Fri
+        let date = date_from_day_hour(Weekday::Fri, 8) - Duration::days(7);
+        let now = date_from_day_hour(Weekday::Mon, 9);
+        workout.completed.insert(name.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Due(0));
+
+        let now = date_from_day(Weekday::Tue);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+
+        let now = date_from_day(Weekday::Wed);
+        assert_eq!(workout.status_from(now), Status::Overdue(3));
+
+        let now = date_from_day(Weekday::Thu);
+        assert_eq!(workout.status_from(now), Status::Due(1));
+
+        let now = date_from_day(Weekday::Fri);
+        assert_eq!(workout.status_from(now), Status::Overdue(5));
+    }
+
+    #[test]
+    fn multiple() {
+        let days = vec![Weekday::Mon, Weekday::Wed, Weekday::Fri];
+        let (mut workout, name1, name2) = build_squat_bench(Schedule::Days(days));
+
+        // not completed
+        let now = date_from_day(Weekday::Mon);
+        assert_eq!(workout.status_from(now), Status::Due(0));
+
+        // complete one
+        let date = date_from_day_hour(Weekday::Mon, 8);
+        workout.completed.insert(name1.clone(), date);
+        assert_eq!(workout.status_from(now), Status::PartiallyCompleted);
+
+        // complete both
+        let date = date_from_day_hour(Weekday::Mon, 9);
+        workout.completed.insert(name2.clone(), date);
+        assert_eq!(workout.status_from(now), Status::Completed);
+    }
+
+    fn build_squat(schedule: Schedule) -> (Workout, ExerciseName) {
+        let name = ExerciseName("Squat".to_owned());
+        let formal_name = FormalName("Low-bar Squat".to_owned());
+        let exercise = FixedRepsExercise::with_reps(vec![5; 3]);
+        let exercise = BuildExercise::fixed_reps(name.clone(), formal_name, exercise).finalize();
+
+        let mut workout = Workout::new("Full Body".to_owned(), schedule);
+        workout.apply(WorkoutOp::Add(exercise));
+
+        (workout, name)
+    }
+
+    fn build_squat_bench(schedule: Schedule) -> (Workout, ExerciseName, ExerciseName) {
+        let name1 = ExerciseName("Squat".to_owned());
+        let formal_name = FormalName("Low-bar Squat".to_owned());
+        let exercise = FixedRepsExercise::with_reps(vec![5; 3]);
+        let exercise1 = BuildExercise::fixed_reps(name1.clone(), formal_name, exercise).finalize();
+
+        let name2 = ExerciseName("Bench".to_owned());
+        let formal_name = FormalName("Bench Press".to_owned());
+        let exercise = FixedRepsExercise::with_reps(vec![5; 3]);
+        let exercise2 = BuildExercise::fixed_reps(name2.clone(), formal_name, exercise).finalize();
+
+        let mut workout = Workout::new("Full Body".to_owned(), schedule);
+        workout.apply(WorkoutOp::Add(exercise1));
+        workout.apply(WorkoutOp::Add(exercise2));
+
+        (workout, name1, name2)
+    }
+}
