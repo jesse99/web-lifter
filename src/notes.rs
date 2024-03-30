@@ -4076,8 +4076,7 @@ vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/spider-cu
 
     add(t, "Stack Complex",
 vec![
-    "Do 8 reps.",
-    "[Push Press](https://greatist.com/health/dumbbell-push-press#how-to-do-a-dumbbell-push-press)",
+    "[Push Press](https://greatist.com/health/dumbbell-push-press#how-to-do-a-dumbbell-push-press) (all for 8 reps)",
         "[Front Squat](https://www.nasm.org/exercise-library/dumbbell-front-squat)",
         "[Romanian Deadlift](https://www.nasm.org/exercise-library/dumbbell-romanian-deadlift)",
         "[Bent-over Row](https://www.muscleandstrength.com/exercises/bent-over-dumbbell-row.html)",

@@ -123,7 +123,7 @@ function update_rest() {
         label.innerHTML = "Done";
         label.style.color = "green";
     } else {
-        label.innerHTML = "+" + friendly_time(-remaining);
+        label.innerHTML = friendly_time(-remaining) + " over";
         label.style.color = "green";
     }
 }
