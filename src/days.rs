@@ -4,9 +4,8 @@ use std::hash::Hash;
 use std::ops::{Add, Sub};
 
 pub fn date_to_days(date: DateTime<Local>) -> i32 {
-    date.duration_round(TimeDelta::days(1))
-        .unwrap()
-        .num_days_from_ce()
+    // date.duration_round(TimeDelta::days(1)).unwrap()
+    date.num_days_from_ce()
 }
 
 /// Represents number of days since year 1 day 1.

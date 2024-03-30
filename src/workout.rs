@@ -121,10 +121,54 @@ impl Workout {
     }
 
     pub fn status(&self, bschedule: BlockSchedule) -> Status {
-        self.status_from(Local::now(), bschedule)
+        self.adjusted_status(Local::now(), bschedule)
     }
 
-    fn status_from(&self, now: DateTime<Local>, bschedule: BlockSchedule) -> Status {
+    fn adjusted_status(&self, now: DateTime<Local>, bschedule: BlockSchedule) -> Status {
+        let status = self.status_from(now);
+        // println!("workout: {} status: {status:?} now: {now}", self.name);
+        if bschedule.is_active(&self.name) {
+            let ok = match status {
+                Status::Completed => true,
+                Status::Due(n) => bschedule.in_active(now + Duration::days(n as i64)),
+                Status::DueAnyTime => true,
+                Status::Empty => true,
+                Status::Overdue(_) => true,
+                Status::PartiallyCompleted => true,
+            };
+            if ok {
+                // println!("   returning status");
+                return status;
+            }
+        }
+        if let Some(block_start) = bschedule.next_block_start(&self.name) {
+            let status = self.status_from(block_start);
+            // println!("   block_start: {block_start} status: {status:?}");
+            match status {
+                Status::Completed => status,
+                Status::Due(n) => {
+                    let today = Days::new(now);
+                    let then = Days::new(block_start + Duration::days(n as i64));
+                    // println!("   today: {today} then: {then} (due)");
+                    return Status::Due(then - today);
+                }
+                Status::DueAnyTime => status,
+                Status::Empty => status,
+                Status::Overdue(n) => {
+                    let today = Days::new(now);
+                    let then = Days::new(block_start - Duration::days(n as i64));
+                    // println!("   then: {then} (overdue)");
+                    return Status::Due(then - today);
+                }
+                Status::PartiallyCompleted => status,
+            }
+        } else {
+            // println!("   returning status (no next block)");
+            status
+        }
+    }
+
+    fn status_from(&self, now: DateTime<Local>) -> Status {
         if self.exercises.is_empty() {
             return Status::Empty;
         }
@@ -145,14 +189,11 @@ impl Workout {
             Schedule::AnyDay => Status::DueAnyTime,
             Schedule::Every(1) => {
                 if last.is_some() {
-                    let extra_days = bschedule.adjustment(&self.name, now, now);
-                    Status::Due(extra_days)
+                    Status::Due(0)
                 } else {
                     // Little weird but this way workouts that are scheduled for a different
                     // number of days will be listed as due at staggered times.
-                    let scheduled = now + Duration::days(1);
-                    let extra_days = bschedule.adjustment(&self.name, now, scheduled);
-                    Status::Due(1 + extra_days)
+                    Status::Due(1)
                 }
             }
             Schedule::Every(n) => {
@@ -160,32 +201,27 @@ impl Workout {
                     let due = last + *n;
                     let delta = due - today;
 
-                    let scheduled = now + Duration::days(delta as i64);
-                    let extra_days = bschedule.adjustment(&self.name, now, scheduled);
-                    if delta < 0 && *n > 1 && extra_days == 0 {
+                    if delta < 0 && *n > 1 {
                         Status::Overdue(n - 1)
                     } else {
-                        Status::Due(delta + extra_days)
+                        Status::Due(delta)
                     }
                 } else {
-                    let scheduled = now + Duration::days(*n as i64);
-                    let extra_days = bschedule.adjustment(&self.name, now, scheduled);
-                    Status::Due(*n + extra_days)
+                    Status::Due(*n)
                 }
             }
             Schedule::Days(days) => {
                 if let Some(last) = last {
                     let last_scheduled = Days::new(self.last_scheduled_date(now, days));
                     let scheduled = self.next_scheduled_date(now, days).unwrap();
-                    let extra_days = bschedule.adjustment(&self.name, now, scheduled);
                     if last >= last_scheduled {
                         let n = Days::new(scheduled) - today;
-                        Status::Due(n + extra_days)
-                    } else if days.contains(&now.weekday()) && extra_days == 0 {
+                        Status::Due(n)
+                    } else if days.contains(&now.weekday()) {
                         Status::Overdue(last_scheduled - last)
                     } else {
                         let n = Days::new(scheduled) - today;
-                        Status::Due(n + extra_days)
+                        Status::Due(n)
                     }
                 } else {
                     let due = days
@@ -193,9 +229,7 @@ impl Workout {
                         .map(|wd| self.weekday_to_days(now, *wd))
                         .min()
                         .unwrap();
-                    let scheduled = now + Duration::days((due - today) as i64);
-                    let extra_days = bschedule.adjustment(&self.name, now, scheduled);
-                    Status::Due(due - today + extra_days)
+                    Status::Due(due - today)
                 }
             }
         }

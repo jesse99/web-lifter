@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use super::*;
 use chrono::{DateTime, Datelike, Duration};
 use serde::{Deserialize, Serialize};
@@ -13,8 +11,8 @@ pub enum ProgramOp {
 /// next block starts up.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Block {
-    pub name: String,
-    pub workouts: Vec<String>, // can be empty if the user doesn't want to do any workouts for the block
+    pub name: String,          // e.g. "Heavy" or "Light"
+    pub workouts: Vec<String>, // e.g. "Heavy Bench" and "Heavy OHP", can be empty if the user doesn't want to do any workouts for the block
     pub num_weeks: i32,
 }
 
@@ -29,48 +27,45 @@ impl Block {
 }
 
 pub struct BlockSpan {
-    begin: DateTime<Local>,
+    workouts: Vec<String>,
+    begin: DateTime<Local>, // week start, i.e. Monday
     end: DateTime<Local>,
 }
 
 /// Used by [`Workout`] to create the next scheduled label in the program page.
 pub struct BlockSchedule {
-    blocks_start: DateTime<Local>,
-    workouts: HashMap<String, BlockSpan>,
-    total_weeks: i32,
+    spans: Vec<BlockSpan>, // active workout (will typically start in the past), next workout, next next, ends with next scheduled active workout
 }
 
 impl BlockSchedule {
-    /// Returns the number of days to add to scheduled to account for any block scheduling
-    /// that may be present.
-    pub fn adjustment(
-        &self,
-        workout: &str,
-        now: DateTime<Local>,
-        scheduled: DateTime<Local>,
-    ) -> i32 {
-        if let Some(span) = self.workouts.get(workout) {
-            if span.begin <= now && now < span.end {
-                if span.begin <= scheduled && scheduled < span.end {
-                    // now and scheduled are in the active block
-                    0
-                } else {
-                    // now is in the current block but next scheduled is not
-                    7 * (self.total_weeks - 1)
-                }
-            } else if scheduled < span.begin {
-                // block is coming up
-                date_to_days(span.begin) - date_to_days(now)
-            } else {
-                // block is in the past
-                let last_end = self.blocks_start + Duration::weeks(self.total_weeks as i64);
-                (date_to_days(last_end) - date_to_days(now))
-                    + (date_to_days(span.begin) - date_to_days(self.blocks_start))
+    /// Returns true if the workout may be executed in the current block. Note that this
+    /// does not mean that the next scheduled date for the workout will still be in the
+    /// active block.
+    pub fn is_active(&self, workout: &str) -> bool {
+        self.spans
+            .first()
+            .map(|s| s.workouts.iter().any(|w| w == workout))
+            .unwrap_or(false)
+    }
+
+    /// Returns true if the date is within the span of the active block.
+    pub fn in_active(&self, date: DateTime<Local>) -> bool {
+        self.spans
+            .first()
+            .map(|s| s.begin <= date && date < s.end)
+            .unwrap_or(false)
+    }
+
+    /// Returns the next Monday at which the workout will become active. Note that if the
+    /// workout is currently active this will be a future date.
+    pub fn next_block_start(&self, workout: &str) -> Option<DateTime<Local>> {
+        for span in self.spans.iter().skip(1) {
+            if span.workouts.iter().any(|w| w == workout) {
+                assert!(span.begin.weekday() == Weekday::Mon);
+                return Some(span.begin);
             }
-        } else {
-            // workout isn't part of a block
-            0
         }
+        None
     }
 }
 
@@ -207,38 +202,60 @@ impl Program {
         self.workouts.iter_mut().find(|w| w.name == workout)
     }
 
-    /// Returns the number of days to the block start (a Monday) or 0 if the workout is in
-    /// the current block.
     pub fn block_schedule(&self) -> BlockSchedule {
         self.block_schedule_from(Local::now())
     }
 
     fn block_schedule_from(&self, now: DateTime<Local>) -> BlockSchedule {
-        let mut blocks_start = self.blocks_start.unwrap_or(now);
-        let total_weeks = self.blocks.iter().fold(0, |sum, b| sum + b.num_weeks);
-        while total_weeks > 0 && (now - blocks_start).num_weeks() >= total_weeks as i64 {
-            blocks_start += Duration::weeks(total_weeks as i64);
+        fn find_active(
+            blocks_start: DateTime<Local>,
+            blocks: &Vec<Block>,
+            now: DateTime<Local>,
+        ) -> (usize, DateTime<Local>) {
+            let mut block_start = blocks_start; // TODO should we bump this forward in fixup?
+            loop {
+                // loop because blocks_start might be way in the past
+                assert!(blocks_start.weekday() == Weekday::Mon);
+                for (i, block) in blocks.iter().enumerate() {
+                    assert!(block.num_weeks > 0);
+                    let block_end = block_start + Duration::weeks(block.num_weeks as i64);
+                    if block_start <= now && now < block_end {
+                        return (i, block_start);
+                    }
+                    block_start = block_end;
+                }
+            }
         }
 
-        let mut workouts = HashMap::new();
-        let mut block_start = blocks_start;
-        for block in self.blocks.iter() {
-            let block_end = block_start + Duration::weeks(block.num_weeks as i64);
-            for workout in block.workouts.iter() {
-                let span = BlockSpan {
-                    begin: block_start,
-                    end: block_end,
-                };
-                workouts.insert(workout.clone(), span);
-            }
+        if self.blocks_start.is_none() || self.blocks.is_empty() {
+            return BlockSchedule { spans: vec![] };
+        }
+
+        // Add the active block and all the successor blocks.
+        let (start, mut block_start) = find_active(self.blocks_start.unwrap(), &self.blocks, now);
+        let mut spans = Vec::new();
+        for i in start..self.blocks.len() {
+            let block_end = block_start + Duration::weeks(self.blocks[i].num_weeks as i64);
+            spans.push(BlockSpan {
+                workouts: self.blocks[i].workouts.clone(),
+                begin: block_start,
+                end: block_end,
+            });
             block_start = block_end;
         }
 
-        BlockSchedule {
-            blocks_start,
-            workouts,
-            total_weeks,
+        // Add the predecessor blocks and the active block (again).
+        for i in 0..=start {
+            let block_end = block_start + Duration::weeks(self.blocks[i].num_weeks as i64);
+            spans.push(BlockSpan {
+                workouts: self.blocks[i].workouts.clone(),
+                begin: block_start,
+                end: block_end,
+            });
+            block_start = block_end;
         }
+
+        BlockSchedule { spans }
     }
 }
 

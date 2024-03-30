@@ -89,7 +89,7 @@
 \f2 \cf0 \expnd0\expndtw0\kerning0
 73.140.78.74
 \f1 \cf10 \kerning1\expnd0\expndtw0 :3000/     \cf10 https://ip4.me (https://superuser.com/a/1629435)\
-	same mar 21-25      have to connect using 5G (or from public internet)\
+	same mar 21-29      have to connect using 5G (or from public internet)\
 \pard\pardeftab720\partightenfactor0
 
 \f0\fs32 \cf3 \expnd0\expndtw0\kerning0
@@ -98,23 +98,30 @@
 \cf14 \strokec14 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95\'a0How should advancement be handled in var sets?\
+\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95 Block scheduling isn\'92t right\
+	- re-enable unit tests\
+\'95\'a0How should advancement be handled in var sets?\
+\'95 Use a complex in light workouts?\
 \'95\'a0Timer can say \'931 mins\'94\
-\'95 Block scheduling isn\'92t right\
-	- can we move now to the block start, do normal scheduling, and then\
-	  use the delta from that to the real now?\
-	- would have to special case active block to handle case where now is\
-	  after last scheduled workout\
-\'95 Use a redirect when after posting\
+\'95 Use a redirect after posting\
 	- should allow back button to work better\
-\'95\'a0Supporting editing:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf10 \'95\'a0Should all mutates go through an enum op?\
+	- could persist those instead of struct instances\
+	- how messy would that get, e.g. modify\
+		reps in a set in an exercise\
+	- would this be brittle?\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+\cf10 \'95\'a0Supporting editing:\
 	- add a hambuger drop down in upper right\
 	- edit common (i.e. ExerciseData)\
 		` for now 
 \f3\b weight and rests
 \f1\b0 \
-	- edit special (durations, reps, etc)\
+	- edit sets (durations, reps, etc)\
+		` maybe change title depending on exercise type\
 	- edit note\
+	- edit weight sets\
 	- start timer?\
 	- 
 \f3\b reset exercise
@@ -124,9 +131,9 @@
 	- click should edit 
 \f3\b history record
 \f1\b0 \
-\'95 Should there be a way to manually start a timer?\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 \cf10 \'95 Do timers work when switch to a new page and then back?\
+	- can we use some sort of web storage?\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf10 \'95\'a0To avoid annoying if let chains, can\
 	- match a tuple\
@@ -175,8 +182,6 @@ fn get_result() -> Option<u64> \{
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf10 	- think it said Set 1\
 	- may want to add a bit of delay\
-\'95 Should we use bigger fonts on mobile?\
-	- might want options\
 \'95\'a0Switch to medium RDL at some point\
 \'95 Turn this into a Progressive Web App (PWA)? \
 	- would allow it to be added to the app store\
@@ -192,30 +197,24 @@ fn get_result() -> Option<u64> \{
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf10 \'95\'a0Replace www.bodybuilding.com links with something else\
 	- think www.bodybuilding.com has some aggresive throttling\
-\'95\'a0Should be able to edit exercises\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Should all mutates go through an enum op?\
-	- could persist those instead of struct instances\
-	- how messy would that get, e.g. modify\
-		reps in a set in an exercise\
-	- would this be brittle?\
-\'95 Add a /health_check edpoint\
+\cf10 \'95 Add a /health_check edpoint\
 	- or maybe /status, could include connections/sec, num active users, etc)\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf10 \'95\'a0Should be able to edit workouts\
 \'95\'a0Should be able to edit programs\
+\'95\'a0Support multiple users\
+	- allow guest for people who don\'92t want to register\
+	- need to register email for password recovery\
+	- will probably need to switch to https\
+	- whats the bext practice for keying via user names?\
+		` hash user name and password?\
+	- use the secrets crate?\
+	- cap number of concurrent users? think there\'92s a tower thing for this\
 \'95 May want an option for bootstrap\'92s dark theme\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Need a setting to configure font sizes. Maybe font name too.\
-\'95\'a0Should log ops.\
+\cf10 \'95\'a0Should log ops.\
 \'95\'a0May want a way to replay ops.\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95 Support editing weight sets\
-	- maybe via a settings option in hamburger\
-	- or a settings button/dropdown\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Need to restart the server if it dies due to a panic. Or maybe\
-restart a thread. Might be some tower thing for this.\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf10 \'95 Variable reps needs to support backoff sets\
 \'95 Should fixed reps support backoff sets?\
@@ -227,41 +226,7 @@ restart a thread. Might be some tower thing for this.\
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f3\b\fs48 \cf10 \kerning1\expnd0\expndtw0 \
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-
-\f1\b0 \cf10          \cf10 \ul \ulc10 Full Body Exercises\cf10 \ulnone \
-\
-\
-         Side Leg Lift
-\f3\b \cf10             
-\f1\b0 \cf10 \
-         \
-         \
-            Set 1 of 2
-\f3\b \cf10               
-\f1\b0 \cf10 \
-               
-\fs36 \cf10 10 reps
-\f3\b\fs48 \cf10                  
-\f1\b0 \cf10 \
-            \
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \ul \ulc10 Next\ulnone                        \ul Reset
-\f3\b \ulnone  
-\f1\b0 \ul \
-\ulnone \
-               \ul Start Timer?\
-               \
-               \
-
-\f3\b \ulnone History
-\f1\b0  | Chart | Notes | Edit\
-2x10   Mar 6, 2024\
-2x10   Mar 1, 2024\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \
-\
+\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 \cf10 https://www.shuttle.rs/blog/2023/12/06/using-axum-rustJeremy Chone has a good axum tutorial\
 Jeremy Chone has a good axum tutorial\
