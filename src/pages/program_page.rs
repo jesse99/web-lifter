@@ -1,5 +1,10 @@
-use crate::*;
+use crate::{
+    pages::{InternalError, SharedState},
+    program::Program,
+    workout::{Status, Workout},
+};
 use anyhow::Context;
+use serde::{Deserialize, Serialize};
 
 pub fn get_program_page(state: SharedState) -> Result<String, InternalError> {
     // TODO: It'd be nice if handlers could call render_template outside the State lock.

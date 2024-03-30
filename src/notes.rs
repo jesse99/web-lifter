@@ -1,6 +1,6 @@
-use crate::*;
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
+use super::exercise::FormalName;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Notes {

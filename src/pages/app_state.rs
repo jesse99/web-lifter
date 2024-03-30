@@ -1,4 +1,7 @@
-use crate::*;
+use crate::{history::History, notes::Notes, program::Program, weights::Weights};
+use handlebars::Handlebars;
+use serde::{Deserialize, Serialize};
+use std::sync::{Arc, RwLock};
 
 /// State associated with a user.
 #[derive(Debug, Serialize, Deserialize)]

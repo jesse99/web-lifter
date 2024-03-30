@@ -1,4 +1,17 @@
+use self::{
+    exercise::{
+        BuildExercise, DurationsExercise, Exercise, ExerciseName, FixedReps, FixedRepsExercise,
+        FormalName, VariableReps, VariableRepsExercise, VariableSetsExercise,
+    },
+    history::{History, Record},
+    notes::Notes,
+    pages::{AppState, UserState},
+    program::{Block, Program, ProgramOp},
+    weights::{Plate, WeightSet, Weights},
+    workout::{Schedule, Workout, WorkoutOp},
+};
 use crate::*;
+use chrono::{Local, Weekday};
 
 pub fn make_program() -> pages::AppState {
     let blocks = vec![
@@ -558,13 +571,17 @@ fn fixup_program(mut state: UserState) -> UserState {
 }
 
 fn merge_program(mut state: UserState, default_program: Program) -> UserState {
-    let loaded_names: Vec<_> = state.program.workouts().map(|w| w.name.clone()).collect();
+    let loaded_names: Vec<_> = state
+        .program
+        .workouts()
+        .map(|w: &Workout| w.name.clone())
+        .collect();
 
     for new_workout in default_program.workouts() {
         if let Some(loaded_workout) = state.program.find_mut(&new_workout.name) {
             let loaded_exercises: Vec<_> = loaded_workout
                 .exercises()
-                .map(|e| e.name().clone())
+                .map(|e: &Exercise| e.name().clone())
                 .collect();
             for loaded_exercise in loaded_exercises {
                 if new_workout.find(&loaded_exercise).is_none() {

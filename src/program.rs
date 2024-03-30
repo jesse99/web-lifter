@@ -1,5 +1,6 @@
+use self::workout::Workout;
 use super::*;
-use chrono::{DateTime, Datelike, Duration};
+use chrono::{DateTime, Datelike, Duration, Local, Weekday};
 use serde::{Deserialize, Serialize};
 
 pub enum ProgramOp {

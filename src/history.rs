@@ -1,8 +1,7 @@
+use crate::exercise::ExerciseName;
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-use crate::ExerciseName;
 
 const RECENT_MINS: i64 = 3 * 60;
 

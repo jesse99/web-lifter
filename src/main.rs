@@ -16,23 +16,12 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use chrono::{Local, Weekday};
-use days::*;
-use exercise::*;
 use handlebars::Handlebars;
-use history::*;
-use notes::*;
-use pages::*;
-use program::*;
-use serde::{Deserialize, Serialize};
-use std::{
-    io::ErrorKind,
-    sync::{Arc, RwLock},
-};
+use pages::{InternalError, SharedState};
+use serde::Deserialize;
+use std::{io::ErrorKind, sync::RwLock};
 use tower::ServiceBuilder;
 use tower_http::add_extension::AddExtensionLayer;
-use weights::*;
-use workout::*;
 
 #[tokio::main]
 async fn main() {
@@ -86,7 +75,7 @@ async fn get_exercise_js(Extension(_state): Extension<SharedState>) -> impl Into
 async fn get_program(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let contents = get_program_page(state)?;
+    let contents = pages::get_program_page(state)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -101,7 +90,7 @@ async fn get_workout(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
     let error = String::new();
-    let contents = get_workout_page(state, &name, error)?;
+    let contents = pages::get_workout_page(state, &name, error)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -115,7 +104,7 @@ async fn get_exercise(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let contents = get_exercise_page(state, &workout, &exercise)?;
+    let contents = pages::get_exercise_page(state, &workout, &exercise)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -136,7 +125,7 @@ async fn post_next_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let contents = post_next_exercise_page(state, &workout, &exercise, None)?;
+    let contents = pages::post_next_exercise_page(state, &workout, &exercise, None)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -151,7 +140,7 @@ async fn post_next_var_set(
     options: Query<VarRepsOptions>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let contents = post_next_exercise_page(state, &workout, &exercise, Some(options.0))?;
+    let contents = pages::post_next_exercise_page(state, &workout, &exercise, Some(options.0))?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),

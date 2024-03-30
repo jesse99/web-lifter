@@ -1,4 +1,4 @@
-use crate::SetIndex;
+use super::exercise::SetIndex;
 use serde::{Deserialize, Serialize};
 
 /// Used for stuff like 3x60s planks. Target is used to signal the user to increase

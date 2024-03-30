@@ -1,5 +1,9 @@
-use super::*;
-use chrono::{DateTime, Datelike, Duration};
+use crate::{
+    days::Days,
+    exercise::{Exercise, ExerciseName},
+    program::BlockSchedule,
+};
+use chrono::{DateTime, Datelike, Duration, Local, Weekday};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -307,6 +311,8 @@ impl Workout {
 
 #[cfg(test)]
 mod tests {
+    use crate::exercise::{BuildExercise, FixedRepsExercise, FormalName};
+
     use super::*;
 
     #[test]

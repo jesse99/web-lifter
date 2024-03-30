@@ -1,7 +1,8 @@
 //! Exercises are movements for the user to perform, e.g. a barbell squat. These may be
 //! shared across programs and workouts.
+use self::weights::{Weight, Weights};
 use crate::*;
-use chrono::DateTime;
+use chrono::{DateTime, Local};
 use core::fmt;
 use serde::{Deserialize, Serialize};
 use std::fmt::Formatter;

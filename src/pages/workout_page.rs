@@ -1,5 +1,13 @@
-use crate::*;
+use crate::{
+    exercise::{Exercise, SetIndex},
+    history::History,
+    pages::{InternalError, SharedState},
+    program::Program,
+    weights::Weights,
+    workout::Workout,
+};
 use anyhow::Context;
+use serde::{Deserialize, Serialize};
 
 pub fn get_workout_page(
     state: SharedState,

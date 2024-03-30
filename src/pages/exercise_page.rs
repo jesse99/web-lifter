@@ -1,5 +1,16 @@
-use crate::*;
+use crate::{
+    exercise::{Exercise, ExerciseName, SetIndex, VariableReps},
+    history::{CompletedSets, History, Record},
+    notes::Notes,
+    pages::{self, InternalError, SharedState},
+    program::Program,
+    weights::{self, Weights},
+    workout::Workout,
+    VarRepsOptions,
+};
 use anyhow::Context;
+use chrono::Local;
+use serde::{Deserialize, Serialize};
 
 pub fn get_exercise_page(
     state: SharedState,
@@ -72,7 +83,7 @@ pub fn post_next_exercise_page(
 
     let error = if finished {
         let user = &state.read().unwrap().user; // TODO pass error to workout page?
-        match persist::save(user) {
+        match crate::persist::save(user) {
             Ok(_) => String::new(),
             Err(e) => format!("{e}"),
         }
@@ -82,7 +93,7 @@ pub fn post_next_exercise_page(
 
     if finished {
         complete_set(&mut state, workout_name, exercise_name, options);
-        get_workout_page(state, workout_name, error)
+        pages::get_workout_page(state, workout_name, error)
     } else {
         advance_set(&mut state, workout_name, exercise_name, options);
         get_exercise_page(state, workout_name, exercise_name)
@@ -967,20 +978,20 @@ fn reps_to_str(sets: &Vec<(i32, Option<f32>)>) -> String {
 fn num_to_str(sets: &Vec<(i32, Option<f32>)>, unit: &str) -> String {
     if sets.iter().all(|s| s.1.is_none()) {
         let reps: Vec<_> = sets.iter().map(|x| format!("{}", x.0)).collect();
-        let reps = join_labels(reps);
+        let reps = pages::join_labels(reps);
         reps + " " + unit
     } else if !sets.is_empty() && sets[0].1.is_some() && sets.iter().all(|s| s.1 == sets[0].1) {
         let reps: Vec<_> = sets.iter().map(|x| format!("{}", x.0)).collect();
-        let reps = join_labels(reps);
-        let weight = format_weight(sets[0].1.unwrap(), " lbs");
+        let reps = pages::join_labels(reps);
+        let weight = weights::format_weight(sets[0].1.unwrap(), " lbs");
         format!("{reps} {unit} @ {weight}")
     } else {
-        join_labels(
+        pages::join_labels(
             sets.iter()
                 .map(|x| {
                     let reps = format!("{}", x.0);
                     if let Some(weight) = x.1 {
-                        let weight = format_weight(weight, " lbs");
+                        let weight = weights::format_weight(weight, " lbs");
                         format!("{reps} @ {weight}")
                     } else {
                         reps
