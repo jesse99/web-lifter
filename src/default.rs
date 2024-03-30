@@ -63,7 +63,7 @@ fn create_test() -> Workout {
     let exercise = BuildExercise::variable_reps(name.clone(), formal_name, e)
         .with_weightset("Dual Plates".to_owned())
         .with_weight(150.0)
-        .with_rest_mins(3.5)
+        .with_rest_mins(1.0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 
@@ -72,7 +72,7 @@ fn create_test() -> Workout {
     let name = ExerciseName("Test Chin-ups".to_owned());
     let formal_name = FormalName("Chin-up".to_owned());
     let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
-        .with_rest_mins(3.5)
+        .with_rest_mins(1.0)
         .finalize();
     workout.apply(WorkoutOp::Add(exercise));
 

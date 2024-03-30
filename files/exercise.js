@@ -141,11 +141,20 @@ function on_timer() {
 
 function friendly_time(secs) {
     if (secs > 360) {
-        return (secs / 360).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " hours";
+        return add_unit((secs / 360).toLocaleString(undefined, { maximumFractionDigits: 2 }), "hour");
     } else if (secs > 60) {
-        return (secs / 60).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " mins";
+        return add_unit((secs / 60).toLocaleString(undefined, { maximumFractionDigits: 1 }), "min");
     } else {
-        return secs.toLocaleString(undefined, { maximumFractionDigits: 0 }) + " secs";
+        return add_unit(secs.toLocaleString(undefined, { maximumFractionDigits: 0 }), "sec");
+    }
+}
+
+function add_unit(num, unit) {
+    if (num == "1") {
+        return num + " " + unit;
+    } else {
+        return num + " " + unit + "s";
+
     }
 }
 
