@@ -498,7 +498,13 @@ impl ExerciseData {
         let suffix = w
             .clone()
             .map_or("".to_owned(), |w| format!(" @ {}", w.text()));
-        let exercise_set_details = format!("{} reps{suffix}", e.set(d.current_index).reps);
+        let reps = e.set(d.current_index).reps;
+        let reps = if reps == 1 {
+            "1 rep".to_owned()
+        } else {
+            format!("{reps} reps")
+        };
+        let exercise_set_details = format!("{reps}{suffix}");
         let weight_details = w.map(|w| w.details()).flatten().unwrap_or("".to_owned());
 
         let wait = "0".to_owned(); // for durations
