@@ -134,7 +134,7 @@ async fn post_next_set(
         "no-store, must-revalidate".parse().unwrap(),
     );
     headers.insert("Expires", "0".parse().unwrap());
-    headers.insert("Location", new_url.parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
     Ok((StatusCode::SEE_OTHER, headers))
 }
 
@@ -151,6 +151,6 @@ async fn post_next_var_set(
         "no-store, must-revalidate".parse().unwrap(),
     );
     headers.insert("Expires", "0".parse().unwrap());
-    headers.insert("Location", new_url.parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
     Ok((StatusCode::SEE_OTHER, headers))
 }

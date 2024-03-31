@@ -9,6 +9,7 @@ use crate::{
     VarRepsOptions,
 };
 use anyhow::Context;
+use axum::http::Uri;
 use chrono::Local;
 use serde::{Deserialize, Serialize};
 
@@ -64,7 +65,7 @@ pub fn post_next_exercise_page(
     workout_name: &str,
     exercise_name: &str,
     options: Option<VarRepsOptions>,
-) -> Result<String, InternalError> {
+) -> Result<Uri, InternalError> {
     let finished = {
         let program = &state.read().unwrap().user.program;
         let workout = program
@@ -90,10 +91,18 @@ pub fn post_next_exercise_page(
 
     if finished {
         complete_set(&mut state, workout_name, exercise_name, options);
-        Ok(format!("/workout/{workout_name}")) // TODO: need to escape special chars when building URLs
+
+        let path = format!("/workout/{workout_name}");
+        let uri = url_escape::encode_path(&path);
+        let uri = uri.parse()?;
+        Ok(uri)
     } else {
         advance_set(&mut state, workout_name, exercise_name, options);
-        Ok(format!("/exercise/{workout_name}/{exercise_name}"))
+
+        let path = format!("/exercise/{workout_name}/{exercise_name}");
+        let uri = url_escape::encode_path(&path);
+        let uri = uri.parse()?;
+        Ok(uri)
     }
 }
 
