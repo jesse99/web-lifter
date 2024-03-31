@@ -17,17 +17,49 @@
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
 
-    <nav class="breadcrumb d-flex justify-content-center">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Program</a></li>
-            <li class="breadcrumb-item"><a href="/workout/{{workout}}">Workout</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{exercise}}</li>
-        </ol>
-    </nav>
+    <div class="d-flex">
+        <div class="p-1">
+            <!-- so breadcrumb is more centered -->
+                       
+        </div>
+        <div class="p-1 flex-fill">
+            <!-- program/workout/exercise breadcrumb -->
+            <nav class="breadcrumb d-flex justify-content-center">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Program</a></li>
+                    <li class="breadcrumb-item"><a href="/workout/{{workout}}">Workout</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{exercise}}</li>
+                </ol>
+            </nav>
 
+        </div>
+        <div class="p-1 pe-2 justify-content-end">
+            <!-- options dropdown, TODO use a hamburger icon? -->
+            <div class="col justify-content-end">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><button onclick="start_manual_timer(event)" class="dropdown-item" type="button">
+                                Start Timer
+                            </button></li>
+                        <li><a class="dropdown-item" href="#">Action</a></li>
+                        <li><a class="dropdown-item" href="#">Something else here</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#">Separated link</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="d-flex flex-column align-items-center">
-        <div class="fs-2 mt-2 text-decoration-underline">{{exercise}}</div>
+        <!-- exercise details -->
+        <div class="fs-2 mt-0 text-decoration-underline">{{exercise}}</div>
 
         <div class="fs-4 mt-4">{{exercise_set}}</div>
         <div class="fs-6 mt-0">{{exercise_set_details}}</div>
