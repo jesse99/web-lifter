@@ -250,3 +250,17 @@ function post_next_set() {
     document.body.appendChild(form); // forms cannot be submitted outside of body
     form.submit(); // send the payload and navigate
 }
+
+function post_reset() {
+    const body = document.getElementById('body');
+    const workout = body.getAttribute("data-workout");
+    const exercise = body.getAttribute("data-exercise");
+
+    var form = document.createElement('form');
+    form.style.visibility = 'hidden'; // no user interaction is necessary
+    form.method = 'POST'; // forms by default use GET query strings
+    form.action = `/reset/exercise/${workout}/${exercise}`;
+
+    document.body.appendChild(form); // forms cannot be submitted outside of body
+    form.submit(); // send the payload and navigate
+}

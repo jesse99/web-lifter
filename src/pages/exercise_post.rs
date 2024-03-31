@@ -5,6 +5,7 @@ use crate::{
 };
 use anyhow::Context;
 use axum::http::Uri;
+use chrono::Local;
 
 pub fn post_next_exercise_page(
     mut state: SharedState,
@@ -50,6 +51,31 @@ pub fn post_next_exercise_page(
         let uri = uri.parse()?;
         Ok(uri)
     }
+}
+
+pub fn post_reset_exercise(
+    state: SharedState,
+    workout_name: &str,
+    exercise_name: &str,
+) -> Result<Uri, InternalError> {
+    let exercise_name = ExerciseName(exercise_name.to_owned());
+
+    {
+        let program = &mut state.write().unwrap().user.program;
+        let workout = program.find_mut(&workout_name).unwrap();
+        let exercise = workout.find_mut(&exercise_name).unwrap();
+        exercise.reset(Some(Local::now()));
+    }
+
+    {
+        let history = &mut state.write().unwrap().user.history;
+        history.abort(&exercise_name);
+    }
+
+    let path = format!("/exercise/{workout_name}/{exercise_name}");
+    let uri = url_escape::encode_path(&path);
+    let uri = uri.parse()?;
+    Ok(uri)
 }
 
 fn complete_set(

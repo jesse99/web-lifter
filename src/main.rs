@@ -37,6 +37,7 @@ async fn main() {
             "/exercise/:workout/:exercise/next-var-set",
             post(post_next_var_set),
         )
+        .route("/reset/exercise/:workout/:exercise", post(reset_exercise))
         .route("/scripts/exercise.js", get(get_exercise_js))
         .route("/styles/style.css", get(get_styles))
         .layer(
@@ -144,6 +145,22 @@ async fn post_next_var_set(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
     let new_url = pages::post_next_exercise_page(state, &workout, &exercise, Some(options.0))?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+async fn reset_exercise(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, InternalError> {
+    let new_url = pages::post_reset_exercise(state, &workout, &exercise)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
