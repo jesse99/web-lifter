@@ -10,6 +10,7 @@ pub struct UserState {
     pub history: History,
     pub weights: Weights,
     pub program: Program,
+    pub errors: Vec<String>,
 }
 
 /// Global state passed into axum handlers.

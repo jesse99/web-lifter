@@ -11,7 +11,7 @@ mod workout;
 
 use axum::{
     extract::{Extension, Path, Query},
-    http::{header, StatusCode},
+    http::{header, HeaderMap, StatusCode},
     response::IntoResponse,
     routing::{get, post},
     Router,
@@ -19,7 +19,7 @@ use axum::{
 use handlebars::Handlebars;
 use pages::{InternalError, SharedState};
 use serde::Deserialize;
-use std::{io::ErrorKind, sync::RwLock};
+use std::sync::RwLock;
 use tower::ServiceBuilder;
 use tower_http::add_extension::AddExtensionLayer;
 
@@ -28,7 +28,6 @@ async fn main() {
     let state = default::make_program();
 
     tracing_subscriber::fmt::init();
-
     let app = Router::new()
         .route("/", get(get_program))
         .route("/workout/:name", get(get_workout))
@@ -89,8 +88,7 @@ async fn get_workout(
     Path(name): Path<String>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let error = String::new();
-    let contents = pages::get_workout_page(state, &name, error)?;
+    let contents = pages::get_workout_page(state, &name)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -121,18 +119,23 @@ struct VarRepsOptions {
     advance: i32,
 }
 
+// After posts we do a redirect to a GET page. This prevents silly issues like duplicate
+// POSTs when the user presses the refresh button. See https://www.theserverside.com/news/1365146/Redirect-After-Post
+// for more.
 async fn post_next_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let contents = pages::post_next_exercise_page(state, &workout, &exercise, None)?;
-    Ok((
-        [
-            ("Cache-Control", "no-store, must-revalidate"),
-            ("Expires", "0"),
-        ],
-        axum::response::Html(contents),
-    ))
+    let new_url = pages::post_next_exercise_page(state, &workout, &exercise, None)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
 }
 
 async fn post_next_var_set(
@@ -140,12 +143,14 @@ async fn post_next_var_set(
     options: Query<VarRepsOptions>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let contents = pages::post_next_exercise_page(state, &workout, &exercise, Some(options.0))?;
-    Ok((
-        [
-            ("Cache-Control", "no-store, must-revalidate"),
-            ("Expires", "0"),
-        ],
-        axum::response::Html(contents),
-    ))
+    let new_url = pages::post_next_exercise_page(state, &workout, &exercise, Some(options.0))?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
 }

@@ -42,18 +42,13 @@ pub fn make_program() -> pages::AppState {
             merge_program(v, default_program)
         }
         Err(e) => {
-            // TODO need to better handle load errors
-            // probably by adding an error label to pages
-            // but that'll be easier once we support multiple users
-            println!("load had error {}", e.kind());
-            if e.kind() != ErrorKind::NotFound {
-                default_program.name = format!("{} {e}", default_program.name);
-            };
+            let errors = vec![format!("load had error {}", e.kind())];
             UserState {
                 notes: Notes::new(),
                 history: create_history(),
                 weights: creat_weight_sets(),
                 program: default_program,
+                errors,
             }
         }
     };

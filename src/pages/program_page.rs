@@ -7,6 +7,12 @@ use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
 pub fn get_program_page(state: SharedState) -> Result<String, InternalError> {
+    let error = {
+        let user = &mut state.write().unwrap().user;
+        let e = user.errors.join(", ");
+        user.errors.clear();
+        e
+    };
     // TODO: It'd be nice if handlers could call render_template outside the State lock.
     // Could call Handlebars::new() inside each handler though that looks fairly expensive.
     // Maybe use TLS?
@@ -15,7 +21,7 @@ pub fn get_program_page(state: SharedState) -> Result<String, InternalError> {
 
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
     let template = include_str!("../../files/program.html");
-    let data = ProgramData::new(program);
+    let data = ProgramData::new(program, error);
     Ok(handlebars
         .render_template(template, &data)
         .context("failed to render template")?)
@@ -25,10 +31,11 @@ pub fn get_program_page(state: SharedState) -> Result<String, InternalError> {
 struct ProgramData {
     name: String,
     workouts: Vec<WorkoutData>,
+    error: String,
 }
 
 impl ProgramData {
-    fn new(program: &Program) -> ProgramData {
+    fn new(program: &Program, error: String) -> ProgramData {
         let workouts = program
             .workouts()
             .map(|w| WorkoutData::new(program, w))
@@ -36,6 +43,7 @@ impl ProgramData {
         ProgramData {
             name: program.name.clone(),
             workouts,
+            error,
         }
     }
 }

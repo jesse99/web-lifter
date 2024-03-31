@@ -9,17 +9,18 @@ use crate::{
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-pub fn get_workout_page(
-    state: SharedState,
-    workout: &str,
-    error: String,
-) -> Result<String, InternalError> {
+pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, InternalError> {
+    let error = {
+        let user = &mut state.write().unwrap().user;
+        let e = user.errors.join(", ");
+        user.errors.clear();
+        e
+    };
     let handlebars = &state.read().unwrap().handlebars;
     let weights = &state.read().unwrap().user.weights;
     let program = &state.read().unwrap().user.program;
     let history = &state.read().unwrap().user.history;
 
-    // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
     let template = include_str!("../../files/workout.html");
     let data = WorkoutData::new(history, weights, program, workout, error)?;
     Ok(handlebars

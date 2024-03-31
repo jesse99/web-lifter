@@ -81,22 +81,19 @@ pub fn post_next_exercise_page(
         }
     };
 
-    let error = if finished {
-        let user = &state.read().unwrap().user; // TODO pass error to workout page?
-        match crate::persist::save(user) {
-            Ok(_) => String::new(),
-            Err(e) => format!("{e}"),
+    if finished {
+        let user = &mut state.write().unwrap().user;
+        if let Err(e) = crate::persist::save(user) {
+            user.errors.push(format!("{e}"));
         }
-    } else {
-        String::new()
     };
 
     if finished {
         complete_set(&mut state, workout_name, exercise_name, options);
-        pages::get_workout_page(state, workout_name, error)
+        Ok(format!("/workout/{workout_name}")) // TODO: need to escape special chars when building URLs
     } else {
         advance_set(&mut state, workout_name, exercise_name, options);
-        get_exercise_page(state, workout_name, exercise_name)
+        Ok(format!("/exercise/{workout_name}/{exercise_name}"))
     }
 }
 
