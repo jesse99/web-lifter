@@ -7,7 +7,7 @@ use anyhow::Context;
 use axum::http::Uri;
 use chrono::Local;
 
-pub fn post_next_exercise_page(
+pub fn post_next_exercise(
     mut state: SharedState,
     workout_name: &str,
     exercise_name: &str,

@@ -127,7 +127,7 @@ async fn post_next_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let new_url = pages::post_next_exercise_page(state, &workout, &exercise, None)?;
+    let new_url = pages::post_next_exercise(state, &workout, &exercise, None)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -144,7 +144,7 @@ async fn post_next_var_set(
     options: Query<VarRepsOptions>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
-    let new_url = pages::post_next_exercise_page(state, &workout, &exercise, Some(options.0))?;
+    let new_url = pages::post_next_exercise(state, &workout, &exercise, Some(options.0))?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
