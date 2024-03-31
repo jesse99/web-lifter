@@ -1,5 +1,4 @@
-use self::workout::Workout;
-use super::*;
+use crate::workout::Workout;
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};
 use serde::{Deserialize, Serialize};
 
@@ -99,6 +98,17 @@ impl Program {
         now: DateTime<Local>,
         week: i32,
     ) -> Program {
+        let mut program = Program {
+            name,
+            blocks: blocks,
+            blocks_start: None,
+            workouts: Vec::new(),
+        };
+        program.set_week(now, week);
+        program
+    }
+
+    pub fn set_week(&mut self, now: DateTime<Local>, week: i32) {
         assert!(week > 0);
 
         // Get the start of the current week.
@@ -107,55 +117,50 @@ impl Program {
 
         // Backup by the week number.
         let delta = 7 * (week - 1) as i64;
-        let blocks_start = Some(week_start - Duration::days(delta));
-        Program {
-            name,
-            blocks: blocks,
-            blocks_start,
-            workouts: Vec::new(),
-        }
+        self.blocks_start = Some(week_start - Duration::days(delta));
     }
 
     pub fn fixup(&mut self) {
-        // if let Some(workout) = self.find_mut("Heavy OHP") {
-        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Chin-ups".to_owned())) {
-        //         let (_, e) = exercise.expect_var_sets_mut();
-        //         e.set_target(16);
+        // fn set_weight(program: &mut Program, workout: &str, exercise: &str, weight: f32) {
+        //     use crate::exercise::ExerciseName;
+
+        //     if let Some(workout) = program.find_mut(workout) {
+        //         if let Some(exercise) = workout.find_mut(&ExerciseName(exercise.to_owned())) {
+        //             exercise.set_weight(Some(weight));
+        //         } else {
+        //             panic!("didn't find exercise {exercise}");
+        //         }
         //     } else {
-        //         panic!("didn't find Chin-ups");
+        //         panic!("didn't find workout {workout}");
         //     }
-        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Face Pulls".to_owned())) {
-        //         exercise.set_weight(Some(37.5));
-        //     } else {
-        //         panic!("didn't find Face Pulls");
-        //     }
-        // } else {
-        //     panic!("didn't find Heavy OHP workout");
         // }
-        // if let Some(workout) = self.find_mut("Medium OHP") {
-        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Medium Chin-ups".to_owned())) {
-        //         let (_, e) = exercise.expect_var_sets_mut();
-        //         e.set_target(16);
+
+        // fn set_var_sets_target(program: &mut Program, workout: &str, exercise: &str, target: i32) {
+        //     use crate::exercise::ExerciseName;
+
+        //     if let Some(workout) = program.find_mut(workout) {
+        //         if let Some(exercise) = workout.find_mut(&ExerciseName(exercise.to_owned())) {
+        //             let (_, e) = exercise.expect_var_sets_mut();
+        //             e.set_target(target);
+        //         } else {
+        //             panic!("didn't find exercise {exercise}");
+        //         }
         //     } else {
-        //         panic!("didn't find Medium Chin-ups");
+        //         panic!("didn't find workout {workout}");
         //     }
-        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Face Pulls".to_owned())) {
-        //         exercise.set_weight(Some(37.5));
-        //     } else {
-        //         panic!("didn't find Face Pulls");
-        //     }
-        // } else {
-        //     panic!("didn't find Medium OHP workout");
         // }
-        // if let Some(workout) = self.find_mut("Light") {
-        //     if let Some(exercise) = workout.find_mut(&ExerciseName("Face Pulls".to_owned())) {
-        //         exercise.set_weight(Some(37.5));
-        //     } else {
-        //         panic!("didn't find Face Pulls");
-        //     }
-        // } else {
-        //     panic!("didn't find Light workout");
-        // }
+
+        // self.set_week(Local::now(), 2);
+
+        // set_weight(self, "Heavy Bench", "Heavy RDL", 235.0);
+        // set_weight(self, "Heavy Bench", "Cable Abduction", 17.5);
+        // set_weight(self, "Heavy OHP", "Heavy OHP", 80.0);
+
+        // set_weight(self, "Medium Bench", "Cable Abduction", 17.5);
+        // set_weight(self, "Medium Bench", "Medium RDL", 215.0);
+        // set_weight(self, "Medium OHP", "OHP", 80.0);
+
+        // set_var_sets_target(self, "Medium OHP", "Medium Chin-ups", 16);
     }
 
     pub fn validate(&mut self, op: &ProgramOp) -> String {

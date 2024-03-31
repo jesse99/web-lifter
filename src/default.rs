@@ -28,7 +28,7 @@ pub fn make_program() -> pages::AppState {
         Block::new("Light".to_owned(), vec!["Light".to_owned()], 1),
     ];
     let name = "My".to_owned();
-    let mut default_program = Program::with_blocks(name, blocks, Local::now(), 1);
+    let mut default_program = Program::with_blocks(name, blocks, Local::now(), 2);
     default_program.apply(ProgramOp::Add(create_heavy_bench()));
     default_program.apply(ProgramOp::Add(create_heavy_ohp()));
     default_program.apply(ProgramOp::Add(create_medium_bench()));
