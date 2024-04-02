@@ -35,6 +35,10 @@ async fn main() {
         .route("/workout/:name", get(get_workout))
         .route("/exercise/:workout/:exercise", get(get_exercise))
         .route("/edit-weight/:workout/:exercise", get(get_edit_weight))
+        .route(
+            "/edit-any-weight/:workout/:exercise",
+            get(get_edit_any_weight),
+        )
         .route("/scripts/exercise.js", get(get_exercise_js))
         .route("/styles/style.css", get(get_styles))
         // posts
@@ -45,6 +49,10 @@ async fn main() {
         )
         .route("/reset/exercise/:workout/:exercise", post(reset_exercise))
         .route("/set-weight/:workout/:exercise", post(post_set_weight))
+        .route(
+            "/set-any-weight/:workout/:exercise",
+            post(post_set_any_weight),
+        )
         .layer(
             ServiceBuilder::new() // TODO: more stuff at https://github.com/tokio-rs/axum/blob/dea36db400f27c025b646e5720b9a6784ea4db6e/examples/key-value-store/src/main.rs
                 .layer(AddExtensionLayer::new(SharedState::new(RwLock::new(state))))
@@ -132,6 +140,20 @@ async fn get_edit_weight(
     ))
 }
 
+async fn get_edit_any_weight(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, InternalError> {
+    let contents = pages::get_edit_any_weight_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
 #[derive(Debug, Deserialize)]
 struct VarRepsOptions {
     reps: i32,
@@ -209,6 +231,30 @@ async fn post_set_weight(
         let x: f32 = s.parse().context(format!("expected f32 but found '{s}'"))?;
         Some(x)
     };
+    let new_url = pages::post_set_weight(state, &workout, &exercise, w)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+// We don't allow None because we want the input type to be Number so that we get a numeric
+// keypad on mobile (and we can't use a custom pattern with Number). So we'll just treat
+// 0.0 as None.
+async fn post_set_any_weight(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetWeight>,
+) -> Result<impl IntoResponse, InternalError> {
+    let parts: Vec<_> = payload.weight.split(" ").collect();
+    let s = parts.get(0).context("empty payload")?.to_string();
+    let w: f32 = s.parse().context(format!("expected f32 but found '{s}'"))?;
+    let w = if w.abs() < 0.001 { None } else { Some(w) };
     let new_url = pages::post_set_weight(state, &workout, &exercise, w)?;
 
     let mut headers = HeaderMap::new();

@@ -1,5 +1,5 @@
 use crate::{
-    exercise::{Exercise, ExerciseName, SetIndex, VariableReps},
+    exercise::{Exercise, ExerciseData, ExerciseName, SetIndex, VariableReps},
     history::{CompletedSets, History, Record},
     notes::Notes,
     pages::{self, InternalError, SharedState},
@@ -52,7 +52,7 @@ pub fn get_exercise_page(
     let exercise = workout
         .find(&exercise_name)
         .context("failed to find exercise")?;
-    let data = ExerciseData::new(weights, notes, history, program, workout, exercise);
+    let data = ExData::new(weights, notes, history, program, workout, exercise);
     Ok(handlebars
         .render_template(template, &data)
         .context("failed to render template")?)
@@ -93,7 +93,7 @@ struct RepItem {
 }
 
 #[derive(Serialize, Deserialize)]
-struct ExerciseData {
+struct ExData {
     workout: String,              // "Full Body Exercises"
     exercise: String,             // "RDL"
     exercise_set: String,         // "Set 1 of 3"
@@ -112,9 +112,10 @@ struct ExerciseData {
     rep_items: Vec<RepItem>,
     notes: String,
     exercise_type: String, // "Durations", "Fixed Reps", etc
+    edit_weight_url: String,
 }
 
-impl ExerciseData {
+impl ExData {
     fn get_records(
         history: &History,
         program: &Program,
@@ -140,6 +141,29 @@ impl ExerciseData {
             .collect()
     }
 
+    fn common(workout: &Workout, exercise: &Exercise, d: &ExerciseData) -> (String, String) {
+        let rest = if d.finished {
+            "0".to_owned()
+        } else {
+            match d.current_index {
+                SetIndex::Warmup(_) => "0".to_owned(),
+                SetIndex::Workset(_) => exercise
+                    .rest(d.current_index)
+                    .map_or("0".to_owned(), |r| format!("{r}")),
+            }
+        };
+
+        let workout = url_escape::encode_path(&workout.name);
+        let exercise = url_escape::encode_path(&exercise.name().0);
+        let edit_weight_url = if d.weightset.is_some() {
+            format!("/edit-weight/{workout}/{exercise}",)
+        } else {
+            format!("/edit-any-weight/{workout}/{exercise}")
+        };
+
+        (rest, edit_weight_url)
+    }
+
     fn with_durations(
         weights: &Weights,
         notes: &Notes,
@@ -147,7 +171,7 @@ impl ExerciseData {
         program: &Program,
         workout: &Workout,
         exercise: &Exercise,
-    ) -> ExerciseData {
+    ) -> ExData {
         let (d, e) = exercise.expect_durations();
         let exercise_set = format!("Set {} of {}", d.current_index.index() + 1, e.num_sets());
 
@@ -173,14 +197,8 @@ impl ExerciseData {
         } else {
             format!("{}", e.set(d.current_index))
         };
-        let rest = if d.finished {
-            "0".to_owned()
-        } else {
-            exercise
-                .rest(d.current_index)
-                .map_or("0".to_owned(), |r| format!("{r}"))
-        };
-        let records = ExerciseData::get_records(history, program, workout, exercise);
+        let (rest, edit_weight_url) = ExData::common(workout, exercise, d);
+        let records = ExData::get_records(history, program, workout, exercise);
         let button_title = if d.finished {
             "Exit".to_owned()
         } else {
@@ -199,7 +217,7 @@ impl ExerciseData {
 
         let workout = workout.name.clone();
         let exercise = exercise.name().0.clone();
-        ExerciseData {
+        ExData {
             workout,
             exercise,
             exercise_set,
@@ -218,6 +236,7 @@ impl ExerciseData {
             rep_items,
             notes,
             exercise_type: "Durations".to_owned(),
+            edit_weight_url,
         }
     }
 
@@ -228,7 +247,7 @@ impl ExerciseData {
         program: &Program,
         workout: &Workout,
         exercise: &Exercise,
-    ) -> ExerciseData {
+    ) -> ExData {
         let (d, e) = exercise.expect_fixed_reps();
         let exercise_set = if e.num_warmups() > 0 {
             match d.current_index {
@@ -260,17 +279,8 @@ impl ExerciseData {
         let weight_details = w.map(|w| w.details()).flatten().unwrap_or("".to_owned());
 
         let wait = "0".to_owned(); // for durations
-        let rest = if d.finished {
-            "0".to_owned()
-        } else {
-            match d.current_index {
-                SetIndex::Warmup(_) => "0".to_owned(),
-                SetIndex::Workset(_) => exercise
-                    .rest(d.current_index)
-                    .map_or("0".to_owned(), |r| format!("{r}")),
-            }
-        };
-        let records = ExerciseData::get_records(history, program, workout, exercise);
+        let (rest, edit_weight_url) = ExData::common(workout, exercise, d);
+        let records = ExData::get_records(history, program, workout, exercise);
         let button_title = if d.finished {
             "Exit".to_owned()
         } else {
@@ -298,7 +308,7 @@ impl ExerciseData {
 
         let workout = workout.name.clone();
         let exercise = exercise.name().0.clone();
-        ExerciseData {
+        ExData {
             workout,
             exercise,
             exercise_set,
@@ -317,6 +327,7 @@ impl ExerciseData {
             rep_items,
             notes,
             exercise_type: "Fixed Reps".to_owned(),
+            edit_weight_url,
         }
     }
 
@@ -327,7 +338,7 @@ impl ExerciseData {
         program: &Program,
         workout: &Workout,
         exercise: &Exercise,
-    ) -> ExerciseData {
+    ) -> ExData {
         let (d, e) = exercise.expect_var_sets();
         let num_sets = e.get_previous().len();
         let exercise_set = if num_sets > 0 && !d.finished {
@@ -370,17 +381,8 @@ impl ExerciseData {
             .unwrap_or("".to_owned());
 
         let wait = "0".to_owned(); // for durations
-        let rest = if d.finished {
-            "0".to_owned()
-        } else {
-            match d.current_index {
-                SetIndex::Warmup(_) => "0".to_owned(),
-                SetIndex::Workset(_) => exercise
-                    .rest(d.current_index)
-                    .map_or("0".to_owned(), |r| format!("{r}")),
-            }
-        };
-        let records = ExerciseData::get_records(history, program, workout, exercise);
+        let (rest, edit_weight_url) = ExData::common(workout, exercise, d);
+        let records = ExData::get_records(history, program, workout, exercise);
         let button_title = if d.finished {
             "Exit".to_owned()
         } else {
@@ -419,7 +421,7 @@ impl ExerciseData {
 
         let workout = workout.name.clone();
         let exercise = exercise.name().0.clone();
-        ExerciseData {
+        ExData {
             workout,
             exercise,
             exercise_set,
@@ -438,6 +440,7 @@ impl ExerciseData {
             rep_items,
             notes,
             exercise_type: "Variable Sets".to_owned(),
+            edit_weight_url,
         }
     }
 
@@ -448,7 +451,7 @@ impl ExerciseData {
         program: &Program,
         workout: &Workout,
         exercise: &Exercise,
-    ) -> ExerciseData {
+    ) -> ExData {
         let (d, e) = exercise.expect_var_reps();
         let exercise_set = if e.num_warmups() > 0 {
             match d.current_index {
@@ -485,14 +488,8 @@ impl ExerciseData {
             .unwrap_or("".to_owned());
 
         let wait = "0".to_owned(); // for durations
-        let rest = if d.finished {
-            "0".to_owned()
-        } else {
-            exercise
-                .rest(d.current_index)
-                .map_or("0".to_owned(), |r| format!("{r}"))
-        };
-        let records = ExerciseData::get_records(history, program, workout, exercise);
+        let (rest, edit_weight_url) = ExData::common(workout, exercise, d);
+        let records = ExData::get_records(history, program, workout, exercise);
         let button_title = if d.finished {
             "Exit".to_owned()
         } else {
@@ -540,7 +537,7 @@ impl ExerciseData {
 
         let workout = workout.name.clone();
         let exercise = exercise.name().0.clone();
-        ExerciseData {
+        ExData {
             workout,
             exercise,
             exercise_set,
@@ -559,6 +556,7 @@ impl ExerciseData {
             rep_items,
             notes,
             exercise_type: "Variable Reps".to_owned(),
+            edit_weight_url,
         }
     }
 
@@ -569,19 +567,19 @@ impl ExerciseData {
         program: &Program,
         workout: &Workout,
         exercise: &Exercise,
-    ) -> ExerciseData {
+    ) -> ExData {
         match exercise {
             Exercise::Durations(_, _) => {
-                ExerciseData::with_durations(weights, notes, history, program, workout, exercise)
+                ExData::with_durations(weights, notes, history, program, workout, exercise)
             }
             Exercise::FixedReps(_, _) => {
-                ExerciseData::with_fixed_reps(weights, notes, history, program, workout, exercise)
+                ExData::with_fixed_reps(weights, notes, history, program, workout, exercise)
             }
             Exercise::VariableReps(_, _) => {
-                ExerciseData::with_var_reps(weights, notes, history, program, workout, exercise)
+                ExData::with_var_reps(weights, notes, history, program, workout, exercise)
             }
             Exercise::VariableSets(_, _) => {
-                ExerciseData::with_var_sets(weights, notes, history, program, workout, exercise)
+                ExData::with_var_sets(weights, notes, history, program, workout, exercise)
             }
         }
     }

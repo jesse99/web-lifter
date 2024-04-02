@@ -23,6 +23,21 @@ pub fn get_edit_weight_page(
         .context("failed to render template")?)
 }
 
+pub fn get_edit_any_weight_page(
+    state: SharedState,
+    workout: &str,
+    exercise: &str,
+) -> Result<String, InternalError> {
+    let handlebars = &state.read().unwrap().handlebars;
+    let program = &state.read().unwrap().user.program;
+
+    let template = include_str!("../../files/edit_any_weight.html");
+    let data = EditAnyWeightData::new(program, workout, exercise)?;
+    Ok(handlebars
+        .render_template(template, &data)
+        .context("failed to render template")?)
+}
+
 #[derive(Serialize, Deserialize)]
 struct EditWeightData {
     workout: String,
@@ -129,5 +144,37 @@ impl WeightData {
             weight: weights::format_weight(weight, " lbs"),
             selected: "selected".to_owned(),
         }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct EditAnyWeightData {
+    workout: String,
+    exercise: String,
+    weight: String,
+}
+
+impl EditAnyWeightData {
+    fn new(
+        program: &Program,
+        workout_name: &str,
+        exercise_name: &str,
+    ) -> Result<EditAnyWeightData, anyhow::Error> {
+        let workout = program.find(&workout_name).unwrap();
+        let exercise = workout
+            .find(&ExerciseName(exercise_name.to_owned()))
+            .unwrap();
+        let data = exercise.data();
+        let weight = if let Some(current) = data.weight {
+            weights::format_weight(current, "")
+        } else {
+            "0.0".to_owned()
+        };
+
+        Ok(EditAnyWeightData {
+            workout: workout_name.to_owned(),
+            exercise: exercise_name.to_owned(),
+            weight,
+        })
     }
 }
