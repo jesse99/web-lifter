@@ -9,12 +9,13 @@ mod program;
 mod weights;
 mod workout;
 
+use anyhow::Context;
 use axum::{
     extract::{Extension, Path, Query},
     http::{header, HeaderMap, StatusCode},
     response::IntoResponse,
     routing::{get, post},
-    Router,
+    Form, Router,
 };
 use handlebars::Handlebars;
 use pages::{InternalError, SharedState};
@@ -29,17 +30,21 @@ async fn main() {
 
     tracing_subscriber::fmt::init();
     let app = Router::new()
+        // gets
         .route("/", get(get_program))
         .route("/workout/:name", get(get_workout))
         .route("/exercise/:workout/:exercise", get(get_exercise))
+        .route("/edit-weight/:workout/:exercise", get(get_edit_weight))
+        .route("/scripts/exercise.js", get(get_exercise_js))
+        .route("/styles/style.css", get(get_styles))
+        // posts
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
         .route(
             "/exercise/:workout/:exercise/next-var-set",
             post(post_next_var_set),
         )
         .route("/reset/exercise/:workout/:exercise", post(reset_exercise))
-        .route("/scripts/exercise.js", get(get_exercise_js))
-        .route("/styles/style.css", get(get_styles))
+        .route("/set-weight/:workout/:exercise", post(post_set_weight))
         .layer(
             ServiceBuilder::new() // TODO: more stuff at https://github.com/tokio-rs/axum/blob/dea36db400f27c025b646e5720b9a6784ea4db6e/examples/key-value-store/src/main.rs
                 .layer(AddExtensionLayer::new(SharedState::new(RwLock::new(state))))
@@ -113,6 +118,20 @@ async fn get_exercise(
     ))
 }
 
+async fn get_edit_weight(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, InternalError> {
+    let contents = pages::get_edit_weight_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
 #[derive(Debug, Deserialize)]
 struct VarRepsOptions {
     reps: i32,
@@ -161,6 +180,36 @@ async fn reset_exercise(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, InternalError> {
     let new_url = pages::post_reset_exercise(state, &workout, &exercise)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetWeight {
+    weight: String, // "25 lbs"
+}
+
+async fn post_set_weight(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetWeight>,
+) -> Result<impl IntoResponse, InternalError> {
+    let parts: Vec<_> = payload.weight.split(" ").collect();
+    let s = parts.get(0).context("empty payload")?.to_string();
+    let w = if s == "None" {
+        None
+    } else {
+        let x: f32 = s.parse().context(format!("expected f32 but found '{s}'"))?;
+        Some(x)
+    };
+    let new_url = pages::post_set_weight(state, &workout, &exercise, w)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

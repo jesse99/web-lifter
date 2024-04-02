@@ -20,7 +20,7 @@
     <div class="d-flex">
         <div class="p-1">
             <!-- so breadcrumb is more centered -->
-                       
+                          
         </div>
         <div class="p-1 flex-fill">
             <!-- program/workout/exercise breadcrumb -->
@@ -42,17 +42,24 @@
 
                     </button>
                     <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/edit-weight/{{workout}}/{{exercise}}">
+                                Edit Weight
+                            </a></li>
+                        <li><a class="dropdown-item disabled" href="#">Edit Weight Set</a></li>
+                        <li><a class="dropdown-item disabled" href="#">Edit Rest</a></li>
+                        <li><a class="dropdown-item disabled" href="#">Edit Name</a></li>
+                        <li><a class="dropdown-item disabled" href="#">Edit Note</a></li>
+                        <li><a class="dropdown-item disabled" href="#">Edit {{exercise_type}}</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
                         <li><button onclick="start_manual_timer(event)" class="dropdown-item" type="button">
                                 Start Timer
                             </button></li>
                         <li><button onclick="post_reset(event)" class="dropdown-item" type="button">
                                 Reset Exercise
                             </button></li>
-                        <li><a class="dropdown-item" href="#">Something else here</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="#">Separated link</a></li>
+                        <li><a class="dropdown-item disabled" href="#">Options</a></li>
                     </ul>
                 </div>
             </div>

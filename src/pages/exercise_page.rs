@@ -111,6 +111,7 @@ struct ExerciseData {
     reps_title: String,     // "8 reps"
     rep_items: Vec<RepItem>,
     notes: String,
+    exercise_type: String, // "Durations", "Fixed Reps", etc
 }
 
 impl ExerciseData {
@@ -216,6 +217,7 @@ impl ExerciseData {
             reps_title,
             rep_items,
             notes,
+            exercise_type: "Durations".to_owned(),
         }
     }
 
@@ -314,6 +316,7 @@ impl ExerciseData {
             reps_title,
             rep_items,
             notes,
+            exercise_type: "Fixed Reps".to_owned(),
         }
     }
 
@@ -434,6 +437,7 @@ impl ExerciseData {
             reps_title,
             rep_items,
             notes,
+            exercise_type: "Variable Sets".to_owned(),
         }
     }
 
@@ -554,6 +558,7 @@ impl ExerciseData {
             reps_title,
             rep_items,
             notes,
+            exercise_type: "Variable Reps".to_owned(),
         }
     }
 

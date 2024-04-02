@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"                                                      # error handling
-axum = { version = "0.7", features = ["query"] }                    # web backend
+axum = { version = "0.7", features = ["form", "query"] }            # web backend
 chrono = { version = "0.4", features = ["serde"] }                  # date and time
 dirs = "5.0"                                                        # system paths
 handlebars = "5.1"                                                  # template implementation

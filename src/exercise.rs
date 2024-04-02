@@ -53,10 +53,10 @@ pub struct ExerciseData {
     pub started: Option<DateTime<Local>>,
     pub finished: bool,
     pub current_index: SetIndex,
-    weightset: Option<String>,
-    weight: Option<f32>, // base weight to use for each workset, often modified by set percent
-    rest: Option<i32>,   // used for work sets
-    last_rest: Option<i32>, // overrides rest.last()
+    pub weightset: Option<String>,
+    pub weight: Option<f32>, // base weight to use for each workset, often modified by set percent
+    pub rest: Option<i32>,   // used for work sets
+    pub last_rest: Option<i32>, // overrides rest.last()
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -116,6 +116,15 @@ impl Exercise {
                 d.finished = false;
                 d.started = new_start;
             }
+        }
+    }
+
+    pub fn data(&self) -> &ExerciseData {
+        match self {
+            Exercise::Durations(d, _) => d,
+            Exercise::FixedReps(d, _) => d,
+            Exercise::VariableReps(d, _) => d,
+            Exercise::VariableSets(d, _) => d,
         }
     }
 
