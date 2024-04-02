@@ -295,7 +295,12 @@ fn closest_discrete(target: f32, weights: &Vec<f32>) -> f32 {
     }
 }
 
-fn too_small_target(target: f32, plates: &Plates, bar: &Option<f32>) -> Option<Plates> {
+fn too_small_target(
+    target: f32,
+    plates: &Plates,
+    bar: &Option<f32>,
+    use_upper: bool,
+) -> Option<Plates> {
     // Degenerate case: target is smaller than smallest weight.
     // println!("target: {target}");
     if let Some(smallest) = plates.smallest() {
@@ -306,10 +311,11 @@ fn too_small_target(target: f32, plates: &Plates, bar: &Option<f32>) -> Option<P
         //     2.0 * smallest.weight + plates.bar()
         // );
         if target < 2.0 * smallest.weight + plates.bar() {
-            // 58 < 2*5 + 45
             // println!("degenerate case");
             let upper = find_dual_upper(target, &plates);
-            if plates.bar() > 0.0 && (target - plates.bar()).abs() < (target - upper.weight()).abs()
+            if plates.bar() > 0.0
+                && (target - plates.bar()).abs() < (target - upper.weight()).abs()
+                && !use_upper
             {
                 return Some(Plates::new(Vec::new(), bar.clone(), plates.dual));
             } else {
@@ -322,7 +328,7 @@ fn too_small_target(target: f32, plates: &Plates, bar: &Option<f32>) -> Option<P
 
 fn closest_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
     let plates = Plates::new(plates.clone(), bar.clone(), true);
-    if let Some(plates) = too_small_target(target, &plates, bar) {
+    if let Some(plates) = too_small_target(target, &plates, bar, false) {
         plates
     } else {
         let lower = find_dual_lower(target, &plates);
@@ -338,7 +344,7 @@ fn closest_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
 
 fn lower_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
     let plates = Plates::new(plates.clone(), bar.clone(), true);
-    if let Some(plates) = too_small_target(target, &plates, bar) {
+    if let Some(plates) = too_small_target(target, &plates, bar, false) {
         plates
     } else {
         find_dual_lower(target, &plates)
@@ -347,7 +353,7 @@ fn lower_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
 
 fn upper_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
     let plates = Plates::new(plates.clone(), bar.clone(), true);
-    if let Some(plates) = too_small_target(target, &plates, bar) {
+    if let Some(plates) = too_small_target(target, &plates, bar, true) {
         plates
     } else {
         find_dual_upper(target, &plates)
@@ -768,6 +774,7 @@ mod tests {
         weights.add(name.to_owned(), WeightSet::DualPlates(plates, Some(45.0)));
 
         assert_eq!(weights.advance(name, 0.0).value(), 45.0);
+        assert_eq!(weights.advance(name, 45.0).value(), 55.0);
         assert_eq!(weights.advance(name, 50.0).value(), 55.0);
         assert_eq!(weights.advance(name, 55.0).value(), 65.0);
     }
