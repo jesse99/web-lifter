@@ -46,6 +46,10 @@ impl FixedRepsExercise {
         self.worksets.len()
     }
 
+    pub fn worksets(&self) -> impl Iterator<Item = &FixedReps> + '_ {
+        self.worksets.iter()
+    }
+
     pub fn set(&self, index: SetIndex) -> &FixedReps {
         match index {
             SetIndex::Warmup(i) => &self.warmups[i],

@@ -133,15 +133,25 @@ fn summarize(weights: &Weights, exercise: &Exercise) -> String {
                 format!("{d}s{suffix}")
             })
             .collect(),
-        Exercise::FixedReps(_, e) => (0..e.num_worksets())
-            .map(|i| {
-                let index = SetIndex::Workset(i); // workout page only shows work sets
-                let r = e.set(index).reps;
+        Exercise::FixedReps(_, e) => {
+            let p1 = e.set(SetIndex::Workset(0)).percent;
+            if e.worksets().all(|r| r.reps == 1 && r.percent == p1) {
+                let index = SetIndex::Workset(0);
                 let w = exercise.lower_weight(weights, index);
                 let suffix = w.map_or("".to_owned(), |w| format!(" @ {}", w.text()));
-                format!("{r} reps{suffix}")
-            })
-            .collect(),
+                vec![format!("{} sets{suffix}", e.num_worksets())]
+            } else {
+                (0..e.num_worksets())
+                    .map(|i| {
+                        let index = SetIndex::Workset(i); // workout page only shows work sets
+                        let r = e.set(index).reps;
+                        let w = exercise.lower_weight(weights, index);
+                        let suffix = w.map_or("".to_owned(), |w| format!(" @ {}", w.text()));
+                        format!("{r} reps{suffix}")
+                    })
+                    .collect()
+            }
+        }
         Exercise::VariableReps(_, e) => (0..e.num_worksets())
             .map(|i| {
                 let index = SetIndex::Workset(i);
