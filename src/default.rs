@@ -6,9 +6,9 @@ use self::{
     history::{History, Record},
     notes::Notes,
     pages::{AppState, UserState},
-    program::{Block, Program, ProgramOp},
+    program::{Block, Program},
     weights::{Plate, WeightSet, Weights},
-    workout::{Schedule, Workout, WorkoutOp},
+    workout::{Schedule, Workout},
 };
 use crate::*;
 use chrono::{Local, Weekday};
@@ -29,12 +29,12 @@ pub fn make_program() -> pages::AppState {
     ];
     let name = "My".to_owned();
     let mut default_program = Program::with_blocks(name, blocks, Local::now(), 2);
-    default_program.apply(ProgramOp::Add(create_heavy_bench()));
-    default_program.apply(ProgramOp::Add(create_heavy_ohp()));
-    default_program.apply(ProgramOp::Add(create_medium_bench()));
-    default_program.apply(ProgramOp::Add(create_medium_ohp()));
-    default_program.apply(ProgramOp::Add(create_light()));
-    default_program.apply(ProgramOp::Add(create_test()));
+    default_program.add_workout(create_heavy_bench());
+    default_program.add_workout(create_heavy_ohp());
+    default_program.add_workout(create_medium_bench());
+    default_program.add_workout(create_medium_ohp());
+    default_program.add_workout(create_light());
+    default_program.add_workout(create_test());
 
     let user = match persist::load() {
         Ok(u) => {
@@ -73,7 +73,7 @@ fn create_test() -> Workout {
         .with_weight(150.0)
         .with_rest_mins(1.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Test Chin-ups
     let e = VariableSetsExercise::new(16);
@@ -82,7 +82,7 @@ fn create_test() -> Workout {
     let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
         .with_rest_mins(1.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     workout
 }
@@ -107,7 +107,7 @@ fn create_heavy_bench() -> Workout {
     //     .with_weight(175.0)
     //     .with_rest_mins(3.5)
     //     .finalize();
-    // workout.apply(WorkoutOp::Add(exercise));
+    // workout.add_exercise(exercise);
 
     // // Dislocates
     // let worksets = vec![FixedReps::new(10, 100)];
@@ -115,7 +115,7 @@ fn create_heavy_bench() -> Workout {
     // let name = ExerciseName("Dislocates".to_owned());
     // let formal_name = FormalName("Shoulder Dislocate (band)".to_owned());
     // let exercise = BuildExercise::fixed_reps(name.clone(), formal_name, e).finalize();
-    // workout.apply(WorkoutOp::Add(exercise));
+    // workout.add_exercise(exercise);
 
     // Heavy Bench
     let warmups = vec![
@@ -133,14 +133,14 @@ fn create_heavy_bench() -> Workout {
         .with_weight(150.0)
         .with_rest_mins(3.5)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Quad Stretch
     let e = DurationsExercise::new(vec![20; 4]);
     let name = ExerciseName("Quad Stretch".to_owned());
     let formal_name = FormalName("Standing Quad Stretch".to_owned());
     let exercise = BuildExercise::durations(name, formal_name, e).finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Cable Abduction
     let warmups = vec![FixedReps::new(6, 75)];
@@ -153,7 +153,7 @@ fn create_heavy_bench() -> Workout {
         .with_weight(12.5)
         .with_rest_mins(2.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Heavy RDL
     let warmups = vec![
@@ -171,7 +171,7 @@ fn create_heavy_bench() -> Workout {
         .with_rest_mins(3.0)
         .with_last_rest_mins(0.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     workout
 }
@@ -196,7 +196,7 @@ fn create_heavy_ohp() -> Workout {
         .with_weight(75.0)
         .with_rest_mins(3.5)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Heavy Leg Press
     let warmups = vec![
@@ -214,7 +214,7 @@ fn create_heavy_ohp() -> Workout {
         .with_weight(160.0)
         .with_rest_mins(3.5)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Chin-ups
     let e = VariableSetsExercise::new(16);
@@ -223,7 +223,7 @@ fn create_heavy_ohp() -> Workout {
     let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
         .with_rest_mins(3.5)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Face Pulls
     let warmups = vec![FixedReps::new(6, 75)];
@@ -236,7 +236,7 @@ fn create_heavy_ohp() -> Workout {
         .with_weight(37.5)
         .with_rest_mins(2.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     workout
 }
@@ -261,14 +261,14 @@ fn create_medium_bench() -> Workout {
         .with_weight(135.0)
         .with_rest_mins(3.5)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Quad Stretch
     let e = DurationsExercise::new(vec![20; 4]);
     let name = ExerciseName("Quad Stretch".to_owned());
     let formal_name = FormalName("Standing Quad Stretch".to_owned());
     let exercise = BuildExercise::durations(name, formal_name, e).finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Cable Abduction
     let warmups = vec![FixedReps::new(6, 75)];
@@ -281,7 +281,7 @@ fn create_medium_bench() -> Workout {
         .with_weight(12.5)
         .with_rest_mins(2.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Medium RDL
     let warmups = vec![
@@ -299,7 +299,7 @@ fn create_medium_bench() -> Workout {
         .with_rest_mins(3.0)
         .with_last_rest_mins(0.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     workout
 }
@@ -324,7 +324,7 @@ fn create_medium_ohp() -> Workout {
         .with_weight(75.0)
         .with_rest_mins(3.5)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Leg Press
     let warmups = vec![
@@ -342,7 +342,7 @@ fn create_medium_ohp() -> Workout {
         .with_weight(160.0)
         .with_rest_mins(3.5)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     let e = VariableSetsExercise::new(6);
     let name = ExerciseName("Medium Chin-ups".to_owned());
@@ -350,7 +350,7 @@ fn create_medium_ohp() -> Workout {
     let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
         .with_rest_mins(3.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Face Pulls
     let warmups = vec![FixedReps::new(6, 75)];
@@ -363,7 +363,7 @@ fn create_medium_ohp() -> Workout {
         .with_weight(37.5)
         .with_rest_mins(2.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     workout
 }
@@ -377,7 +377,7 @@ fn create_light() -> Workout {
     let name = ExerciseName("Couch Stretch".to_owned());
     let formal_name = FormalName("Couch Stretch".to_owned());
     let exercise = BuildExercise::durations(name, formal_name, e).finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Face Pulls
     let warmups = vec![FixedReps::new(6, 75)];
@@ -390,7 +390,7 @@ fn create_light() -> Workout {
         .with_weight(37.5)
         .with_rest_mins(2.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Light Chin-ups
     let e = VariableSetsExercise::new(12);
@@ -399,7 +399,7 @@ fn create_light() -> Workout {
     let exercise = BuildExercise::variable_sets(name.clone(), formal_name, e)
         .with_rest_mins(3.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // // Cable Crunchs
     // let worksets = vec![VariableReps::new(6, 12, 100); 3];
@@ -411,7 +411,7 @@ fn create_light() -> Workout {
     //     .with_weight(17.5)
     //     .with_rest_mins(2.0)
     //     .finalize();
-    // workout.apply(WorkoutOp::Add(exercise));
+    // workout.add_exercise(exercise);
 
     // Stack Complex 1
     let sets = vec![1; 4];
@@ -422,7 +422,7 @@ fn create_light() -> Workout {
         .with_rest_secs(45)
         .with_last_rest_mins(3.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     // Stack Complex 2
     let sets = vec![1; 4];
@@ -433,7 +433,7 @@ fn create_light() -> Workout {
         .with_rest_secs(45)
         .with_last_rest_mins(0.0)
         .finalize();
-    workout.apply(WorkoutOp::Add(exercise));
+    workout.add_exercise(exercise);
 
     workout
 }
@@ -584,7 +584,7 @@ fn merge_program(mut state: UserState, default_program: Program) -> UserState {
                         "removing old exercise '{}' from '{}'",
                         loaded_exercise, new_workout.name
                     );
-                    loaded_workout.apply(WorkoutOp::Del(loaded_exercise));
+                    loaded_workout.remove_exercise(&loaded_exercise);
                 }
             }
             for new_exercise in new_workout.exercises() {
@@ -594,19 +594,19 @@ fn merge_program(mut state: UserState, default_program: Program) -> UserState {
                         new_exercise.name(),
                         new_workout.name
                     );
-                    loaded_workout.apply(WorkoutOp::Add(new_exercise.clone()));
+                    loaded_workout.add_exercise(new_exercise.clone());
                 }
             }
         } else {
             println!("adding new workout '{}'", new_workout.name);
-            state.program.apply(ProgramOp::Add(new_workout.clone()));
+            state.program.add_workout(new_workout.clone());
         }
     }
 
     for loaded_workout in loaded_names {
         if default_program.find(&loaded_workout).is_none() {
             println!("removing old workout '{}'", loaded_workout);
-            state.program.apply(ProgramOp::Del(loaded_workout));
+            state.program.remove_workout(&loaded_workout);
         }
     }
     state

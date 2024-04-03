@@ -257,15 +257,6 @@ impl Exercise {
         }
     }
 
-    fn do_set_weight(&mut self, weight: Option<f32>) {
-        match self {
-            Exercise::Durations(d, _) => d.weight = weight,
-            Exercise::FixedReps(d, _) => d.weight = weight,
-            Exercise::VariableReps(d, _) => d.weight = weight,
-            Exercise::VariableSets(d, _) => d.weight = weight,
-        }
-    }
-
     fn validate_weight(&self, weight: Option<f32>) -> Result<(), ValidationError> {
         if let Some(weight) = weight {
             if weight < 0.0 {
@@ -279,6 +270,15 @@ impl Exercise {
             }
         }
         Ok(())
+    }
+
+    fn do_set_weight(&mut self, weight: Option<f32>) {
+        match self {
+            Exercise::Durations(d, _) => d.weight = weight,
+            Exercise::FixedReps(d, _) => d.weight = weight,
+            Exercise::VariableReps(d, _) => d.weight = weight,
+            Exercise::VariableSets(d, _) => d.weight = weight,
+        }
     }
 }
 

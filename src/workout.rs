@@ -1,16 +1,12 @@
 use crate::{
     days::Days,
     exercise::{Exercise, ExerciseName},
+    pages::ValidationError,
     program::BlockSchedule,
 };
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-pub enum WorkoutOp {
-    Add(Exercise),
-    Del(ExerciseName),
-}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Schedule {
@@ -73,43 +69,26 @@ impl Workout {
         }
     }
 
-    pub fn validate(&mut self, op: &WorkoutOp) -> String {
-        let mut err = String::new();
-        match op {
-            WorkoutOp::Add(exercise) => {
-                // TODO: should names disallow HTML markup symbols?
-                let name = exercise.name();
-                if name.0.trim().is_empty() {
-                    err += "The exercise name cannot be empty. ";
-                } else if self.exercises.iter().find(|e| e.name() == name).is_some() {
-                    err += "The exercise name must be unique. ";
-                }
-            }
-            WorkoutOp::Del(name) => {
-                if self.exercises.iter().find(|e| e.name() == name).is_none() {
-                    err += "The exercise does not exist. ";
-                }
-            }
-        }
-        err
+    // pub fn try_add_exercise(&mut self, exercise: Exercise) -> Result<(), ValidationError> {
+    //     self.validate_add_exercise(&exercise)?;
+    //     self.do_add_exercise(exercise);
+    //     Ok(())
+    // }
+
+    pub fn add_exercise(&mut self, exercise: Exercise) {
+        assert!(self.validate_add_exercise(&exercise).is_ok());
+        self.do_add_exercise(exercise);
     }
 
-    pub fn apply(&mut self, op: WorkoutOp) {
-        assert_eq!(self.validate(&op), "");
-        match op {
-            WorkoutOp::Add(exercise) => {
-                self.exercises.push(exercise);
-            }
-            WorkoutOp::Del(name) => {
-                let index = self
-                    .exercises
-                    .iter()
-                    .position(|e| *e.name() == name)
-                    .unwrap();
-                self.exercises.remove(index);
-                self.completed.remove(&name);
-            }
-        }
+    // pub fn try_remove_exercise(&mut self, name: &ExerciseName) -> Result<(), ValidationError> {
+    //     self.validate_remove_exercise(name)?;
+    //     self.do_remove_exercise(name);
+    //     Ok(())
+    // }
+
+    pub fn remove_exercise(&mut self, name: &ExerciseName) {
+        assert!(self.validate_remove_exercise(name).is_ok());
+        self.do_remove_exercise(name);
     }
 
     pub fn exercises(&self) -> impl Iterator<Item = &Exercise> + '_ {
@@ -306,6 +285,37 @@ impl Workout {
             .collect();
         candidates.sort_by(|x, y| (now - x).cmp(&(now - y)));
         candidates[0]
+    }
+
+    fn validate_add_exercise(&self, exercise: &Exercise) -> Result<(), ValidationError> {
+        let name = exercise.name();
+        if name.0.trim().is_empty() {
+            return Err(ValidationError::new("The exercise name cannot be empty."));
+        } else if self.exercises.iter().find(|e| e.name() == name).is_some() {
+            return Err(ValidationError::new("The exercise name must be unique."));
+        }
+        Ok(())
+    }
+
+    fn do_add_exercise(&mut self, exercise: Exercise) {
+        self.exercises.push(exercise);
+    }
+
+    fn validate_remove_exercise(&self, name: &ExerciseName) -> Result<(), ValidationError> {
+        if self.exercises.iter().find(|&e| e.name() == name).is_none() {
+            return Err(ValidationError::new("The exercise name doesn't exist."));
+        }
+        Ok(())
+    }
+
+    fn do_remove_exercise(&mut self, name: &ExerciseName) {
+        let index = self
+            .exercises
+            .iter()
+            .position(|e| e.name() == name)
+            .unwrap();
+        self.exercises.remove(index);
+        self.completed.remove(&name);
     }
 }
 
@@ -613,7 +623,7 @@ mod tests {
         let exercise = BuildExercise::fixed_reps(name.clone(), formal_name, exercise).finalize();
 
         let mut workout = Workout::new("Full Body".to_owned(), schedule);
-        workout.apply(WorkoutOp::Add(exercise));
+        workout.add_exercise(exercise);
 
         (workout, name)
     }
@@ -630,8 +640,8 @@ mod tests {
         let exercise2 = BuildExercise::fixed_reps(name2.clone(), formal_name, exercise).finalize();
 
         let mut workout = Workout::new("Full Body".to_owned(), schedule);
-        workout.apply(WorkoutOp::Add(exercise1));
-        workout.apply(WorkoutOp::Add(exercise2));
+        workout.add_exercise(exercise1);
+        workout.add_exercise(exercise2);
 
         (workout, name1, name2)
     }

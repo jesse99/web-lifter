@@ -1,11 +1,6 @@
-use crate::workout::Workout;
+use crate::{pages::ValidationError, workout::Workout};
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};
 use serde::{Deserialize, Serialize};
-
-pub enum ProgramOp {
-    Add(Workout),
-    Del(String),
-}
 
 /// Optional block periodization: blocks are scheduled for a number of weeks and then the
 /// next block starts up.
@@ -163,39 +158,26 @@ impl Program {
         // set_var_sets_target(self, "Medium OHP", "Medium Chin-ups", 16);
     }
 
-    pub fn validate(&mut self, op: &ProgramOp) -> String {
-        let mut err = String::new();
-        match op {
-            ProgramOp::Add(workout) => {
-                if self
-                    .workouts
-                    .iter()
-                    .find(|&w| w.name == workout.name)
-                    .is_some()
-                {
-                    err += "The workout name must be unique. ";
-                }
-            }
-            ProgramOp::Del(name) => {
-                if self.workouts.iter().find(|&w| w.name == *name).is_none() {
-                    err += "The workout name doesn't exist. ";
-                }
-            }
-        }
-        err
+    // pub fn try_add_workout(&mut self, workout: Workout) -> Result<(), ValidationError> {
+    //     self.validate_add_workout(&workout)?;
+    //     self.do_add_workout(workout);
+    //     Ok(())
+    // }
+
+    pub fn add_workout(&mut self, workout: Workout) {
+        assert!(self.validate_add_workout(&workout).is_ok());
+        self.do_add_workout(workout);
     }
 
-    pub fn apply(&mut self, op: ProgramOp) {
-        assert_eq!(self.validate(&op), "");
-        match op {
-            ProgramOp::Add(workout) => {
-                self.workouts.push(workout);
-            }
-            ProgramOp::Del(name) => {
-                let index = self.workouts.iter().position(|w| w.name == name).unwrap();
-                self.workouts.remove(index);
-            }
-        }
+    // pub fn try_remove_workout(&mut self, name: &str) -> Result<(), ValidationError> {
+    //     self.validate_remove_workout(name)?;
+    //     self.do_remove_workout(name);
+    //     Ok(())
+    // }
+
+    pub fn remove_workout(&mut self, name: &str) {
+        assert!(self.validate_remove_workout(name).is_ok());
+        self.do_remove_workout(name);
     }
 
     pub fn workouts(&self) -> impl Iterator<Item = &Workout> + '_ {
@@ -264,5 +246,40 @@ impl Program {
         }
 
         BlockSchedule { spans }
+    }
+
+    fn validate_add_workout(&self, workout: &Workout) -> Result<(), ValidationError> {
+        if self
+            .workouts
+            .iter()
+            .find(|&w| w.name == workout.name)
+            .is_some()
+        {
+            // Other checks would be done when creating workouts.
+            return Err(ValidationError::new("The workout name must be unique."));
+        }
+        Ok(())
+    }
+
+    fn do_add_workout(&mut self, workout: Workout) {
+        self.workouts.push(workout);
+    }
+
+    fn validate_remove_workout(&self, name: &str) -> Result<(), ValidationError> {
+        if self.workouts.iter().find(|&w| w.name == *name).is_none() {
+            return Err(ValidationError::new("The workout name doesn't exist."));
+        }
+        Ok(())
+    }
+
+    fn do_remove_workout(&mut self, name: &str) {
+        let index = self.workouts.iter().position(|w| w.name == name).unwrap();
+        self.workouts.remove(index);
+
+        for block in self.blocks.iter_mut() {
+            if let Some(index) = block.workouts.iter().position(|n| n == name) {
+                block.workouts.remove(index);
+            }
+        }
     }
 }
