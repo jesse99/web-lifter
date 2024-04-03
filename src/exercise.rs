@@ -206,6 +206,16 @@ impl Exercise {
         self.do_set_weight(weight);
     }
 
+    // pub fn set_weightset(&mut self, set: Option<String>) {
+    //     // assert!(self.validate_weightset(weight).is_ok());
+    //     match self {
+    //         Exercise::Durations(d, _) => d.weightset = set,
+    //         Exercise::FixedReps(d, _) => d.weightset = set,
+    //         Exercise::VariableReps(d, _) => d.weightset = set,
+    //         Exercise::VariableSets(d, _) => d.weightset = set,
+    //     }
+    // }
+
     /// For the specified set, in seconds.
     pub fn rest(&self, index: SetIndex) -> Option<i32> {
         fn get(index: usize, num: usize, d: &ExerciseData) -> Option<i32> {

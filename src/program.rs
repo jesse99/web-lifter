@@ -130,6 +130,20 @@ impl Program {
         //     }
         // }
 
+        // fn set_weightset(program: &mut Program, workout: &str, exercise: &str, name: &str) {
+        //     use crate::exercise::ExerciseName;
+
+        //     if let Some(workout) = program.find_mut(workout) {
+        //         if let Some(exercise) = workout.find_mut(&ExerciseName(exercise.to_owned())) {
+        //             exercise.set_weightset(Some(name.to_owned()));
+        //         } else {
+        //             panic!("didn't find exercise {exercise}");
+        //         }
+        //     } else {
+        //         panic!("didn't find workout {workout}");
+        //     }
+        // }
+
         // fn set_var_sets_target(program: &mut Program, workout: &str, exercise: &str, target: i32) {
         //     use crate::exercise::ExerciseName;
 
@@ -146,6 +160,8 @@ impl Program {
         // }
 
         // self.set_week(Local::now(), 2);
+        // set_weightset(self, "Light", "Stack Complex 1", "Gym Dumbbells");
+        // set_weightset(self, "Light", "Stack Complex 2", "Gym Dumbbells");
 
         // set_weight(self, "Heavy Bench", "Heavy RDL", 235.0);
         // set_weight(self, "Heavy Bench", "Cable Abduction", 17.5);
