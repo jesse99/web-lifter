@@ -89,7 +89,7 @@
     \cf4 \strokec4 weightset\cf3 \strokec3 : Option<String>,\
     \cf4 \strokec4 weight\cf3 \strokec3 : Option<f32>, \cf13 \strokec13 // base weight to use for each workset, often modified by set percent\cf3 \strokec3 \
     \cf4 \strokec4 rest\cf3 \strokec3 : Option<i32>,   \cf13 \strokec13 // used for work sets\cf3 \strokec3 \
-    \cf4 \strokec4 last_rest\cf3 \strokec3 : Option<i32>, \cf13 \strokec13 // overrides rest.last()\cf3 \strokec3 \
+    \cf4 \strokec4 last_rest\cf3 \strokec3 : Option<i32>, \cf13 \strokec13 // overrides rest.last() \cf3 \strokec3 \
 \pard\pardeftab720\partightenfactor0
 
 \fs32 \cf3 \
@@ -107,10 +107,8 @@
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 \cf10 \'95 Work on edit weight form:\
-    - validate the weight\
-    		` >= 0, maybe not insanely large, maybe not inf or nan)\
-    		` maybe via an Op enum\
-    		` or special set/parse methods\
+    	- see if there are any other posts that need validation\
+    	- get rid of the Op enums\
 \'95 Light workout should start on wed?\
 \'95 Complexes need to use a dumbbell weight set\
 	- make sure edit weight looks OK\

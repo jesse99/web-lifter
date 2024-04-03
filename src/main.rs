@@ -18,7 +18,7 @@ use axum::{
     Form, Router,
 };
 use handlebars::Handlebars;
-use pages::{InternalError, SharedState};
+use pages::{AppError, SharedState};
 use serde::Deserialize;
 use std::sync::RwLock;
 use tower::ServiceBuilder;
@@ -87,7 +87,7 @@ async fn get_exercise_js(Extension(_state): Extension<SharedState>) -> impl Into
 
 async fn get_program(
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, InternalError> {
+) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_program_page(state)?;
     Ok((
         [
@@ -101,7 +101,7 @@ async fn get_program(
 async fn get_workout(
     Path(name): Path<String>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, InternalError> {
+) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_workout_page(state, &name)?;
     Ok((
         [
@@ -115,7 +115,7 @@ async fn get_workout(
 async fn get_exercise(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, InternalError> {
+) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_exercise_page(state, &workout, &exercise)?;
     Ok((
         [
@@ -129,7 +129,7 @@ async fn get_exercise(
 async fn get_edit_weight(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, InternalError> {
+) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_weight_page(state, &workout, &exercise)?;
     Ok((
         [
@@ -143,7 +143,7 @@ async fn get_edit_weight(
 async fn get_edit_any_weight(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, InternalError> {
+) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_any_weight_page(state, &workout, &exercise)?;
     Ok((
         [
@@ -167,7 +167,7 @@ struct VarRepsOptions {
 async fn post_next_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, InternalError> {
+) -> Result<impl IntoResponse, AppError> {
     let new_url = pages::post_next_exercise(state, &workout, &exercise, None)?;
 
     let mut headers = HeaderMap::new();
@@ -184,7 +184,7 @@ async fn post_next_var_set(
     Path((workout, exercise)): Path<(String, String)>,
     options: Query<VarRepsOptions>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, InternalError> {
+) -> Result<impl IntoResponse, AppError> {
     let new_url = pages::post_next_exercise(state, &workout, &exercise, Some(options.0))?;
 
     let mut headers = HeaderMap::new();
@@ -200,7 +200,7 @@ async fn post_next_var_set(
 async fn reset_exercise(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, InternalError> {
+) -> Result<impl IntoResponse, AppError> {
     let new_url = pages::post_reset_exercise(state, &workout, &exercise)?;
 
     let mut headers = HeaderMap::new();
@@ -218,11 +218,26 @@ struct SetWeight {
     weight: String, // "25 lbs"
 }
 
+// The user experience of failed form validation is not great. The user will get a new
+// page with an error message and then have to use the back button to fix the issue.
+// Annoying and pretty bad if there are multiple widgets that could have errors. There
+// are other possibilites:
+// 1) axum has some built in support for validation, see https://github.com/tokio-rs/axum/blob/main/examples/validator/src/main.rs
+// However I don't think this will provide a better UX and the validation logic isn't
+// together with the backend logic.
+// 2) There are also validation crates for use with axum like valitron. Haven't looked at
+// these much but I don't think they'll solve the UX issue.
+// 3) We could redirect back to the edit page and include an error. That's almost a good
+// UX but we'd want to preserve the user's edits which would be pretty annoying.
+// 4) We could use javascript and something like AJAX to validate before submitting. That
+// would give us a nice UX and allow us to do things like style the offending widget but
+// means we'd have parallel code paths for validation and setting which is again quite
+// annoying.
 async fn post_set_weight(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetWeight>,
-) -> Result<impl IntoResponse, InternalError> {
+) -> Result<impl IntoResponse, AppError> {
     let parts: Vec<_> = payload.weight.split(" ").collect();
     let s = parts.get(0).context("empty payload")?.to_string();
     let w = if s == "None" {
@@ -250,7 +265,7 @@ async fn post_set_any_weight(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetWeight>,
-) -> Result<impl IntoResponse, InternalError> {
+) -> Result<impl IntoResponse, AppError> {
     let parts: Vec<_> = payload.weight.split(" ").collect();
     let s = parts.get(0).context("empty payload")?.to_string();
     let w: f32 = s.parse().context(format!("expected f32 but found '{s}'"))?;
@@ -264,5 +279,6 @@ async fn post_set_any_weight(
     );
     headers.insert("Expires", "0".parse().unwrap());
     headers.insert("Location", new_url.path().parse().unwrap());
+    // Ok((StatusCode::BAD_REQUEST, "Weight has to be less than 20.0"))
     Ok((StatusCode::SEE_OTHER, headers))
 }

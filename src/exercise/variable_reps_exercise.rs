@@ -1,4 +1,5 @@
-use super::{exercise::SetIndex, FixedReps};
+use super::FixedReps;
+use crate::exercise::SetIndex;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]

@@ -1,6 +1,6 @@
 use crate::{
     exercise::{Exercise, ExerciseName, SetIndex},
-    pages::{InternalError, SharedState},
+    pages::SharedState,
     VarRepsOptions,
 };
 use anyhow::Context;
@@ -12,7 +12,7 @@ pub fn post_next_exercise(
     workout_name: &str,
     exercise_name: &str,
     options: Option<VarRepsOptions>,
-) -> Result<Uri, InternalError> {
+) -> Result<Uri, anyhow::Error> {
     let finished = {
         let program = &state.read().unwrap().user.program;
         let workout = program
@@ -57,7 +57,7 @@ pub fn post_reset_exercise(
     state: SharedState,
     workout_name: &str,
     exercise_name: &str,
-) -> Result<Uri, InternalError> {
+) -> Result<Uri, anyhow::Error> {
     let exercise_name = ExerciseName(exercise_name.to_owned());
 
     {
@@ -83,14 +83,14 @@ pub fn post_set_weight(
     workout_name: &str,
     exercise_name: &str,
     weight: Option<f32>,
-) -> Result<Uri, InternalError> {
+) -> Result<Uri, anyhow::Error> {
     let exercise_name = ExerciseName(exercise_name.to_owned());
 
     {
         let program = &mut state.write().unwrap().user.program;
         let workout = program.find_mut(&workout_name).unwrap();
         let exercise = workout.find_mut(&exercise_name).unwrap();
-        exercise.set_weight(weight);
+        exercise.try_set_weight(weight)?;
     }
 
     {
@@ -105,6 +105,7 @@ pub fn post_set_weight(
     let uri = uri.parse()?;
     Ok(uri)
 }
+
 fn complete_set(
     state: &mut SharedState,
     workout_name: &str,

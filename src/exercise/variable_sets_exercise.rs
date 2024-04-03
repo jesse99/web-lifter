@@ -1,4 +1,4 @@
-use super::exercise::SetIndex;
+use crate::exercise::SetIndex;
 use serde::{Deserialize, Serialize};
 
 /// Used for stuff like 20 pull-ups spread across as many sets as necessary.

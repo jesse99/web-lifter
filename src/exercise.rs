@@ -1,7 +1,9 @@
 //! Exercises are movements for the user to perform, e.g. a barbell squat. These may be
 //! shared across programs and workouts.
-use self::weights::{Weight, Weights};
-use crate::*;
+use crate::{
+    pages::ValidationError,
+    weights::{Weight, Weights},
+};
 use chrono::{DateTime, Local};
 use core::fmt;
 use serde::{Deserialize, Serialize};
@@ -193,13 +195,15 @@ impl Exercise {
         }
     }
 
+    pub fn try_set_weight(&mut self, weight: Option<f32>) -> Result<(), ValidationError> {
+        self.validate_weight(weight)?;
+        self.do_set_weight(weight);
+        Ok(())
+    }
+
     pub fn set_weight(&mut self, weight: Option<f32>) {
-        match self {
-            Exercise::Durations(d, _) => d.weight = weight,
-            Exercise::FixedReps(d, _) => d.weight = weight,
-            Exercise::VariableReps(d, _) => d.weight = weight,
-            Exercise::VariableSets(d, _) => d.weight = weight,
-        }
+        assert!(self.validate_weight(weight).is_ok());
+        self.do_set_weight(weight);
     }
 
     /// For the specified set, in seconds.
@@ -251,6 +255,30 @@ impl Exercise {
             Exercise::VariableReps(d, _) => (d.weight, &d.weightset),
             Exercise::VariableSets(d, _) => (d.weight, &d.weightset),
         }
+    }
+
+    fn do_set_weight(&mut self, weight: Option<f32>) {
+        match self {
+            Exercise::Durations(d, _) => d.weight = weight,
+            Exercise::FixedReps(d, _) => d.weight = weight,
+            Exercise::VariableReps(d, _) => d.weight = weight,
+            Exercise::VariableSets(d, _) => d.weight = weight,
+        }
+    }
+
+    fn validate_weight(&self, weight: Option<f32>) -> Result<(), ValidationError> {
+        if let Some(weight) = weight {
+            if weight < 0.0 {
+                return Err(ValidationError::new("Weight cannot be negative"));
+            }
+            if weight.is_nan() {
+                return Err(ValidationError::new("Weight cannot be a Not A Number"));
+            }
+            if weight.is_infinite() {
+                return Err(ValidationError::new("Weight cannot be a infinite"));
+            }
+        }
+        Ok(())
     }
 }
 

@@ -1,12 +1,12 @@
 use crate::{
-    pages::{InternalError, SharedState},
+    pages::SharedState,
     program::Program,
     workout::{Status, Workout},
 };
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-pub fn get_program_page(state: SharedState) -> Result<String, InternalError> {
+pub fn get_program_page(state: SharedState) -> Result<String, anyhow::Error> {
     let error = {
         let user = &mut state.write().unwrap().user;
         let e = user.errors.join(", ");

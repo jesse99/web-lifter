@@ -1,4 +1,4 @@
-use super::exercise::SetIndex;
+use crate::exercise::SetIndex;
 use serde::{Deserialize, Serialize};
 
 /// Reps to use for a set along with a percentage of weight.

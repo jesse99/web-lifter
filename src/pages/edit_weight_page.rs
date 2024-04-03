@@ -1,6 +1,6 @@
 use crate::{
     exercise::ExerciseName,
-    pages::{InternalError, SharedState},
+    pages::SharedState,
     program::Program,
     weights::{self, Weights},
 };
@@ -11,7 +11,7 @@ pub fn get_edit_weight_page(
     state: SharedState,
     workout: &str,
     exercise: &str,
-) -> Result<String, InternalError> {
+) -> Result<String, anyhow::Error> {
     let handlebars = &state.read().unwrap().handlebars;
     let weights = &state.read().unwrap().user.weights;
     let program = &state.read().unwrap().user.program;
@@ -27,7 +27,7 @@ pub fn get_edit_any_weight_page(
     state: SharedState,
     workout: &str,
     exercise: &str,
-) -> Result<String, InternalError> {
+) -> Result<String, anyhow::Error> {
     let handlebars = &state.read().unwrap().handlebars;
     let program = &state.read().unwrap().user.program;
 

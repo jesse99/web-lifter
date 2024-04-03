@@ -2,7 +2,7 @@ use crate::{
     exercise::{Exercise, ExerciseData, ExerciseName, SetIndex, VariableReps},
     history::{CompletedSets, History, Record},
     notes::Notes,
-    pages::{self, InternalError, SharedState},
+    pages::{self, SharedState},
     program::Program,
     weights::{self, Weights},
     workout::Workout,
@@ -15,7 +15,7 @@ pub fn get_exercise_page(
     state: SharedState,
     workout_name: &str,
     exercise_name: &str,
-) -> Result<String, InternalError> {
+) -> Result<String, anyhow::Error> {
     fn get_new_record(state: &SharedState, workout_name: &str) -> Record {
         let program = &state.read().unwrap().user.program;
 

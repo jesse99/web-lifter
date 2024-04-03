@@ -1,7 +1,7 @@
 use crate::{
     exercise::{Exercise, SetIndex},
     history::History,
-    pages::{InternalError, SharedState},
+    pages::SharedState,
     program::Program,
     weights::Weights,
     workout::Workout,
@@ -9,7 +9,7 @@ use crate::{
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, InternalError> {
+pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, anyhow::Error> {
     let error = {
         let user = &mut state.write().unwrap().user;
         let e = user.errors.join(", ");
