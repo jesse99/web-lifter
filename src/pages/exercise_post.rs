@@ -106,6 +106,35 @@ pub fn post_set_weight(
     Ok(uri)
 }
 
+pub fn post_set_rest(
+    state: SharedState,
+    workout_name: &str,
+    exercise_name: &str,
+    rest: Option<i32>,
+    last_rest: Option<i32>,
+) -> Result<Uri, anyhow::Error> {
+    let exercise_name = ExerciseName(exercise_name.to_owned());
+
+    {
+        let program = &mut state.write().unwrap().user.program;
+        let workout = program.find_mut(&workout_name).unwrap();
+        let exercise = workout.find_mut(&exercise_name).unwrap();
+        exercise.try_set_rest(rest)?;
+        exercise.try_set_last_rest(last_rest)?;
+    }
+
+    {
+        let user = &mut state.write().unwrap().user;
+        if let Err(e) = crate::persist::save(user) {
+            user.errors.push(format!("{e}")); // not fatal so we don't return an error
+        }
+    }
+
+    let path = format!("/exercise/{workout_name}/{exercise_name}");
+    let uri = url_escape::encode_path(&path);
+    let uri = uri.parse()?;
+    Ok(uri)
+}
 fn complete_set(
     state: &mut SharedState,
     workout_name: &str,

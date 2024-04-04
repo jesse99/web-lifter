@@ -39,6 +39,7 @@ async fn main() {
             "/edit-any-weight/:workout/:exercise",
             get(get_edit_any_weight),
         )
+        .route("/edit-rest/:workout/:exercise", get(get_edit_rest))
         .route("/scripts/exercise.js", get(get_exercise_js))
         .route("/styles/style.css", get(get_styles))
         // posts
@@ -49,6 +50,7 @@ async fn main() {
         )
         .route("/reset/exercise/:workout/:exercise", post(reset_exercise))
         .route("/set-weight/:workout/:exercise", post(post_set_weight))
+        .route("/set-rest/:workout/:exercise", post(post_set_rest))
         .route(
             "/set-any-weight/:workout/:exercise",
             post(post_set_any_weight),
@@ -131,6 +133,20 @@ async fn get_edit_weight(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_weight_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_rest(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_rest_page(state, &workout, &exercise)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -280,5 +296,49 @@ async fn post_set_any_weight(
     headers.insert("Expires", "0".parse().unwrap());
     headers.insert("Location", new_url.path().parse().unwrap());
     // Ok((StatusCode::BAD_REQUEST, "Weight has to be less than 20.0"))
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetRest {
+    rest: String,
+    last_rest: String,
+}
+
+async fn post_set_rest(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetRest>,
+) -> Result<impl IntoResponse, AppError> {
+    println!("payload: {payload:?}");
+
+    let rest = if payload.rest.is_empty() || payload.rest == "0" || payload.rest == "0.0" {
+        None
+    } else {
+        let x: f32 = payload.rest.parse().context(format!(
+            "expected f32 for rest but found '{}'",
+            payload.rest
+        ))?;
+        Some(x as i32)
+    };
+    let last_rest =
+        if payload.last_rest.is_empty() || payload.last_rest == "0" || payload.last_rest == "0.0" {
+            None
+        } else {
+            let x: f32 = payload.last_rest.parse().context(format!(
+                "expected f32 for last_rest but found '{}'",
+                payload.last_rest
+            ))?;
+            Some(x as i32)
+        };
+    let new_url = pages::post_set_rest(state, &workout, &exercise, rest, last_rest)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
     Ok((StatusCode::SEE_OTHER, headers))
 }

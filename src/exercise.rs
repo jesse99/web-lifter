@@ -206,6 +206,28 @@ impl Exercise {
         self.do_set_weight(weight);
     }
 
+    pub fn try_set_rest(&mut self, rest: Option<i32>) -> Result<(), ValidationError> {
+        self.validate_rest(rest)?;
+        self.do_set_rest(rest);
+        Ok(())
+    }
+
+    pub fn set_rest(&mut self, rest: Option<i32>) {
+        assert!(self.validate_rest(rest).is_ok());
+        self.do_set_rest(rest);
+    }
+
+    pub fn try_set_last_rest(&mut self, last_rest: Option<i32>) -> Result<(), ValidationError> {
+        self.validate_last_rest(last_rest)?;
+        self.do_set_last_rest(last_rest);
+        Ok(())
+    }
+
+    pub fn set_last_rest(&mut self, last_rest: Option<i32>) {
+        assert!(self.validate_last_rest(last_rest).is_ok());
+        self.do_set_last_rest(last_rest);
+    }
+
     // pub fn set_weightset(&mut self, set: Option<String>) {
     //     // assert!(self.validate_weightset(weight).is_ok());
     //     match self {
@@ -288,6 +310,42 @@ impl Exercise {
             Exercise::FixedReps(d, _) => d.weight = weight,
             Exercise::VariableReps(d, _) => d.weight = weight,
             Exercise::VariableSets(d, _) => d.weight = weight,
+        }
+    }
+
+    fn validate_rest(&self, rest: Option<i32>) -> Result<(), ValidationError> {
+        if let Some(rest) = rest {
+            if rest < 0 {
+                return Err(ValidationError::new("Rest cannot be negative"));
+            }
+        }
+        Ok(())
+    }
+
+    fn do_set_rest(&mut self, rest: Option<i32>) {
+        match self {
+            Exercise::Durations(d, _) => d.rest = rest,
+            Exercise::FixedReps(d, _) => d.rest = rest,
+            Exercise::VariableReps(d, _) => d.rest = rest,
+            Exercise::VariableSets(d, _) => d.rest = rest,
+        }
+    }
+
+    fn validate_last_rest(&self, last_rest: Option<i32>) -> Result<(), ValidationError> {
+        if let Some(last_rest) = last_rest {
+            if last_rest < 0 {
+                return Err(ValidationError::new("Last rest cannot be negative"));
+            }
+        }
+        Ok(())
+    }
+
+    fn do_set_last_rest(&mut self, last_rest: Option<i32>) {
+        match self {
+            Exercise::Durations(d, _) => d.last_rest = last_rest,
+            Exercise::FixedReps(d, _) => d.last_rest = last_rest,
+            Exercise::VariableReps(d, _) => d.last_rest = last_rest,
+            Exercise::VariableSets(d, _) => d.last_rest = last_rest,
         }
     }
 }
