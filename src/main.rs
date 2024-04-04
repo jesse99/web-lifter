@@ -41,6 +41,7 @@ async fn main() {
         )
         .route("/edit-rest/:workout/:exercise", get(get_edit_rest))
         .route("/scripts/exercise.js", get(get_exercise_js))
+        .route("/scripts/rest.js", get(get_rest_js))
         .route("/styles/style.css", get(get_styles))
         // posts
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
@@ -80,6 +81,15 @@ async fn get_styles(Extension(_state): Extension<SharedState>) -> impl IntoRespo
 
 async fn get_exercise_js(Extension(_state): Extension<SharedState>) -> impl IntoResponse {
     let contents = include_str!("../files/exercise.js");
+    (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "text/javascript")],
+        contents,
+    )
+}
+
+async fn get_rest_js(Extension(_state): Extension<SharedState>) -> impl IntoResponse {
+    let contents = include_str!("../files/rest.js");
     (
         StatusCode::OK,
         [(header::CONTENT_TYPE, "text/javascript")],
