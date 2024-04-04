@@ -1,14 +1,14 @@
 {\rtf1\ansi\ansicpg1252\cocoartf2709
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fswiss\fcharset0 Helvetica;\f2\fswiss\fcharset0 ArialMT;
-\f3\fswiss\fcharset0 Helvetica-Bold;\f4\froman\fcharset0 Times-Roman;}
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fswiss\fcharset0 Helvetica;\f2\fswiss\fcharset0 Helvetica-Bold;
+\f3\froman\fcharset0 Times-Roman;}
 {\colortbl;\red255\green255\blue255;\red203\green0\blue77;\red60\green60\blue59;\red117\green66\blue151;
 \red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;\red117\green66\blue151;\red9\green76\blue116;
 \red2\green2\blue2;\red25\green28\blue31;\red130\green130\blue130;\red130\green130\blue130;\red0\green0\blue0;
-\red11\green12\blue12;}
+\red11\green12\blue12;\red0\green0\blue0;}
 {\*\expandedcolortbl;;\cssrgb\c84314\c0\c37255;\cssrgb\c30196\c30196\c29804;\cssrgb\c53725\c34902\c65882;
 \cssrgb\c30196\c30196\c29804;\cssrgb\c84314\c0\c37255;\cssrgb\c0\c37255\c52941;\cssrgb\c53725\c34902\c65882;\cssrgb\c0\c37255\c52941;
-\csgenericrgb\c784\c784\c784;\cssrgb\c12941\c14510\c16078;\cssrgb\c58039\c58039\c58039;\cssrgb\c58039\c58039\c58039;\cssrgb\c0\c0\c0;
-\cssrgb\c4706\c5098\c5490;}
+\csgenericrgb\c784\c784\c784;\cssrgb\c12941\c14510\c16078;\cssrgb\c58039\c58039\c58039;\cssrgb\c58039\c58039\c58039;\csgray\c0;
+\cssrgb\c4706\c5098\c5490;\cssrgb\c0\c0\c0;}
 \deftab720
 \pard\pardeftab720\partightenfactor0
 
@@ -97,32 +97,23 @@
 
 \f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 localhost:3000/\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
-\f2 \cf0 \expnd0\expndtw0\kerning0
-73.140.78.74
-\f1 \cf10 \kerning1\expnd0\expndtw0 :3000/     \cf10 https://whatismyip.uno/ (https://superuser.com/a/1629435)\
+\f0\fs36 \cf14 \CocoaLigature0 localhost:3000/ \
+73.140.78.74:3000/
+\f1\fs48 \cf10 \CocoaLigature1      \cf10 https://whatismyip.uno/ (https://superuser.com/a/1629435)\
 	same mar 21-31      have to connect using 5G (or from public internet)\
 \pard\pardeftab720\partightenfactor0
 
 \f0\fs32 \cf3 \expnd0\expndtw0\kerning0
 \outl0\strokewidth0 \strokec3 \
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
 \f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'aa Support editing rest:\
-	- add a drop down for secs/mins/hours\
-		` will need javascript to change text fields when units change\
-		` make sure units are sent to server\
-		` what should the units default be? always mins? depends on rest value?\
+\'aa Support editing rest:\
+	- probably should use a custom js file for rest\
+\'95\'a0Fonts didn\'92t seem any larger on iOS \
 \'95 Does last_rest make sense for variable sets?\
 \'95\'a0Supporting editing:\
-	- edit common (i.e. ExerciseData)\
-		` for now 
-\f3\b rests
-\f1\b0 \
 	- edit sets (durations, reps, etc)\
 		` change title depending on exercise type\
 	- edit note\
@@ -132,7 +123,7 @@
 		` for scaling can set bs-body-font-size in body elements\
 		  would be nice if font size was per device\
 	- click should edit 
-\f3\b history record
+\f2\b history record
 \f1\b0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 \cf10 \'95 Light workout should start on wed\
@@ -148,42 +139,42 @@
 	- extract to a function and use ? operator (if the lets all want the same type)\
 
 \fs52 		
-\f4\fs30\fsmilli15333 \cf15 \expnd0\expndtw0\kerning0
+\f3\fs30\fsmilli15333 \cf15 \expnd0\expndtw0\kerning0
 fn get_result() -> Option<u64> \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f4\fs30\fsmilli15333 \cf15 \'a0 let i = func1()?;
+\f3\fs30\fsmilli15333 \cf15 \'a0 let i = func1()?;
 \f1\fs33\fsmilli16667 \cf0 \
 \pard\pardeftab720\partightenfactor0
 \cf0 		
-\f4\fs30\fsmilli15333 \cf15 \'a0 let j = func2(i)?;
+\f3\fs30\fsmilli15333 \cf15 \'a0 let j = func2(i)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f4\fs30\fsmilli15333 \cf15 \'a0 let k = func3(j)?;
+\f3\fs30\fsmilli15333 \cf15 \'a0 let k = func3(j)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f4\fs30\fsmilli15333 \cf15 \'a0 func3(k)
+\f3\fs30\fsmilli15333 \cf15 \'a0 func3(k)
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f4\fs30\fsmilli15333 \cf15 \}
+\f3\fs30\fsmilli15333 \cf15 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f4\fs30\fsmilli15333 \cf15 \'a0
+\f3\fs30\fsmilli15333 \cf15 \'a0
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f4\fs30\fsmilli15333 \cf15 fn main() \{
+\f3\fs30\fsmilli15333 \cf15 fn main() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f4\fs30\fsmilli15333 \cf15 \'a0 if let Some(result) = get_result() \{
+\f3\fs30\fsmilli15333 \cf15 \'a0 if let Some(result) = get_result() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f4\fs30\fsmilli15333 \cf15 \'a0\'a0\'a0 // do something
+\f3\fs30\fsmilli15333 \cf15 \'a0\'a0\'a0 // do something
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f4\fs30\fsmilli15333 \cf15 \'a0 \}
+\f3\fs30\fsmilli15333 \cf15 \'a0 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f4\fs30\fsmilli15333 \cf15 \}\
+\f3\fs30\fsmilli15333 \cf15 \}\
 \pard\pardeftab720\partightenfactor0
 
 \f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \'95\'a0Set label flaked out for a second after finishing last set\

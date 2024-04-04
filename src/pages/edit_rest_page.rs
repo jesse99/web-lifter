@@ -38,13 +38,13 @@ impl EditRestData {
         let d = exercise.data();
 
         let rest = if let Some(r) = d.rest {
-            format!("{}", r)
+            format!("{:.2}", r as f32 / 60.0)
         } else {
             "".to_owned()
         };
 
         let last_rest = if let Some(r) = d.last_rest {
-            format!("{}", r)
+            format!("{:.2}", r as f32 / 60.0)
         } else {
             "".to_owned()
         };

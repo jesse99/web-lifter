@@ -303,6 +303,7 @@ async fn post_set_any_weight(
 struct SetRest {
     rest: String,
     last_rest: String,
+    units: String, // "secs", "mins", or "hours"
 }
 
 async fn post_set_rest(
@@ -310,27 +311,28 @@ async fn post_set_rest(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetRest>,
 ) -> Result<impl IntoResponse, AppError> {
+    fn parse_time(name: &str, value: &str, units: &str) -> Result<Option<i32>, AppError> {
+        if !value.is_empty() {
+            let mut x: f32 = value
+                .parse()
+                .context(format!("expected f32 for {name} but found '{value}'"))?;
+            if units == "mins" {
+                x *= 60.0;
+            }
+            if units == "hours" {
+                x *= 60.0 * 60.0;
+            }
+            if x > 0.1 {
+                return Ok(Some(x as i32));
+            }
+        }
+        Ok(None)
+    }
+
     println!("payload: {payload:?}");
 
-    let rest = if payload.rest.is_empty() || payload.rest == "0" || payload.rest == "0.0" {
-        None
-    } else {
-        let x: f32 = payload.rest.parse().context(format!(
-            "expected f32 for rest but found '{}'",
-            payload.rest
-        ))?;
-        Some(x as i32)
-    };
-    let last_rest =
-        if payload.last_rest.is_empty() || payload.last_rest == "0" || payload.last_rest == "0.0" {
-            None
-        } else {
-            let x: f32 = payload.last_rest.parse().context(format!(
-                "expected f32 for last_rest but found '{}'",
-                payload.last_rest
-            ))?;
-            Some(x as i32)
-        };
+    let rest = parse_time("rest", &payload.rest, &payload.units)?;
+    let last_rest = parse_time("last_rest", &payload.last_rest, &payload.units)?;
     let new_url = pages::post_set_rest(state, &workout, &exercise, rest, last_rest)?;
 
     let mut headers = HeaderMap::new();
