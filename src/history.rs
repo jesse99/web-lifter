@@ -109,9 +109,9 @@ impl History {
 
     pub fn abort(&mut self, name: &ExerciseName) {
         if let Some(entries) = self.records.get_mut(name) {
-            if let Some(last) = entries.last() {
+            if let Some(last) = entries.last_mut() {
                 if last.completed.is_none() {
-                    entries.pop();
+                    last.sets = None;
                 }
             }
         }
