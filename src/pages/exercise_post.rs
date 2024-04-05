@@ -106,6 +106,73 @@ pub fn post_set_weight(
     Ok(uri)
 }
 
+pub fn post_set_note(
+    state: SharedState,
+    workout_name: &str,
+    exercise_name: &str,
+    note: String,
+) -> Result<Uri, anyhow::Error> {
+    let exercise_name = ExerciseName(exercise_name.to_owned());
+
+    {
+        let formal_name = {
+            let program = &state.read().unwrap().user.program;
+            let workout = program.find(&workout_name).unwrap();
+            let exercise = workout.find(&exercise_name).unwrap();
+            let d = exercise.data();
+            d.formal_name.clone()
+        };
+
+        let notes = &mut state.write().unwrap().user.notes;
+        notes.set_markdown(formal_name, note);
+    }
+
+    {
+        let user = &mut state.write().unwrap().user;
+        if let Err(e) = crate::persist::save(user) {
+            user.errors.push(format!("{e}")); // not fatal so we don't return an error
+        }
+    }
+
+    let path = format!("/exercise/{workout_name}/{exercise_name}");
+    let uri = url_escape::encode_path(&path);
+    let uri = uri.parse()?;
+    Ok(uri)
+}
+
+pub fn post_revert_note(
+    state: SharedState,
+    workout_name: &str,
+    exercise_name: &str,
+) -> Result<Uri, anyhow::Error> {
+    let exercise_name = ExerciseName(exercise_name.to_owned());
+
+    {
+        let formal_name = {
+            let program = &state.read().unwrap().user.program;
+            let workout = program.find(&workout_name).unwrap();
+            let exercise = workout.find(&exercise_name).unwrap();
+            let d = exercise.data();
+            d.formal_name.clone()
+        };
+
+        let notes = &mut state.write().unwrap().user.notes;
+        notes.revert_markdown(formal_name);
+    }
+
+    {
+        let user = &mut state.write().unwrap().user;
+        if let Err(e) = crate::persist::save(user) {
+            user.errors.push(format!("{e}")); // not fatal so we don't return an error
+        }
+    }
+
+    let path = format!("/exercise/{workout_name}/{exercise_name}");
+    let uri = url_escape::encode_path(&path);
+    let uri = uri.parse()?;
+    Ok(uri)
+}
+
 pub fn post_set_rest(
     state: SharedState,
     workout_name: &str,
@@ -135,6 +202,7 @@ pub fn post_set_rest(
     let uri = uri.parse()?;
     Ok(uri)
 }
+
 fn complete_set(
     state: &mut SharedState,
     workout_name: &str,

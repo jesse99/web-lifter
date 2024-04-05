@@ -39,6 +39,7 @@ async fn main() {
             "/edit-any-weight/:workout/:exercise",
             get(get_edit_any_weight),
         )
+        .route("/edit-note/:workout/:exercise", get(get_edit_note))
         .route("/edit-rest/:workout/:exercise", get(get_edit_rest))
         .route("/scripts/exercise.js", get(get_exercise_js))
         .route("/scripts/rest.js", get(get_rest_js))
@@ -51,6 +52,8 @@ async fn main() {
         )
         .route("/reset/exercise/:workout/:exercise", post(reset_exercise))
         .route("/set-weight/:workout/:exercise", post(post_set_weight))
+        .route("/revert-note/:workout/:exercise", post(post_revert_note))
+        .route("/set-note/:workout/:exercise", post(post_set_note))
         .route("/set-rest/:workout/:exercise", post(post_set_rest))
         .route(
             "/set-any-weight/:workout/:exercise",
@@ -143,6 +146,20 @@ async fn get_edit_weight(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_weight_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_note(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_note_page(state, &workout, &exercise)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -310,6 +327,44 @@ async fn post_set_any_weight(
 }
 
 #[derive(Debug, Deserialize)]
+struct SetNote {
+    note: String,
+}
+
+async fn post_set_note(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetNote>,
+) -> Result<impl IntoResponse, AppError> {
+    let new_url = pages::post_set_note(state, &workout, &exercise, payload.note)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+async fn post_revert_note(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let new_url = pages::post_revert_note(state, &workout, &exercise)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
 struct SetRest {
     rest: String,
     last_rest: String,
@@ -338,8 +393,6 @@ async fn post_set_rest(
         }
         Ok(None)
     }
-
-    println!("payload: {payload:?}");
 
     let rest = parse_time("rest", &payload.rest, &payload.units)?;
     let last_rest = parse_time("last_rest", &payload.last_rest, &payload.units)?;

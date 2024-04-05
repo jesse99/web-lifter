@@ -5,7 +5,7 @@ use super::exercise::FormalName;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Notes {
     #[serde(skip_serializing, default = "get_default_markup")]
-    defaults: HashMap<FormalName, String>, // values are markup
+    defaults: HashMap<FormalName, String>, // values are markup, note that these aren't persisted
 
     custom: HashMap<FormalName, String>, // values are markup
 }
@@ -15,6 +15,26 @@ impl Notes {
         Notes {
             defaults: get_default_markup(),
             custom: HashMap::new(),
+        }
+    }
+
+    pub fn set_markdown(&mut self, name: FormalName, markdown: String) {
+        self.custom.insert(name, markdown);
+    }
+
+    pub fn revert_markdown(&mut self, name: FormalName) {
+        self.custom.remove(&name);
+    }
+
+    pub fn markdown(&self, name: &FormalName) -> String {
+        if let Some(markdown) = self.custom.get(name) {
+            markdown.clone()
+        } else {
+            if let Some(markdown) = self.defaults.get(name) {
+                markdown.clone()
+            } else {
+                "".to_owned()
+            }
         }
     }
 
