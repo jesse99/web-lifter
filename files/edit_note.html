@@ -20,9 +20,9 @@
     <form method="post" action="/set-note/{{workout}}/{{exercise}}" role=" form" class="mt-4 ms-2 me-2">
         <!-- note text area -->
         <div class="input-group">
-            <textarea id="note" name="note" rows="15" cols="60" autofocus spellcheck=“true” autocorrect=“on”
-                autocapitalize="sentences" class="form-control" id="note-area"
-                aria-describedby="note-help">{{note}}</textarea>
+            <textarea id="note" name="note" rows="15" cols="60" spellcheck=“true” autocorrect=“on”
+                autocapitalize="sentences" class="form-control" id="note-area" aria-describedby="note-help"
+                autofocus>{{note}}</textarea>
         </div>
         <div class="form-text mb-4" id="note-help">Text and links that describe how to perform the exercise in <a
                 href="https://www.markdownguide.org/cheat-sheet/">markdown</a>
