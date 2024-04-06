@@ -4,11 +4,11 @@
 {\colortbl;\red255\green255\blue255;\red203\green0\blue77;\red60\green60\blue59;\red117\green66\blue151;
 \red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;\red117\green66\blue151;\red9\green76\blue116;
 \red2\green2\blue2;\red25\green28\blue31;\red130\green130\blue130;\red130\green130\blue130;\red0\green0\blue0;
-\red95\green124\blue3;\red203\green74\blue5;\red11\green12\blue12;\red0\green0\blue0;}
+\red95\green124\blue3;\red11\green12\blue12;\red0\green0\blue0;}
 {\*\expandedcolortbl;;\cssrgb\c84314\c0\c37255;\cssrgb\c30196\c30196\c29804;\cssrgb\c53725\c34902\c65882;
 \cssrgb\c30196\c30196\c29804;\cssrgb\c84314\c0\c37255;\cssrgb\c0\c37255\c52941;\cssrgb\c53725\c34902\c65882;\cssrgb\c0\c37255\c52941;
 \csgenericrgb\c784\c784\c784;\cssrgb\c12941\c14510\c16078;\cssrgb\c58039\c58039\c58039;\cssrgb\c58039\c58039\c58039;\csgray\c0;
-\cssrgb\c44314\c54902\c0;\cssrgb\c84314\c37255\c0;\cssrgb\c4706\c5098\c5490;\cssrgb\c0\c0\c0;}
+\cssrgb\c44314\c54902\c0;\cssrgb\c4706\c5098\c5490;\cssrgb\c0\c0\c0;}
 \deftab720
 \pard\pardeftab720\partightenfactor0
 
@@ -110,36 +110,25 @@ localhost:3000/ \
 \outl0\strokewidth0 \strokec15 \
 \
 \pard\pardeftab720\partightenfactor0
-\cf2 \strokec2 async\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 get_exercise_js\cf3 \strokec3 (\cf7 \strokec7 Extension\cf3 \strokec3 (\cf4 \strokec4 _state\cf3 \strokec3 ): Extension<SharedState>) -> \cf2 \strokec2 impl\cf3 \strokec3  IntoResponse \{\
-    \cf2 \strokec2 let\cf3 \strokec3  \cf4 \strokec4 contents\cf3 \strokec3  = \cf7 \strokec7 include_str!\cf3 \strokec3 ("\cf15 \strokec15 ../files/exercise.js\cf3 \strokec3 ");\
-    (\
-        StatusCode::\cf16 \strokec16 OK\cf3 \strokec3 ,\
-        [(header::\cf16 \strokec16 CONTENT_TYPE\cf3 \strokec3 , "\cf15 \strokec15 text/javascript\cf3 \strokec3 ")],\
-        \cf4 \strokec4 contents\cf3 \strokec3 ,\
-    )\
-\}\
+
+\fs36 \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  VariableSetsExercise \{\
+    \cf4 \strokec4 target\cf3 \strokec3 : i32,\
+    \cf4 \strokec4 previous\cf3 \strokec3 : Vec<i32>,\
+    \
+\pard\pardeftab720\partightenfactor0
+\cf15 \strokec15 /edit-var-sets/\{workout_name\}/\{exercise_name\}\
 \
-\cf2 \strokec2 async\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 get_durations_js\cf3 \strokec3 (\cf7 \strokec7 Extension\cf3 \strokec3 (\cf4 \strokec4 _state\cf3 \strokec3 ): Extension<SharedState>) -> \cf2 \strokec2 impl\cf3 \strokec3  IntoResponse \{\
-    \cf2 \strokec2 let\cf3 \strokec3  \cf4 \strokec4 contents\cf3 \strokec3  = \cf7 \strokec7 include_str!\cf3 \strokec3 ("\cf15 \strokec15 ../files/durations.js\cf3 \strokec3 ");\
-    (\
-        StatusCode::\cf16 \strokec16 OK\cf3 \strokec3 ,\
-        [(header::\cf16 \strokec16 CONTENT_TYPE\cf3 \strokec3 , "\cf15 \strokec15 text/javascript\cf3 \strokec3 ")],\
-        \cf4 \strokec4 contents\cf3 \strokec3 ,\
-    )\
-\}\
-\
-\cf2 \strokec2 async\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 get_rest_js\cf3 \strokec3 (\cf7 \strokec7 Extension\cf3 \strokec3 (\cf4 \strokec4 _state\cf3 \strokec3 ): Extension<SharedState>) -> \cf2 \strokec2 impl\cf3 \strokec3  IntoResponse \{\
-    \cf2 \strokec2 let\cf3 \strokec3  \cf4 \strokec4 contents\cf3 \strokec3  = \cf7 \strokec7 include_str!\cf3 \strokec3 ("\cf15 \strokec15 ../files/rest.js\cf3 \strokec3 ");\
-    (\
-        StatusCode::\cf16 \strokec16 OK\cf3 \strokec3 ,\
-        [(header::\cf16 \strokec16 CONTENT_TYPE\cf3 \strokec3 , "\cf15 \strokec15 text/javascript\cf3 \strokec3 ")],\
-        \cf4 \strokec4 contents\cf3 \strokec3 ,\
-    )\
-\}\
+/set-var-sets/\{\{workout\}\}/\{\{exercise\}\}\cf3 \strokec3 \
+\pard\pardeftab720\partightenfactor0
+
+\fs32 \cf3 \
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95\'a0Supporting editing:\
+\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95 What happens if durations are bad and change units?\
+\'95 Help text should be styled differently? Smaller? Italics? Different font?\
+\'95 Support editing fixed reps:\
+\'95\'a0Supporting editing:\
 	- edit sets (reps, etc)\
 	- edit weight sets\
 	- options (eg font scaling, save keyed with device name)\
@@ -150,7 +139,6 @@ localhost:3000/ \
 \f2\b history record
 \f1\b0 \
 \'95\'a0Fonts didn\'92t seem any larger on iOS?\
-\'95 Help text should be styled differently? Smaller? Italics? Different font?\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 \cf10 \'95 Light workout should start on wed\
 \'95 Circuit1, Circuit2, and Circuit3 have no notes\
@@ -172,42 +160,42 @@ localhost:3000/ \
 	- extract to a function and use ? operator (if the lets all want the same type)\
 
 \fs52 		
-\f3\fs30\fsmilli15333 \cf17 \expnd0\expndtw0\kerning0
+\f3\fs30\fsmilli15333 \cf16 \expnd0\expndtw0\kerning0
 fn get_result() -> Option<u64> \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf17 \'a0 let i = func1()?;
+\f3\fs30\fsmilli15333 \cf16 \'a0 let i = func1()?;
 \f1\fs33\fsmilli16667 \cf0 \
 \pard\pardeftab720\partightenfactor0
 \cf0 		
-\f3\fs30\fsmilli15333 \cf17 \'a0 let j = func2(i)?;
+\f3\fs30\fsmilli15333 \cf16 \'a0 let j = func2(i)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf17 \'a0 let k = func3(j)?;
+\f3\fs30\fsmilli15333 \cf16 \'a0 let k = func3(j)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf17 \'a0 func3(k)
+\f3\fs30\fsmilli15333 \cf16 \'a0 func3(k)
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf17 \}
+\f3\fs30\fsmilli15333 \cf16 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf17 \'a0
+\f3\fs30\fsmilli15333 \cf16 \'a0
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf17 fn main() \{
+\f3\fs30\fsmilli15333 \cf16 fn main() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf17 \'a0 if let Some(result) = get_result() \{
+\f3\fs30\fsmilli15333 \cf16 \'a0 if let Some(result) = get_result() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf17 \'a0\'a0\'a0 // do something
+\f3\fs30\fsmilli15333 \cf16 \'a0\'a0\'a0 // do something
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf17 \'a0 \}
+\f3\fs30\fsmilli15333 \cf16 \'a0 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf17 \}\
+\f3\fs30\fsmilli15333 \cf16 \}\
 \pard\pardeftab720\partightenfactor0
 
 \f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \'95\'a0Set label flaked out for a second after finishing last set\

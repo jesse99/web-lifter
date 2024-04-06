@@ -1,4 +1,4 @@
-use crate::exercise::SetIndex;
+use crate::{exercise::SetIndex, pages::ValidationError};
 use serde::{Deserialize, Serialize};
 
 /// Used for stuff like 20 pull-ups spread across as many sets as necessary.
@@ -41,5 +41,31 @@ impl VariableSetsExercise {
             SetIndex::Warmup(_) => panic!("expected workset"),
             SetIndex::Workset(i) => self.previous.get(i).copied().unwrap_or(0),
         }
+    }
+
+    pub fn try_set_target(&mut self, target: i32) -> Result<(), ValidationError> {
+        self.validate_target(target)?;
+        self.do_set_target(target);
+        Ok(())
+    }
+
+    // pub fn set_target(&mut self, target: i32) {
+    //     assert!(self.validate_target(target).is_ok());
+    //     self.do_set_target(target);
+    // }
+
+    fn validate_target(&self, target: i32) -> Result<(), ValidationError> {
+        if target < 0 {
+            return Err(ValidationError::new("target cannot be negative"));
+        }
+        if target == 0 {
+            return Err(ValidationError::new("target cannot be zero"));
+        }
+        Ok(())
+    }
+
+    fn do_set_target(&mut self, target: i32) {
+        self.target = target;
+        self.previous = Vec::new();
     }
 }

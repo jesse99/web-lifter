@@ -43,6 +43,7 @@ async fn main() {
             "/edit-durations/:workout/:exercise",
             get(get_edit_durations),
         )
+        .route("/edit-var-sets/:workout/:exercise", get(get_edit_var_sets))
         .route("/edit-note/:workout/:exercise", get(get_edit_note))
         .route("/edit-rest/:workout/:exercise", get(get_edit_rest))
         .route(
@@ -75,6 +76,7 @@ async fn main() {
             "/set-durations/:workout/:exercise",
             post(post_set_durations),
         )
+        .route("/set-var-sets/:workout/:exercise", post(post_set_var_sets))
         .route("/set-rest/:workout/:exercise", post(post_set_rest))
         .route(
             "/set-any-weight/:workout/:exercise",
@@ -171,6 +173,20 @@ async fn get_edit_durations(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_durations_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_var_sets(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_var_sets_page(state, &workout, &exercise)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -409,6 +425,32 @@ async fn post_set_durations(
     let durations = durations.iter().filter_map(|o| *o).collect();
     let target = parse_time("target", &payload.target, &payload.units)?;
     let new_url = pages::post_set_durations(state, &workout, &exercise, durations, target)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetVarSets {
+    target: String,
+}
+
+async fn post_set_var_sets(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetVarSets>,
+) -> Result<impl IntoResponse, AppError> {
+    let target: i32 = payload.target.parse().context(format!(
+        "expected integer for target but found '{}'",
+        payload.target
+    ))?;
+    let new_url = pages::post_set_var_sets(state, &workout, &exercise, target)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
