@@ -45,10 +45,22 @@ async fn main() {
         )
         .route("/edit-note/:workout/:exercise", get(get_edit_note))
         .route("/edit-rest/:workout/:exercise", get(get_edit_rest))
-        .route("/scripts/exercise.js", get(get_exercise_js))
-        .route("/scripts/rest.js", get(get_rest_js))
-        .route("/scripts/durations.js", get(get_durations_js))
-        .route("/styles/style.css", get(get_styles))
+        .route(
+            "/scripts/exercise.js",
+            get(|s| get_js(s, include_str!("../files/exercise.js"))),
+        )
+        .route(
+            "/scripts/rest.js",
+            get(|s| get_js(s, include_str!("../files/rest.js"))),
+        )
+        .route(
+            "/scripts/durations.js",
+            get(|s| get_js(s, include_str!("../files/durations.js"))),
+        )
+        .route(
+            "/styles/style.css",
+            get(|s| get_css(s, include_str!("../files/styles.css"))),
+        )
         // post --------------------------------------------------------------------------
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
         .route(
@@ -83,39 +95,19 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn get_styles(Extension(_state): Extension<SharedState>) -> impl IntoResponse {
-    let contents = include_str!("../files/styles.css");
+async fn get_css(Extension(_state): Extension<SharedState>, contents: &str) -> impl IntoResponse {
     (
         StatusCode::OK,
         [(header::CONTENT_TYPE, "text/css")],
-        contents,
+        contents.to_owned(),
     )
 }
 
-async fn get_exercise_js(Extension(_state): Extension<SharedState>) -> impl IntoResponse {
-    let contents = include_str!("../files/exercise.js");
+async fn get_js(Extension(_state): Extension<SharedState>, contents: &str) -> impl IntoResponse {
     (
         StatusCode::OK,
         [(header::CONTENT_TYPE, "text/javascript")],
-        contents,
-    )
-}
-
-async fn get_durations_js(Extension(_state): Extension<SharedState>) -> impl IntoResponse {
-    let contents = include_str!("../files/durations.js");
-    (
-        StatusCode::OK,
-        [(header::CONTENT_TYPE, "text/javascript")],
-        contents,
-    )
-}
-
-async fn get_rest_js(Extension(_state): Extension<SharedState>) -> impl IntoResponse {
-    let contents = include_str!("../files/rest.js");
-    (
-        StatusCode::OK,
-        [(header::CONTENT_TYPE, "text/javascript")],
-        contents,
+        contents.to_owned(),
     )
 }
 
