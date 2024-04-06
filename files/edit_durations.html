@@ -28,7 +28,9 @@
             <input type="text" pattern="\s*\d+(\.\d+)?(\s+\d+(\.\d+)?)*" name="durations" class="form-control"
                 id="durations-field" aria-describedby="durations-label durations-help" value="{{durations}}" autofocus>
         </div>
-        <div class="form-text mb-4" id="durations-help">Space separated amount of time to wait for each set.</div>
+        <div class="form-text mb-4 fst-italic fs-6" id="durations-help">Space separated amount of time to wait for each
+            set.
+        </div>
 
         <!-- target text field -->
         <div class="input-group">
@@ -36,7 +38,9 @@
             <input type="number" min="0" step="0.1" name="target" class="form-control" id="target-field"
                 aria-describedby="target-label target-help" value="{{target}}">
         </div>
-        <div class="form-text mb-4" id="target-help">Optional goal for times. Users may switch to a harder version of
+        <div class="form-text mb-4 fst-italic fs-6" id="target-help">Optional goal for times. Users may switch to a
+            harder
+            version of
             the exercise when reaching the target.</div>
 
         <!-- units drop down -->
