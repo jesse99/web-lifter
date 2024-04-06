@@ -30,7 +30,7 @@ async fn main() {
 
     tracing_subscriber::fmt::init();
     let app = Router::new()
-        // gets
+        // get ---------------------------------------------------------------------------
         .route("/", get(get_program))
         .route("/workout/:name", get(get_workout))
         .route("/exercise/:workout/:exercise", get(get_exercise))
@@ -39,12 +39,17 @@ async fn main() {
             "/edit-any-weight/:workout/:exercise",
             get(get_edit_any_weight),
         )
+        .route(
+            "/edit-durations/:workout/:exercise",
+            get(get_edit_durations),
+        )
         .route("/edit-note/:workout/:exercise", get(get_edit_note))
         .route("/edit-rest/:workout/:exercise", get(get_edit_rest))
         .route("/scripts/exercise.js", get(get_exercise_js))
         .route("/scripts/rest.js", get(get_rest_js))
+        .route("/scripts/durations.js", get(get_durations_js))
         .route("/styles/style.css", get(get_styles))
-        // posts
+        // post --------------------------------------------------------------------------
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
         .route(
             "/exercise/:workout/:exercise/next-var-set",
@@ -54,11 +59,16 @@ async fn main() {
         .route("/set-weight/:workout/:exercise", post(post_set_weight))
         .route("/revert-note/:workout/:exercise", post(post_revert_note))
         .route("/set-note/:workout/:exercise", post(post_set_note))
+        .route(
+            "/set-durations/:workout/:exercise",
+            post(post_set_durations),
+        )
         .route("/set-rest/:workout/:exercise", post(post_set_rest))
         .route(
             "/set-any-weight/:workout/:exercise",
             post(post_set_any_weight),
         )
+        // layer -------------------------------------------------------------------------
         .layer(
             ServiceBuilder::new() // TODO: more stuff at https://github.com/tokio-rs/axum/blob/dea36db400f27c025b646e5720b9a6784ea4db6e/examples/key-value-store/src/main.rs
                 .layer(AddExtensionLayer::new(SharedState::new(RwLock::new(state))))
@@ -84,6 +94,15 @@ async fn get_styles(Extension(_state): Extension<SharedState>) -> impl IntoRespo
 
 async fn get_exercise_js(Extension(_state): Extension<SharedState>) -> impl IntoResponse {
     let contents = include_str!("../files/exercise.js");
+    (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "text/javascript")],
+        contents,
+    )
+}
+
+async fn get_durations_js(Extension(_state): Extension<SharedState>) -> impl IntoResponse {
+    let contents = include_str!("../files/durations.js");
     (
         StatusCode::OK,
         [(header::CONTENT_TYPE, "text/javascript")],
@@ -146,6 +165,20 @@ async fn get_edit_weight(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_weight_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_durations(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_durations_page(state, &workout, &exercise)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -365,6 +398,37 @@ async fn post_revert_note(
 }
 
 #[derive(Debug, Deserialize)]
+struct SetDurations {
+    durations: String,
+    target: String,
+    units: String, // "secs", "mins", or "hours"
+}
+
+async fn post_set_durations(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetDurations>,
+) -> Result<impl IntoResponse, AppError> {
+    let durations = payload
+        .durations
+        .split_whitespace()
+        .map(|s| parse_time("durations", s, &payload.units))
+        .collect::<Result<Vec<_>, _>>()?;
+    let durations = durations.iter().filter_map(|o| *o).collect();
+    let target = parse_time("target", &payload.target, &payload.units)?;
+    let new_url = pages::post_set_durations(state, &workout, &exercise, durations, target)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
 struct SetRest {
     rest: String,
     last_rest: String,
@@ -376,24 +440,6 @@ async fn post_set_rest(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetRest>,
 ) -> Result<impl IntoResponse, AppError> {
-    fn parse_time(name: &str, value: &str, units: &str) -> Result<Option<i32>, AppError> {
-        if !value.is_empty() {
-            let mut x: f32 = value
-                .parse()
-                .context(format!("expected f32 for {name} but found '{value}'"))?;
-            if units == "mins" {
-                x *= 60.0;
-            }
-            if units == "hours" {
-                x *= 60.0 * 60.0;
-            }
-            if x > 0.1 {
-                return Ok(Some(x as i32));
-            }
-        }
-        Ok(None)
-    }
-
     let rest = parse_time("rest", &payload.rest, &payload.units)?;
     let last_rest = parse_time("last_rest", &payload.last_rest, &payload.units)?;
     let new_url = pages::post_set_rest(state, &workout, &exercise, rest, last_rest)?;
@@ -406,4 +452,22 @@ async fn post_set_rest(
     headers.insert("Expires", "0".parse().unwrap());
     headers.insert("Location", new_url.path().parse().unwrap());
     Ok((StatusCode::SEE_OTHER, headers))
+}
+
+fn parse_time(name: &str, value: &str, units: &str) -> Result<Option<i32>, AppError> {
+    if !value.is_empty() {
+        let mut x: f32 = value
+            .parse()
+            .context(format!("expected f32 for {name} but found '{value}'"))?;
+        if units == "mins" {
+            x *= 60.0;
+        }
+        if units == "hours" {
+            x *= 60.0 * 60.0;
+        }
+        if x > 0.1 {
+            return Ok(Some(x as i32));
+        }
+    }
+    Ok(None)
 }

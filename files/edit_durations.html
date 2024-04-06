@@ -15,28 +15,29 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
-    <script src="/scripts/rest.js"></script>
+    <script src="/scripts/durations.js"></script>
     <script type="text/javascript">
         window.addEventListener('DOMContentLoaded', on_loaded);
     </script>
-    <h2 class="text-center">Edit Rest</h2>
+    <h2 class="text-center">Edit Durations</h2>
 
-    <form method="post" action="/set-rest/{{workout}}/{{exercise}}" role=" form" class="mt-4 ms-2 me-2">
-        <!-- rest text field -->
+    <form method="post" action="/set-durations/{{workout}}/{{exercise}}" role=" form" class="mt-4 ms-2 me-2">
+        <!-- durations text field -->
         <div class="input-group">
-            <span class="input-group-text" id="rest-label">Rest</span>
-            <input type="number" min="0" step="0.1" name="rest" class="form-control" id="rest-field"
-                aria-describedby="rest-label rest-help" value="{{rest}}" autofocus>
+            <span class="input-group-text" id="durations-label">Times</span>
+            <input type="text" pattern="\s*\d+(\.\d+)?(\s+\d+(\.\d+)?)*" name="durations" class="form-control"
+                id="durations-field" aria-describedby="durations-label durations-help" value="{{durations}}" autofocus>
         </div>
-        <div class="form-text mb-4" id="rest-help">Amount of time to rest after each work set.</div>
+        <div class="form-text mb-4" id="durations-help">Space separated amount of time to wait for each set.</div>
 
-        <!-- last text field -->
+        <!-- target text field -->
         <div class="input-group">
-            <span class="input-group-text" id="last-rest-label">Last Rest</span>
-            <input type="number" min="0" step="0.1" name="last_rest" class="form-control" id="last-rest-field"
-                aria-describedby="last-rest-label last-rest-help" value="{{last-rest}}">
+            <span class="input-group-text" id="target-label">Target</span>
+            <input type="number" min="0" step="0.1" name="target" class="form-control" id="target-field"
+                aria-describedby="target-label target-help" value="{{target}}">
         </div>
-        <div class="form-text mb-4" id="last-rest-help">If set then overrides the rest for the last work set.</div>
+        <div class="form-text mb-4" id="target-help">Optional goal for times. Users may switch to a harder version of
+            the exercise when reaching the target.</div>
 
         <!-- units drop down -->
         <div class="input-group">

@@ -113,6 +113,7 @@ struct ExData {
     notes: String,
     exercise_type: String, // "Durations", "Fixed Reps", etc
     edit_weight_url: String,
+    edit_exercise_url: String,
 }
 
 impl ExData {
@@ -141,7 +142,11 @@ impl ExData {
             .collect()
     }
 
-    fn common(workout: &Workout, exercise: &Exercise, d: &ExerciseData) -> (String, String) {
+    fn common(
+        workout: &Workout,
+        exercise: &Exercise,
+        d: &ExerciseData,
+    ) -> (String, String, String) {
         let rest = if d.finished {
             "0".to_owned()
         } else {
@@ -153,15 +158,22 @@ impl ExData {
             }
         };
 
-        let workout = url_escape::encode_path(&workout.name);
-        let exercise = url_escape::encode_path(&exercise.name().0);
+        let workout_name = url_escape::encode_path(&workout.name);
+        let exercise_name = url_escape::encode_path(&exercise.name().0);
         let edit_weight_url = if d.weightset.is_some() {
-            format!("/edit-weight/{workout}/{exercise}",)
+            format!("/edit-weight/{workout_name}/{exercise_name}")
         } else {
-            format!("/edit-any-weight/{workout}/{exercise}")
+            format!("/edit-any-weight/{workout_name}/{exercise_name}")
         };
 
-        (rest, edit_weight_url)
+        let edit_exercise_url = match exercise {
+            Exercise::Durations(_, _) => format!("/edit-durations/{workout_name}/{exercise_name}"),
+            Exercise::FixedReps(_, _) => format!("#"),
+            Exercise::VariableReps(_, _) => format!("#"),
+            Exercise::VariableSets(_, _) => format!("#"),
+        };
+
+        (rest, edit_weight_url, edit_exercise_url)
     }
 
     fn with_durations(
@@ -197,7 +209,7 @@ impl ExData {
         } else {
             format!("{}", e.set(d.current_index))
         };
-        let (rest, edit_weight_url) = ExData::common(workout, exercise, d);
+        let (rest, edit_weight_url, edit_exercise_url) = ExData::common(workout, exercise, d);
         let records = ExData::get_records(history, program, workout, exercise);
         let button_title = if d.finished {
             "Exit".to_owned()
@@ -237,6 +249,7 @@ impl ExData {
             notes,
             exercise_type: "Durations".to_owned(),
             edit_weight_url,
+            edit_exercise_url,
         }
     }
 
@@ -279,7 +292,7 @@ impl ExData {
         let weight_details = w.map(|w| w.details()).flatten().unwrap_or("".to_owned());
 
         let wait = "0".to_owned(); // for durations
-        let (rest, edit_weight_url) = ExData::common(workout, exercise, d);
+        let (rest, edit_weight_url, edit_exercise_url) = ExData::common(workout, exercise, d);
         let records = ExData::get_records(history, program, workout, exercise);
         let button_title = if d.finished {
             "Exit".to_owned()
@@ -328,6 +341,7 @@ impl ExData {
             notes,
             exercise_type: "Fixed Reps".to_owned(),
             edit_weight_url,
+            edit_exercise_url,
         }
     }
 
@@ -381,7 +395,7 @@ impl ExData {
             .unwrap_or("".to_owned());
 
         let wait = "0".to_owned(); // for durations
-        let (rest, edit_weight_url) = ExData::common(workout, exercise, d);
+        let (rest, edit_weight_url, edit_exercise_url) = ExData::common(workout, exercise, d);
         let records = ExData::get_records(history, program, workout, exercise);
         let button_title = if d.finished {
             "Exit".to_owned()
@@ -441,6 +455,7 @@ impl ExData {
             notes,
             exercise_type: "Variable Sets".to_owned(),
             edit_weight_url,
+            edit_exercise_url,
         }
     }
 
@@ -488,7 +503,7 @@ impl ExData {
             .unwrap_or("".to_owned());
 
         let wait = "0".to_owned(); // for durations
-        let (rest, edit_weight_url) = ExData::common(workout, exercise, d);
+        let (rest, edit_weight_url, edit_exercise_url) = ExData::common(workout, exercise, d);
         let records = ExData::get_records(history, program, workout, exercise);
         let button_title = if d.finished {
             "Exit".to_owned()
@@ -557,6 +572,7 @@ impl ExData {
             notes,
             exercise_type: "Variable Reps".to_owned(),
             edit_weight_url,
+            edit_exercise_url,
         }
     }
 

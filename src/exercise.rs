@@ -137,6 +137,13 @@ impl Exercise {
         }
     }
 
+    pub fn expect_durations_mut(&mut self) -> (&mut ExerciseData, &mut DurationsExercise) {
+        match self {
+            Exercise::Durations(d, e) => (d, e),
+            _ => panic!("expected durations"),
+        }
+    }
+
     pub fn expect_fixed_reps(&self) -> (&ExerciseData, &FixedRepsExercise) {
         match self {
             Exercise::FixedReps(d, e) => (d, e),
@@ -212,10 +219,10 @@ impl Exercise {
         Ok(())
     }
 
-    pub fn set_rest(&mut self, rest: Option<i32>) {
-        assert!(self.validate_rest(rest).is_ok());
-        self.do_set_rest(rest);
-    }
+    // pub fn set_rest(&mut self, rest: Option<i32>) {
+    //     assert!(self.validate_rest(rest).is_ok());
+    //     self.do_set_rest(rest);
+    // }
 
     pub fn try_set_last_rest(&mut self, last_rest: Option<i32>) -> Result<(), ValidationError> {
         self.validate_last_rest(last_rest)?;
@@ -223,10 +230,10 @@ impl Exercise {
         Ok(())
     }
 
-    pub fn set_last_rest(&mut self, last_rest: Option<i32>) {
-        assert!(self.validate_last_rest(last_rest).is_ok());
-        self.do_set_last_rest(last_rest);
-    }
+    // pub fn set_last_rest(&mut self, last_rest: Option<i32>) {
+    //     assert!(self.validate_last_rest(last_rest).is_ok());
+    //     self.do_set_last_rest(last_rest);
+    // }
 
     // pub fn set_weightset(&mut self, set: Option<String>) {
     //     // assert!(self.validate_weightset(weight).is_ok());
