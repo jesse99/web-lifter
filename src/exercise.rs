@@ -151,6 +151,13 @@ impl Exercise {
         }
     }
 
+    pub fn expect_var_reps_mut(&mut self) -> (&mut ExerciseData, &mut VariableRepsExercise) {
+        match self {
+            Exercise::VariableReps(d, e) => (d, e),
+            _ => panic!("expected var_reps"),
+        }
+    }
+
     pub fn expect_var_sets_mut(&mut self) -> (&mut ExerciseData, &mut VariableSetsExercise) {
         match self {
             Exercise::VariableSets(d, e) => (d, e),

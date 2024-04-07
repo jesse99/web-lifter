@@ -1,5 +1,5 @@
 use crate::{
-    exercise::{Exercise, ExerciseName, FixedReps, SetIndex},
+    exercise::{Exercise, ExerciseName, FixedReps, SetIndex, VariableReps},
     pages::SharedState,
     VarRepsOptions,
 };
@@ -218,6 +218,41 @@ pub fn post_set_fixed_reps(
         let workout = program.find_mut(&workout_name).unwrap();
         let exercise = workout.find_mut(&exercise_name).unwrap();
         let (d, e) = exercise.expect_fixed_reps_mut();
+        e.try_set_warmups(warmups)?;
+        e.try_set_worksets(worksets)?;
+
+        if !d.finished {
+            exercise.reset(exercise.started());
+        }
+    }
+
+    {
+        let user = &mut state.write().unwrap().user;
+        if let Err(e) = crate::persist::save(user) {
+            user.errors.push(format!("{e}")); // not fatal so we don't return an error
+        }
+    }
+
+    let path = format!("/exercise/{workout_name}/{exercise_name}");
+    let uri = url_escape::encode_path(&path);
+    let uri = uri.parse()?;
+    Ok(uri)
+}
+
+pub fn post_set_var_reps(
+    state: SharedState,
+    workout_name: &str,
+    exercise_name: &str,
+    warmups: Vec<FixedReps>,
+    worksets: Vec<VariableReps>,
+) -> Result<Uri, anyhow::Error> {
+    let exercise_name = ExerciseName(exercise_name.to_owned());
+
+    {
+        let program = &mut state.write().unwrap().user.program;
+        let workout = program.find_mut(&workout_name).unwrap();
+        let exercise = workout.find_mut(&exercise_name).unwrap();
+        let (d, e) = exercise.expect_var_reps_mut();
         e.try_set_warmups(warmups)?;
         e.try_set_worksets(worksets)?;
 

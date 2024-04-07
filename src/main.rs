@@ -24,7 +24,7 @@ use std::sync::RwLock;
 use tower::ServiceBuilder;
 use tower_http::add_extension::AddExtensionLayer;
 
-use crate::exercise::FixedReps;
+use crate::exercise::{FixedReps, VariableReps};
 
 #[tokio::main]
 async fn main() {
@@ -49,6 +49,7 @@ async fn main() {
             "/edit-fixed-reps/:workout/:exercise",
             get(get_edit_fixed_reps),
         )
+        .route("/edit-var-reps/:workout/:exercise", get(get_edit_var_reps))
         .route("/edit-var-sets/:workout/:exercise", get(get_edit_var_sets))
         .route("/edit-note/:workout/:exercise", get(get_edit_note))
         .route("/edit-rest/:workout/:exercise", get(get_edit_rest))
@@ -86,6 +87,7 @@ async fn main() {
             "/set-fixed-reps/:workout/:exercise",
             post(post_set_fixed_reps),
         )
+        .route("/set-var-reps/:workout/:exercise", post(post_set_var_reps))
         .route("/set-var-sets/:workout/:exercise", post(post_set_var_sets))
         .route("/set-rest/:workout/:exercise", post(post_set_rest))
         .route(
@@ -197,6 +199,20 @@ async fn get_edit_fixed_reps(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_fixed_reps_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_var_reps(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_var_reps_page(state, &workout, &exercise)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -471,26 +487,101 @@ async fn post_set_fixed_reps(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetFixedReps>,
 ) -> Result<impl IntoResponse, AppError> {
-    fn parse_fixed_rep(name: &str, value: &str) -> Result<FixedReps, anyhow::Error> {
-        let parts: Vec<_> = value.split("/").collect();
+    let warmups = payload
+        .warmups
+        .split_whitespace()
+        .map(|s| parse_fixed_rep("warmups", s))
+        .collect::<Result<Vec<_>, _>>()?;
+    let worksets = payload
+        .worksets
+        .split_whitespace()
+        .map(|s| parse_fixed_rep("worksets", s))
+        .collect::<Result<Vec<_>, _>>()?;
+    let new_url = pages::post_set_fixed_reps(state, &workout, &exercise, warmups, worksets)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+fn parse_fixed_rep(name: &str, value: &str) -> Result<FixedReps, anyhow::Error> {
+    let parts: Vec<_> = value.split("/").collect();
+    if parts.len() == 0 {
+        return Err(anyhow::Error::msg(format!("{name} cannot be empty")));
+    } else if parts.len() == 1 {
+        let reps: i32 = parts[0]
+            .parse()
+            .context(format!("expected int for {name} reps but found '{value}'"))?;
+        return Ok(FixedReps::new(reps, 100));
+    } else if parts.len() == 2 {
+        let reps: i32 = parts[0]
+            .parse()
+            .context(format!("expected int for {name} reps but found '{value}'"))?;
+        let percent: i32 = parts[1].parse().context(format!(
+            "expected int for {name} percent but found '{value}'"
+        ))?;
+        return Ok(FixedReps::new(reps, percent));
+    } else {
+        return Err(anyhow::Error::msg(format!(
+            "Expected rep or rep/percent for {name} but found '{value}'"
+        )));
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct SetVarReps {
+    warmups: String,
+    worksets: String,
+}
+
+async fn post_set_var_reps(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetVarReps>,
+) -> Result<impl IntoResponse, AppError> {
+    fn parse_rep(name: &str, value: &str, percent: i32) -> Result<VariableReps, anyhow::Error> {
+        let parts: Vec<_> = value.split("-").collect();
         if parts.len() == 0 {
             return Err(anyhow::Error::msg(format!("{name} cannot be empty")));
         } else if parts.len() == 1 {
             let reps: i32 = parts[0]
                 .parse()
                 .context(format!("expected int for {name} reps but found '{value}'"))?;
-            return Ok(FixedReps::new(reps, 100));
+            return Ok(VariableReps::new(reps, reps, percent));
         } else if parts.len() == 2 {
-            let reps: i32 = parts[0]
-                .parse()
-                .context(format!("expected int for {name} reps but found '{value}'"))?;
+            let min: i32 = parts[0].parse().context(format!(
+                "expected int for {name} min reps but found '{value}'"
+            ))?;
+            let max: i32 = parts[1].parse().context(format!(
+                "expected int for {name} max reps but found '{value}'"
+            ))?;
+            return Ok(VariableReps::new(min, max, percent));
+        } else {
+            return Err(anyhow::Error::msg(format!(
+                "Expected rep or min_rep-max_rep for {name} but found '{value}'"
+            )));
+        }
+    }
+
+    fn parse_var_rep(name: &str, value: &str) -> Result<VariableReps, anyhow::Error> {
+        let parts: Vec<_> = value.split("/").collect();
+        if parts.len() == 0 {
+            return Err(anyhow::Error::msg(format!("{name} cannot be empty")));
+        } else if parts.len() == 1 {
+            return parse_rep(name, parts[0], 100);
+        } else if parts.len() == 2 {
             let percent: i32 = parts[1].parse().context(format!(
                 "expected int for {name} percent but found '{value}'"
             ))?;
-            return Ok(FixedReps::new(reps, percent));
+            return parse_rep(name, parts[0], percent);
         } else {
             return Err(anyhow::Error::msg(format!(
-                "Expected rep or rep/percent for {name} but found '{value}'"
+                "Expected rep or min_rep-max_rep or rep/percent or min_rep-max_rep/percent for {name} but found '{value}'"
             )));
         }
     }
@@ -503,9 +594,9 @@ async fn post_set_fixed_reps(
     let worksets = payload
         .worksets
         .split_whitespace()
-        .map(|s| parse_fixed_rep("worksets", s))
+        .map(|s| parse_var_rep("worksets", s))
         .collect::<Result<Vec<_>, _>>()?;
-    let new_url = pages::post_set_fixed_reps(state, &workout, &exercise, warmups, worksets)?;
+    let new_url = pages::post_set_var_reps(state, &workout, &exercise, warmups, worksets)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

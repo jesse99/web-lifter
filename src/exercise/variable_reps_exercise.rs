@@ -1,5 +1,5 @@
 use super::FixedReps;
-use crate::exercise::SetIndex;
+use crate::{exercise::SetIndex, pages::ValidationError};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -92,5 +92,95 @@ impl VariableRepsExercise {
                 VariableReps { min, max, percent }
             }
         }
+    }
+
+    pub fn warmup(&self, index: usize) -> &FixedReps {
+        &self.warmups[index]
+    }
+
+    pub fn workset(&self, index: usize) -> &VariableReps {
+        &self.worksets[index]
+    }
+
+    pub fn try_set_warmups(&mut self, warmups: Vec<FixedReps>) -> Result<(), ValidationError> {
+        self.validate_warmups(&warmups)?;
+        self.do_set_warmups(warmups);
+        Ok(())
+    }
+
+    // pub fn set_warmups(&mut self, warmups: Vec<FixedReps>) {
+    //     assert!(self.validate_warmups(&warmups).is_ok());
+    //     self.do_set_warmups(warmups);
+    // }
+
+    pub fn try_set_worksets(&mut self, worksets: Vec<VariableReps>) -> Result<(), ValidationError> {
+        self.validate_worksets(&worksets)?;
+        self.do_set_worksets(worksets);
+        Ok(())
+    }
+
+    // pub fn set_worksets(&mut self, worksets: Vec<VariableReps>) {
+    //     assert!(self.validate_worksets(&worksets).is_ok());
+    //     self.do_set_worksets(worksets);
+    // }
+
+    fn validate_warmups(&self, warmups: &Vec<FixedReps>) -> Result<(), ValidationError> {
+        for set in warmups {
+            if set.reps < 0 {
+                return Err(ValidationError::new("warmup reps cannot be negative"));
+            }
+            if set.reps == 0 {
+                return Err(ValidationError::new("warmup reps cannot be zero"));
+            }
+            if set.percent < 0 {
+                // 0 percent is OK (for warmups)
+                return Err(ValidationError::new("warmup percent cannot be negative"));
+            }
+            if set.percent >= 100 {
+                return Err(ValidationError::new(
+                    "warmup percent should be less than 100%",
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_worksets(&self, worksets: &Vec<VariableReps>) -> Result<(), ValidationError> {
+        if worksets.is_empty() {
+            return Err(ValidationError::new("worksets cannot be empty"));
+        }
+        for set in worksets {
+            if set.min < 0 {
+                return Err(ValidationError::new("workset min reps cannot be negative"));
+            }
+            if set.min == 0 {
+                return Err(ValidationError::new("workset min reps cannot be zero"));
+            }
+            if set.min > set.max {
+                return Err(ValidationError::new(
+                    "workset min reps should be <= max reps",
+                ));
+            }
+            if set.percent < 0 {
+                return Err(ValidationError::new("workset percent cannot be negative"));
+            }
+            if set.percent == 0 {
+                return Err(ValidationError::new("workset percent should not be zero"));
+            }
+            if set.percent < 0 {
+                // over 100% is OK (tho not common)
+                return Err(ValidationError::new("workset percent cannot be negative"));
+            }
+        }
+        Ok(())
+    }
+
+    fn do_set_warmups(&mut self, warmups: Vec<FixedReps>) {
+        self.warmups = warmups;
+    }
+
+    fn do_set_worksets(&mut self, worksets: Vec<VariableReps>) {
+        self.worksets = worksets;
+        self.expected = Vec::new();
     }
 }

@@ -169,7 +169,9 @@ impl ExData {
         let edit_exercise_url = match exercise {
             Exercise::Durations(_, _) => format!("/edit-durations/{workout_name}/{exercise_name}"),
             Exercise::FixedReps(_, _) => format!("/edit-fixed-reps/{workout_name}/{exercise_name}"),
-            Exercise::VariableReps(_, _) => format!("#"),
+            Exercise::VariableReps(_, _) => {
+                format!("/edit-var-reps/{workout_name}/{exercise_name}")
+            }
             Exercise::VariableSets(_, _) => {
                 format!("/edit-var-sets/{workout_name}/{exercise_name}")
             }

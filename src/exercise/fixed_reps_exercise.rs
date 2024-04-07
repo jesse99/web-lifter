@@ -100,7 +100,6 @@ impl FixedRepsExercise {
         Ok(())
     }
 
-    // can't be empty
     fn validate_worksets(&self, worksets: &Vec<FixedReps>) -> Result<(), ValidationError> {
         if worksets.is_empty() {
             return Err(ValidationError::new("worksets cannot be empty"));
