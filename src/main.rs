@@ -24,6 +24,8 @@ use std::sync::RwLock;
 use tower::ServiceBuilder;
 use tower_http::add_extension::AddExtensionLayer;
 
+use crate::exercise::FixedReps;
+
 #[tokio::main]
 async fn main() {
     let state = default::make_program();
@@ -42,6 +44,10 @@ async fn main() {
         .route(
             "/edit-durations/:workout/:exercise",
             get(get_edit_durations),
+        )
+        .route(
+            "/edit-fixed-reps/:workout/:exercise",
+            get(get_edit_fixed_reps),
         )
         .route("/edit-var-sets/:workout/:exercise", get(get_edit_var_sets))
         .route("/edit-note/:workout/:exercise", get(get_edit_note))
@@ -75,6 +81,10 @@ async fn main() {
         .route(
             "/set-durations/:workout/:exercise",
             post(post_set_durations),
+        )
+        .route(
+            "/set-fixed-reps/:workout/:exercise",
+            post(post_set_fixed_reps),
         )
         .route("/set-var-sets/:workout/:exercise", post(post_set_var_sets))
         .route("/set-rest/:workout/:exercise", post(post_set_rest))
@@ -173,6 +183,20 @@ async fn get_edit_durations(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_durations_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_fixed_reps(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_fixed_reps_page(state, &workout, &exercise)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -425,6 +449,63 @@ async fn post_set_durations(
     let durations = durations.iter().filter_map(|o| *o).collect();
     let target = parse_time("target", &payload.target, &payload.units)?;
     let new_url = pages::post_set_durations(state, &workout, &exercise, durations, target)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetFixedReps {
+    warmups: String,
+    worksets: String,
+}
+
+async fn post_set_fixed_reps(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetFixedReps>,
+) -> Result<impl IntoResponse, AppError> {
+    fn parse_fixed_rep(name: &str, value: &str) -> Result<FixedReps, anyhow::Error> {
+        let parts: Vec<_> = value.split("/").collect();
+        if parts.len() == 0 {
+            return Err(anyhow::Error::msg(format!("{name} cannot be empty")));
+        } else if parts.len() == 1 {
+            let reps: i32 = parts[0]
+                .parse()
+                .context(format!("expected int for {name} reps but found '{value}'"))?;
+            return Ok(FixedReps::new(reps, 100));
+        } else if parts.len() == 2 {
+            let reps: i32 = parts[0]
+                .parse()
+                .context(format!("expected int for {name} reps but found '{value}'"))?;
+            let percent: i32 = parts[1].parse().context(format!(
+                "expected int for {name} percent but found '{value}'"
+            ))?;
+            return Ok(FixedReps::new(reps, percent));
+        } else {
+            return Err(anyhow::Error::msg(format!(
+                "Expected rep or rep/percent for {name} but found '{value}'"
+            )));
+        }
+    }
+
+    let warmups = payload
+        .warmups
+        .split_whitespace()
+        .map(|s| parse_fixed_rep("warmups", s))
+        .collect::<Result<Vec<_>, _>>()?;
+    let worksets = payload
+        .worksets
+        .split_whitespace()
+        .map(|s| parse_fixed_rep("worksets", s))
+        .collect::<Result<Vec<_>, _>>()?;
+    let new_url = pages::post_set_fixed_reps(state, &workout, &exercise, warmups, worksets)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

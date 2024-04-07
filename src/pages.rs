@@ -1,5 +1,6 @@
 mod app_state;
 mod edit_durations_page;
+mod edit_fixed_reps_page;
 mod edit_note_page;
 mod edit_rest_page;
 mod edit_var_sets_page;
@@ -12,6 +13,7 @@ mod workout_page;
 
 pub use app_state::*;
 pub use edit_durations_page::*;
+pub use edit_fixed_reps_page::*;
 pub use edit_note_page::*;
 pub use edit_rest_page::*;
 pub use edit_var_sets_page::*;

@@ -1,7 +1,7 @@
 use self::{
     exercise::{
-        BuildExercise, DurationsExercise, Exercise, ExerciseName, FixedReps, FixedRepsExercise,
-        FormalName, VariableReps, VariableRepsExercise, VariableSetsExercise,
+        BuildExercise, DurationsExercise, Exercise, ExerciseName, FixedRepsExercise, FormalName,
+        VariableReps, VariableRepsExercise, VariableSetsExercise,
     },
     history::{History, Record},
     notes::Notes,
