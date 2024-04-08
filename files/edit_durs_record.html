@@ -15,16 +15,20 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
-    <h2 class="text-center">Edit Reps Record</h2>
+    <script src="/scripts/durations.js"></script>
+    <script type="text/javascript">
+        window.addEventListener('DOMContentLoaded', on_loaded);
+    </script>
+    <h2 class="text-center">Edit Durations Record</h2>
 
-    <form method="post" action="/set-reps-record/{{workout}}/{{exercise}}/{{id}}" role=" form" class="mt-4 ms-2 me-2">
-        <!-- reps text field -->
+    <form method="post" action="/set-durs-record/{{workout}}/{{exercise}}/{{id}}" role=" form" class="mt-4 ms-2 me-2">
+        <!-- durations text field -->
         <div class="input-group">
-            <span class="input-group-text" id="reps-label">Reps</span>
-            <input type="text" pattern="\s*\d+(\s+\d+)*\s*" name="reps" class="form-control" id="reps-field"
-                aria-describedby="reps-label reps-help" value="{{reps}}" autofocus>
+            <span class="input-group-text" id="durs-label">Durations</span>
+            <input type="text" pattern="\s*\d+(\.\d+)?(\s+\d+(\.\d+)?)*" name="durations" class="form-control"
+                id="durations-field" aria-describedby="durs-label durs-help" value="{{durations}}" autofocus>
         </div>
-        <div class="form-text mb-4 fst-italic fs-6" id="reps-help">Space separated list of reps that were done for each
+        <div class="form-text mb-4 fst-italic fs-6" id="durs-help">Space separated list of times that were done for each
             set.
         </div>
 
@@ -45,6 +49,16 @@
                 aria-describedby="comment-label comment-help" value="{{comment}}">
         </div>
         <div class="form-text mb-4 fst-italic fs-6" id="comment-help">Optional comment, e.g. for exercise difficulty.
+        </div>
+
+        <!-- units drop down -->
+        <div class="input-group">
+            <span class="input-group-text">Units</span>
+            <select class="form-select" id="units" aria-label="units" name="units">
+                <option value="secs">Secs</option>
+                <option value="mins" selected>Mins</option>
+                <option value="hours">Hours</option>
+            </select>
         </div>
 
         <div class="form-group mt-4">

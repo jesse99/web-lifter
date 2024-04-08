@@ -695,7 +695,7 @@ fn record_to_record(delta: i32, record: &Record, in_progress: bool) -> ExerciseD
     let (kind, mut label) = if let Some(ref sets) = record.sets {
         prefix += ", ";
         match sets {
-            CompletedSets::Durations(s) => ("durations".to_owned(), durations_to_str(s)),
+            CompletedSets::Durations(s) => ("durs".to_owned(), durations_to_str(s)),
             CompletedSets::Reps(s) => ("reps".to_owned(), reps_to_str(s)),
         }
     } else {

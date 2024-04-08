@@ -54,6 +54,10 @@ async fn main() {
         .route("/edit-note/:workout/:exercise", get(get_edit_note))
         .route("/edit-rest/:workout/:exercise", get(get_edit_rest))
         .route(
+            "/edit-durs-record/:workout/:exercise/:id",
+            get(get_edit_durs_record),
+        )
+        .route(
             "/edit-reps-record/:workout/:exercise/:id",
             get(get_edit_reps_record),
         )
@@ -97,6 +101,10 @@ async fn main() {
         .route(
             "/set-any-weight/:workout/:exercise",
             post(post_set_any_weight),
+        )
+        .route(
+            "/set-durs-record/:workout/:exercise/:id",
+            post(post_set_durs_record),
         )
         .route(
             "/set-reps-record/:workout/:exercise/:id",
@@ -263,6 +271,23 @@ async fn get_edit_rest(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_rest_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_durs_record(
+    Path((workout, exercise, id)): Path<(String, String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let id: u64 = id
+        .parse()
+        .context(format!("expected int for id but found '{id}'"))?;
+    let contents = pages::get_edit_durs_record_page(state, &workout, &exercise, id)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -674,6 +699,53 @@ async fn post_set_rest(
     let rest = parse_time("rest", &payload.rest, &payload.units)?;
     let last_rest = parse_time("last_rest", &payload.last_rest, &payload.units)?;
     let new_url = pages::post_set_rest(state, &workout, &exercise, rest, last_rest)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetDurationsRecord {
+    durations: String,
+    weights: String,
+    comment: String,
+    units: String, // "secs", "mins", or "hours"
+}
+
+async fn post_set_durs_record(
+    Path((workout, exercise, id)): Path<(String, String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetDurationsRecord>,
+) -> Result<impl IntoResponse, AppError> {
+    let durations = payload
+        .durations
+        .split_whitespace()
+        .map(|s| parse_time("durations", s, &payload.units))
+        .collect::<Result<Vec<_>, _>>()?;
+    let durations = durations.iter().filter_map(|o| *o).collect();
+    let weights = payload
+        .weights
+        .split_whitespace()
+        .map(|s| s.parse::<f32>())
+        .collect::<Result<Vec<_>, _>>()?;
+    let id = id
+        .parse()
+        .context(format!("expected integer for id but found '{id}'"))?;
+    let new_url = pages::post_set_durs_record(
+        state,
+        &workout,
+        &exercise,
+        durations,
+        weights,
+        payload.comment,
+        id,
+    )?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

@@ -46,7 +46,7 @@ function convert_times(name, new_units, decimals) {
 
 function convert_time(name, new_units, decimals) {
     const input = document.getElementById(name);
-    if (input.value && input.value.trim().length) {
+    if (input && input.value && input.value.trim().length) {
         input.value = convert(input.value, new_units, decimals);
     }
 }
