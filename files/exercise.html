@@ -133,7 +133,9 @@
                     {{#each records}}
                     <li class="list-group-item pb-0">
                         <span id="{{this.id}}">{{this.indicator}}</span>
-                        <span>{{this.text}}</span>
+                        <span>{{this.prefix}}</span>
+                        <a
+                            href="/edit-{{this.kind}}-record/{{../workout}}/{{../exercise}}/{{this.rid}}">{{this.label}}</a>
                     </li>
                     {{/each}}
                 </ul>

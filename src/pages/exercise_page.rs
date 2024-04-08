@@ -16,26 +16,16 @@ pub fn get_exercise_page(
     workout_name: &str,
     exercise_name: &str,
 ) -> Result<String, anyhow::Error> {
-    fn get_new_record(state: &SharedState, workout_name: &str) -> Record {
-        let program = &state.read().unwrap().user.program;
-
-        Record {
-            program: program.name.clone(),
-            workout: workout_name.to_owned(),
-            started: Local::now(),
-            completed: None,
-            sets: None,
-            comment: None,
-        }
-    }
-
     let exercise_name = ExerciseName(exercise_name.to_owned());
     let reset = reset_old(&state, workout_name, &exercise_name.0);
     {
-        let record = get_new_record(&state, workout_name);
+        let program_name = {
+            let program = &state.read().unwrap().user.program;
+            program.name.to_owned()
+        };
         let history = &mut state.write().unwrap().user.history;
         if reset || history.is_completed(&exercise_name) {
-            history.start(&exercise_name, record);
+            history.start(&program_name, workout_name, &exercise_name, Local::now());
         }
     }
 
@@ -82,7 +72,10 @@ fn reset_old(state: &SharedState, workout_name: &str, exercise_name: &str) -> bo
 #[derive(Serialize, Deserialize)]
 struct ExerciseDataRecord {
     pub indicator: String,
-    pub text: String,
+    pub prefix: String,
+    pub kind: String,
+    pub label: String,
+    pub rid: String,
     pub id: String,
 }
 
@@ -683,8 +676,6 @@ fn aggregate_reps(sets: &Vec<(i32, Option<f32>)>) -> f32 {
 }
 
 fn record_to_record(delta: i32, record: &Record, in_progress: bool) -> ExerciseDataRecord {
-    let mut text = String::new();
-
     let indicator = if in_progress && record.completed.is_none() {
         "-  ".to_owned()
     } else if delta > 0 {
@@ -699,20 +690,21 @@ fn record_to_record(delta: i32, record: &Record, in_progress: bool) -> ExerciseD
     // do we want to use stuff like "today", "yesterday", "3 days ago"?
     // wouldn't that get weird for stuff further back?
     // make this a setting?
-    text += &record.started.format("%-d %b %Y").to_string();
+    let mut prefix = record.started.format("%-d %b %Y").to_string();
 
-    if let Some(ref sets) = record.sets {
-        text += ", ";
-        text += &match sets {
-            CompletedSets::Durations(s) => durations_to_str(s),
-            CompletedSets::Reps(s) => reps_to_str(s),
-        };
-    }
+    let (kind, mut label) = if let Some(ref sets) = record.sets {
+        prefix += ", ";
+        match sets {
+            CompletedSets::Durations(s) => ("durations".to_owned(), durations_to_str(s)),
+            CompletedSets::Reps(s) => ("reps".to_owned(), reps_to_str(s)),
+        }
+    } else {
+        ("".to_owned(), "".to_owned())
+    };
 
     if let Some(ref comment) = record.comment {
-        text += ", ";
-        text += comment;
-    }
+        label += &format!(", {comment}")
+    };
 
     let id = if delta > 0 && !in_progress {
         "better_record".to_owned()
@@ -724,7 +716,10 @@ fn record_to_record(delta: i32, record: &Record, in_progress: bool) -> ExerciseD
 
     ExerciseDataRecord {
         indicator,
-        text,
+        prefix,
+        kind,
+        label,
+        rid: format!("{}", record.id),
         id,
     }
 }

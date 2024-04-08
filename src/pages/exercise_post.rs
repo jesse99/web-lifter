@@ -1,5 +1,6 @@
 use crate::{
     exercise::{Exercise, ExerciseName, FixedReps, SetIndex, VariableReps},
+    history::CompletedSets,
     pages::SharedState,
     VarRepsOptions,
 };
@@ -333,6 +334,44 @@ pub fn post_set_rest(
     Ok(uri)
 }
 
+pub fn post_set_reps_record(
+    state: SharedState,
+    workout_name: &str,
+    exercise_name: &str,
+    reps: Vec<i32>,
+    weights: Vec<f32>,
+    comment: String,
+    id: u64,
+) -> Result<Uri, anyhow::Error> {
+    let exercise_name = ExerciseName(exercise_name.to_owned());
+
+    {
+        let history = &mut state.write().unwrap().user.history;
+        let record = history.find_record_mut(&exercise_name, id)?;
+        let sets = if reps.len() == weights.len() {
+            reps.iter()
+                .copied()
+                .zip(weights.iter().map(|w| Some(*w)))
+                .collect()
+        } else if weights.is_empty() {
+            reps.iter().map(|r| (*r, None)).collect()
+        } else {
+            return Err(anyhow::Error::msg("Weights must be empty or match reps"));
+        };
+        record.sets = Some(CompletedSets::Reps(sets));
+        if !comment.is_empty() {
+            record.comment = Some(comment);
+        } else {
+            record.comment = None;
+        }
+    }
+
+    let path = format!("/exercise/{workout_name}/{exercise_name}");
+    let uri = url_escape::encode_path(&path);
+    let uri = uri.parse()?;
+    Ok(uri)
+}
+
 fn complete_set(
     state: &mut SharedState,
     workout_name: &str,
@@ -350,7 +389,7 @@ fn complete_set(
 
     {
         let history = &mut state.write().unwrap().user.history;
-        history.finish(&exercise_name);
+        history.finish(&exercise_name, Local::now());
     }
 
     if let Some(options) = options {

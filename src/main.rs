@@ -54,6 +54,10 @@ async fn main() {
         .route("/edit-note/:workout/:exercise", get(get_edit_note))
         .route("/edit-rest/:workout/:exercise", get(get_edit_rest))
         .route(
+            "/edit-reps-record/:workout/:exercise/:id",
+            get(get_edit_reps_record),
+        )
+        .route(
             "/scripts/exercise.js",
             get(|s| get_js(s, include_str!("../files/exercise.js"))),
         )
@@ -93,6 +97,10 @@ async fn main() {
         .route(
             "/set-any-weight/:workout/:exercise",
             post(post_set_any_weight),
+        )
+        .route(
+            "/set-reps-record/:workout/:exercise/:id",
+            post(post_set_reps_record),
         )
         // layer -------------------------------------------------------------------------
         .layer(
@@ -255,6 +263,23 @@ async fn get_edit_rest(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_rest_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_reps_record(
+    Path((workout, exercise, id)): Path<(String, String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let id: u64 = id
+        .parse()
+        .context(format!("expected int for id but found '{id}'"))?;
+    let contents = pages::get_edit_reps_record_page(state, &workout, &exercise, id)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -649,6 +674,51 @@ async fn post_set_rest(
     let rest = parse_time("rest", &payload.rest, &payload.units)?;
     let last_rest = parse_time("last_rest", &payload.last_rest, &payload.units)?;
     let new_url = pages::post_set_rest(state, &workout, &exercise, rest, last_rest)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetRepsRecord {
+    reps: String,
+    weights: String,
+    comment: String,
+}
+
+async fn post_set_reps_record(
+    Path((workout, exercise, id)): Path<(String, String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetRepsRecord>,
+) -> Result<impl IntoResponse, AppError> {
+    let reps = payload
+        .reps
+        .split_whitespace()
+        .map(|s| s.parse::<i32>())
+        .collect::<Result<Vec<_>, _>>()?;
+    let weights = payload
+        .weights
+        .split_whitespace()
+        .map(|s| s.parse::<f32>())
+        .collect::<Result<Vec<_>, _>>()?;
+    let id = id
+        .parse()
+        .context(format!("expected integer for id but found '{id}'"))?;
+    let new_url = pages::post_set_reps_record(
+        state,
+        &workout,
+        &exercise,
+        reps,
+        weights,
+        payload.comment,
+        id,
+    )?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

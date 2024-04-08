@@ -19,7 +19,8 @@ pub struct Record {
     pub started: DateTime<Local>,
     pub completed: Option<DateTime<Local>>,
     pub sets: Option<CompletedSets>,
-    pub comment: Option<String>, // TODO this could be set when user edits a record
+    pub comment: Option<String>,
+    pub id: u64,
 }
 
 /// Records details about the completion of each exercise. Note that this is shared across
@@ -28,6 +29,7 @@ pub struct Record {
 pub struct History {
     records: HashMap<ExerciseName, Vec<Record>>, // most recent record is last
     empty: Vec<Record>,
+    next_id: u64,
 }
 
 impl History {
@@ -35,42 +37,49 @@ impl History {
         History {
             records: HashMap::new(),
             empty: Vec::new(),
+            next_id: 1,
         }
     }
 
     pub fn fixup(&mut self) {
         // for (_, records) in self.records.iter_mut() {
-        //     let indexes: Vec<_> = records
-        //         .iter()
-        //         .enumerate()
-        //         .map(|(i, r)| {
-        //             if r.completed.is_none() || r.sets.is_none() {
-        //                 Some(i)
-        //             } else {
-        //                 None
-        //             }
-        //         })
-        //         .collect();
-        //     for index in indexes.iter().rev() {
-        //         if let Some(index) = index {
-        //             records.remove(*index);
+        //     for record in records {
+        //         if record.id == 0 {
+        //             record.id = self.next_id;
+        //             self.next_id += 1;
         //         }
         //     }
         // }
     }
 
     /// Adds a record with no sets.
-    pub fn start(&mut self, name: &ExerciseName, record: Record) {
+    pub fn start(
+        &mut self,
+        program: &str,
+        workout: &str,
+        exercise: &ExerciseName,
+        started: DateTime<Local>,
+    ) {
         // If we didn't complete the last exercise then nuke it.
-        if let Some(records) = self.records.get_mut(name) {
+        if let Some(records) = self.records.get_mut(exercise) {
             if let Some(last) = records.iter().last() {
                 if last.completed.is_none() {
                     records.pop();
                 }
             }
         }
-        assert!(record.sets.is_none());
-        let list = self.records.entry(name.clone()).or_insert(Vec::new());
+
+        let record = Record {
+            program: program.to_owned(),
+            workout: workout.to_owned(),
+            started,
+            completed: None,
+            sets: None,
+            comment: None,
+            id: self.next_id,
+        };
+        self.next_id += 1;
+        let list = self.records.entry(exercise.clone()).or_insert(Vec::new());
         list.push(record);
     }
 
@@ -101,10 +110,10 @@ impl History {
     }
 
     /// Appended all the sets.
-    pub fn finish(&mut self, name: &ExerciseName) {
+    pub fn finish(&mut self, name: &ExerciseName, completed: DateTime<Local>) {
         let entries = self.records.get_mut(name).unwrap();
         let last = entries.last_mut().unwrap();
-        last.completed = Some(Local::now());
+        last.completed = Some(completed);
     }
 
     pub fn abort(&mut self, name: &ExerciseName) {
@@ -120,6 +129,42 @@ impl History {
     /// Returns records from oldest to newest.
     pub fn records(&self, name: &ExerciseName) -> impl DoubleEndedIterator<Item = &Record> + '_ {
         self.records.get(name).unwrap_or(&self.empty).iter()
+    }
+
+    pub fn find_record(&self, exercise: &ExerciseName, id: u64) -> Result<&Record, anyhow::Error> {
+        if let Some(records) = self.records.get(exercise) {
+            if let Some(r) = records.iter().rev().find(|r| r.id == id) {
+                Ok(r)
+            } else {
+                Err(anyhow::Error::msg(
+                    "Couldn't find record for exercise {exercise} and id {id}",
+                ))
+            }
+        } else {
+            Err(anyhow::Error::msg(
+                "Couldn't find records for exercise {exercise}",
+            ))
+        }
+    }
+
+    pub fn find_record_mut(
+        &mut self,
+        exercise: &ExerciseName,
+        id: u64,
+    ) -> Result<&mut Record, anyhow::Error> {
+        if let Some(records) = self.records.get_mut(exercise) {
+            if let Some(r) = records.iter_mut().rev().find(|r| r.id == id) {
+                Ok(r)
+            } else {
+                Err(anyhow::Error::msg(
+                    "Couldn't find record for exercise {exercise} and id {id}",
+                ))
+            }
+        } else {
+            Err(anyhow::Error::msg(
+                "Couldn't find records for exercise {exercise}",
+            ))
+        }
     }
 
     pub fn is_completed(&self, name: &ExerciseName) -> bool {

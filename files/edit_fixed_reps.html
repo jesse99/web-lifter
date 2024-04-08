@@ -20,7 +20,7 @@
     <form method="post" action="/set-fixed-reps/{{workout}}/{{exercise}}" role=" form" class="mt-4 ms-2 me-2">
         <!-- warmups text field -->
         <div class="input-group">
-            <span class="input-group-text" id="warmups-label">Wamups</span>
+            <span class="input-group-text" id="warmups-label">Warmups</span>
             <input type="text" pattern="\s*(\d+(/\d+)?(\s+\d+(/\d+)?)*)?\s*" name="warmups" class="form-control"
                 id="warmups-field" aria-describedby="warmups-label warmups-help" value="{{warmups}}" autofocus>
         </div>
@@ -32,7 +32,7 @@
         <div class="input-group">
             <span class="input-group-text" id="worksets-label">Worksets</span>
             <input type="text" pattern="\s*\d+(/\d+)?(\s+\d+(/\d+)?)*\s*" name="worksets" class="form-control"
-                id="worksets-field" aria-describedby="worksets-label worksets-help" value="{{worksets}}" autofocus>
+                id="worksets-field" aria-describedby="worksets-label worksets-help" value="{{worksets}}">
         </div>
         <div class="form-text mb-4 fst-italic fs-6" id="worksets-help">Formatted like warmups, e.g. "5 5 5".
         </div>

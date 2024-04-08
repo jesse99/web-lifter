@@ -3,7 +3,7 @@ use self::{
         BuildExercise, DurationsExercise, Exercise, ExerciseName, FixedRepsExercise, FormalName,
         VariableRepsExercise, VariableSetsExercise,
     },
-    history::{History, Record},
+    history::History,
     notes::Notes,
     pages::{AppState, UserState},
     program::{Block, Program},
@@ -441,19 +441,11 @@ fn create_light() -> Workout {
 fn create_history() -> History {
     fn add(history: &mut History, name: &ExerciseName, reps: Vec<i32>, weight: f32, days_ago: i64) {
         let date = Local::now() - chrono::Duration::days(days_ago);
-        let record = Record {
-            program: "My".to_owned(),
-            workout: "Heavy Bench".to_owned(),
-            started: date,
-            completed: Some(date),
-            sets: None,
-            comment: None,
-        };
-        history.start(&name, record);
+        history.start("My", "Heavy Bench", &name, date);
         for rep in reps {
             history.append_reps(&name, rep, Some(weight));
         }
-        history.finish(&name);
+        history.finish(&name, date);
     }
 
     fn add_squat(history: &mut History) {
