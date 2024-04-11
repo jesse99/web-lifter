@@ -36,6 +36,7 @@ async fn main() {
         .route("/", get(get_program))
         .route("/workout/:name", get(get_workout))
         .route("/exercise/:workout/:exercise", get(get_exercise))
+        .route("/edit-exercises/:workout", get(get_edit_exercises))
         .route("/edit-weight/:workout/:exercise", get(get_edit_weight))
         .route(
             "/edit-any-weight/:workout/:exercise",
@@ -173,6 +174,20 @@ async fn get_exercise(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_exercise_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_exercises(
+    Path(workout): Path<String>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_exercises_page(state, &workout)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),

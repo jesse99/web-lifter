@@ -16,13 +16,38 @@
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
 
-    <nav class="breadcrumb d-flex justify-content-center">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Program</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{workout_name}}</li>
-        </ol>
-    </nav>
+    <div class="d-flex">
+        <div class="p-1">
+            <!-- so breadcrumb is more centered -->
+                       
+        </div>
+        <div class="p-1 flex-fill">
+            <!-- breadcrumb -->
+            <nav class="breadcrumb d-flex justify-content-center">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Program</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{workout}}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="p-1 pe-2 justify-content-end">
+            <!-- options dropdown, TODO use a hamburger icon? -->
+            <div class="col justify-content-end">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/edit-exercises/{{workout}}">Edit Exercises</a></li>
+                        <li><a class="dropdown-item disabled" href="#">Edit Name</a></li>
+                        <li><a class="dropdown-item disabled" href="#">Edit Schedule</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- exercises -->
     <table class="table">
         <thead>
             <tr>
@@ -34,8 +59,7 @@
         <tbody>
             {{#each exercises}}
             <tr>
-                <th scope="row"><a class="{{this.color}}"
-                        href="/exercise/{{workout_name}}/{{this.name}}">{{this.name}}</a>
+                <th scope="row"><a class="{{this.color}}" href="/exercise/{{workout}}/{{this.name}}">{{this.name}}</a>
                 </th>
                 <td>
                     <span class="{{this.color}}">{{this.summary}}</span>
@@ -59,6 +83,7 @@
         </tbody>
     </table>
 
+    <!-- error label -->
     <div class="d-flex justify-content-center">
         <p class="text-danger">{{error}}</p>
     </div>

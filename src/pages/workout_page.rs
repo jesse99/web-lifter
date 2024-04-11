@@ -30,7 +30,7 @@ pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, any
 
 #[derive(Serialize, Deserialize)]
 struct WorkoutData {
-    workout_name: String,
+    workout: String,
     exercises: Vec<ExerciseData>,
     total_duration: String,
     error: String,
@@ -65,7 +65,7 @@ impl WorkoutData {
                 "-".to_owned()
             };
             Ok(WorkoutData {
-                workout_name: name.to_owned(),
+                workout: name.to_owned(),
                 exercises: exercises,
                 total_duration,
                 error,
@@ -79,7 +79,7 @@ impl WorkoutData {
 #[derive(Serialize, Deserialize)]
 struct ExerciseData {
     color: String,
-    workout_name: String,
+    workout: String,
     name: String,
     summary: String,
     duration: String,
@@ -113,7 +113,7 @@ impl ExerciseData {
             };
         ExerciseData {
             color,
-            workout_name: workout.name.clone(),
+            workout: workout.name.clone(),
             name: exercise.name().0.clone(),
             summary: summarize(weights, exercise),
             duration,

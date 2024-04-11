@@ -7,6 +7,8 @@ use crate::{
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
+// TODO should there be a way to delete a record? maybe a button in edit page? or set
+// durations/reps to empty?
 pub fn get_edit_durs_record_page(
     state: SharedState,
     workout: &str,

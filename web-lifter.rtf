@@ -1,6 +1,6 @@
 {\rtf1\ansi\ansicpg1252\cocoartf2709
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fswiss\fcharset0 Helvetica;\f2\froman\fcharset0 Times-Roman;
-}
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fswiss\fcharset0 Helvetica;\f2\fswiss\fcharset0 Helvetica-Oblique;
+\f3\fswiss\fcharset0 Helvetica-Bold;\f4\froman\fcharset0 Times-Roman;}
 {\colortbl;\red255\green255\blue255;\red203\green0\blue77;\red60\green60\blue59;\red117\green66\blue151;
 \red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;\red117\green66\blue151;\red9\green76\blue116;
 \red2\green2\blue2;\red25\green28\blue31;\red130\green130\blue130;\red130\green130\blue130;\red0\green0\blue0;
@@ -102,13 +102,52 @@ localhost:3000/ \
 	                              have to connect using 5G (or from public internet)\
 \pard\pardeftab720\partightenfactor0
 \cf10 \
-\'95\'a0History labels should be links leading to an edit page\
+              Edit Exercises\
+              \
+Heavy Bench    
+\f2\i use a List Group
+\f1\i0 \
+
+\f3\b Stretch             
+\f2\i\b0 use javascript to change active on click
+\f1\i0 \
+Squat\
+Pullup\
+\
+[Cancel]                           [^Edit]  [OK]   
+\f2\i edit has add/delete/move up or down
+\f1\i0 \
+                                                              
+\f2\i add uses a default (unique) name\
+                                                              maybe edit should be in upper right\
+                                                              javascript should disable as needed
+\f1\i0 \
+https://stackoverflow.com/questions/34590661/handle-bootstrap-list-group-click\
+https://stackoverflow.com/questions/37418434/bootstrap-4-how-to-make-the-item-of-list-group-active-when-clicking-it-via-jqu\
+\
+
+\f0\fs32 \cf3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec3             \
+\
+
+\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95\'a0Support workout editing:\
 \pard\pardeftab720\partightenfactor0
-\cf10 	- should there be a way to delete? delete all?\
-	  maybe a hambuger option to delete last record?\
+\cf10 	- exercises   
+\f2\i \cf10 add/del/re-order/disable&enable
+\f1\i0 \cf10 \
+\pard\pardeftab720\partightenfactor0
+\cf10 		` may need js to set a value with exercise list\
+		` will have to be careful with the separator\
+	- name\
+	- schedule    
+\f2\i may need dynamic widgets (can show and hide)
+\f1\i0 \
+\'95 Need to be able to change exercise type\
+	- this should clear history?\
+\'95 Support program editing\
+\'95\'a0Supporting editing:\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Supporting editing:\
-	- edit weight sets\
+\cf10 	- edit weight sets\
 	- options (eg font scaling, save keyed with device name)\
 		` options would also be available in program and workout pages\
 		` for scaling can set bs-body-font-size in body elements\
@@ -135,42 +174,42 @@ localhost:3000/ \
 	- extract to a function and use ? operator (if the lets all want the same type)\
 
 \fs52 		
-\f2\fs30\fsmilli15333 \cf15 \expnd0\expndtw0\kerning0
+\f4\fs30\fsmilli15333 \cf15 \expnd0\expndtw0\kerning0
 fn get_result() -> Option<u64> \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f2\fs30\fsmilli15333 \cf15 \'a0 let i = func1()?;
+\f4\fs30\fsmilli15333 \cf15 \'a0 let i = func1()?;
 \f1\fs33\fsmilli16667 \cf0 \
 \pard\pardeftab720\partightenfactor0
 \cf0 		
-\f2\fs30\fsmilli15333 \cf15 \'a0 let j = func2(i)?;
+\f4\fs30\fsmilli15333 \cf15 \'a0 let j = func2(i)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f2\fs30\fsmilli15333 \cf15 \'a0 let k = func3(j)?;
+\f4\fs30\fsmilli15333 \cf15 \'a0 let k = func3(j)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f2\fs30\fsmilli15333 \cf15 \'a0 func3(k)
+\f4\fs30\fsmilli15333 \cf15 \'a0 func3(k)
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f2\fs30\fsmilli15333 \cf15 \}
+\f4\fs30\fsmilli15333 \cf15 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f2\fs30\fsmilli15333 \cf15 \'a0
+\f4\fs30\fsmilli15333 \cf15 \'a0
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f2\fs30\fsmilli15333 \cf15 fn main() \{
+\f4\fs30\fsmilli15333 \cf15 fn main() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f2\fs30\fsmilli15333 \cf15 \'a0 if let Some(result) = get_result() \{
+\f4\fs30\fsmilli15333 \cf15 \'a0 if let Some(result) = get_result() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f2\fs30\fsmilli15333 \cf15 \'a0\'a0\'a0 // do something
+\f4\fs30\fsmilli15333 \cf15 \'a0\'a0\'a0 // do something
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f2\fs30\fsmilli15333 \cf15 \'a0 \}
+\f4\fs30\fsmilli15333 \cf15 \'a0 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f2\fs30\fsmilli15333 \cf15 \}\
+\f4\fs30\fsmilli15333 \cf15 \}\
 \pard\pardeftab720\partightenfactor0
 
 \f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \'95\'a0Set label flaked out for a second after finishing last set\
