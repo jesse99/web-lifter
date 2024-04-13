@@ -62,6 +62,7 @@ async fn main() {
         .route("/exercise/:workout/:exercise", get(get_exercise))
         .route("/add-exercise/:workout", get(get_add_exercise))
         .route("/edit-exercises/:workout", get(get_edit_exercises))
+        .route("/edit-name/:workout/:exercise", get(get_edit_name))
         .route("/edit-weight/:workout/:exercise", get(get_edit_weight))
         .route(
             "/edit-any-weight/:workout/:exercise",
@@ -96,6 +97,7 @@ async fn main() {
         .route("/reset/exercise/:workout/:exercise", post(reset_exercise))
         .route("/append-exercise/:workout", post(post_append_exercise))
         .route("/set-exercises/:workout", post(post_set_exercises))
+        .route("/set-name/:workout/:exercise", post(post_set_name))
         .route("/set-weight/:workout/:exercise", post(post_set_weight))
         .route("/revert-note/:workout/:exercise", post(post_revert_note))
         .route("/set-note/:workout/:exercise", post(post_set_note))
@@ -213,6 +215,20 @@ async fn get_edit_exercises(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_exercises_page(state, &workout)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_name(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_name_page(state, &workout, &exercise)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -531,6 +547,28 @@ async fn post_set_exercises(
         .map(|s| s.parse())
         .collect::<Result<Vec<_>, _>>()?;
     let new_url = pages::post_set_exercises(state, &workout, exercises, disabled)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetName {
+    name: String,
+}
+
+async fn post_set_name(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetName>,
+) -> Result<impl IntoResponse, AppError> {
+    let new_url = pages::post_set_name(state, &workout, &exercise, &payload.name)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

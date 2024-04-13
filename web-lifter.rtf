@@ -127,30 +127,54 @@ https://stackoverflow.com/questions/37418434/bootstrap-4-how-to-make-the-item-of
 \
 \pard\pardeftab720\partightenfactor0
 
-\f0\fs32 \cf15 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec15 \
+\f0\fs32 \cf7 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec7 get_edit_name_page\cf3 \strokec3 \
+\
+\pard\pardeftab720\partightenfactor0
+\cf15 \strokec15 \
 \pard\pardeftab720\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
-\'95 Finish up exercise editing\
-	- name\
-	- weight sets\
+\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95 Finish up exercise editing\
 	- formal name (icky)\
-\pard\pardeftab720\partightenfactor0
-\cf10 \'95\'a0Support workout editing:\
-	- name\
-	- schedule    
-\f2\i may need dynamic widgets (can show and hide)
-\f1\i0 \
+		` maybe hide items that don\'92t match text\
+		` could also hide items once have 200 visible\
+		  would be nice to have a \'85 at the end\
+		` have a checkbox for fuzzy matching? \
+			https://www.fusejs.io/    
+\f2\i \cf10 one guy said it\'92s \'93garbo\'94
+\f1\i0 \cf10 \
+			https://github.com/leeoniya/uFuzzy\
+			https://github.com/farzher/fuzzysort\
+			or maybe do this on the backend?\
+				might not be too bad with an ajax sort of call\
+				https://github.com/Blakeinstein/fuse-rust\
+				https://github.com/helix-editor/nucleo\
+	- weight sets\
 \'95 Would be nice to have some sort of overview option\
 	- shows page with nicely formatted workout/exercise info\
-\'95 Also a way to export history\
+	- include notes?\
+\'95 Use a helper with render_template\
+	- verify that there are no \'93\{\{stuff\}\}\'94 strings left un-expanded\
+	- use an attribute so that the scan code is debug only\
+\pard\pardeftab720\partightenfactor0
+\cf10 \'95\'a0Finish up workout editing:\
+	- name, use existing EditName\
+	- schedule    
+\f2\i may need dynamic widgets (can show and hide)\
+	                    would be nice to avoid that, better to have overview with help
+\f1\i0 \
+\pard\pardeftab720\partightenfactor0
+\cf10 \'95 Support program editing\
+	- name, use existing EditName\
+\'95 Get rid of fixup code\
+\pard\pardeftab720\partightenfactor0
+\cf10 \'95 Also a way to export history\
 	- maybe as json or csv\
-\'95 Support program editing\
 \'95\'a0Supporting editing:\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf10 	- options (eg font scaling, save keyed with device name)\
 		` options would also be available in program and workout pages\
+		  or should this just be at top level?\
 		` for scaling can set bs-body-font-size in body elements\
 		  would be nice if font size was per device\
 \'95\'a0Fonts didn\'92t seem any larger on iOS?\

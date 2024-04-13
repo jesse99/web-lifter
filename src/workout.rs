@@ -72,6 +72,16 @@ impl Workout {
         }
     }
 
+    pub fn try_change_name(
+        &mut self,
+        old_name: &ExerciseName,
+        new_name: &str,
+    ) -> Result<(), ValidationError> {
+        self.validate_change_name(old_name, new_name)?;
+        self.do_change_name(old_name, new_name);
+        Ok(())
+    }
+
     pub fn try_set_exercises(
         &mut self,
         exercises: Vec<&str>,
@@ -88,13 +98,13 @@ impl Workout {
     // }
 
     pub fn try_add_exercise(&mut self, exercise: Exercise) -> Result<(), ValidationError> {
-        self.validate_add_exercise(&exercise)?;
+        self.validate_new_exercise_name(&exercise.name())?;
         self.do_add_exercise(exercise);
         Ok(())
     }
 
     pub fn add_exercise(&mut self, exercise: Exercise) {
-        assert!(self.validate_add_exercise(&exercise).is_ok());
+        assert!(self.validate_new_exercise_name(&exercise.name()).is_ok());
         self.do_add_exercise(exercise);
     }
 
@@ -294,8 +304,33 @@ impl Workout {
         candidates[0]
     }
 
-    fn validate_add_exercise(&self, exercise: &Exercise) -> Result<(), ValidationError> {
-        let name = exercise.name();
+    fn validate_change_name(
+        &self,
+        old_name: &ExerciseName,
+        new_name: &str,
+    ) -> Result<(), ValidationError> {
+        if self.find(old_name).is_none() {
+            return Err(ValidationError::new("Didn't find old exercise."));
+        }
+
+        let new_name = ExerciseName(new_name.to_owned());
+        self.validate_new_exercise_name(&new_name)?;
+
+        Ok(())
+    }
+
+    fn do_change_name(&mut self, old_name: &ExerciseName, new_name: &str) {
+        let exercise = self.find_mut(old_name).unwrap();
+        let new_name = ExerciseName(new_name.to_owned());
+        match exercise {
+            Exercise::Durations(d, _) => d.name = new_name,
+            Exercise::FixedReps(d, _) => d.name = new_name,
+            Exercise::VariableReps(d, _) => d.name = new_name,
+            Exercise::VariableSets(d, _) => d.name = new_name,
+        }
+    }
+
+    fn validate_new_exercise_name(&self, name: &ExerciseName) -> Result<(), ValidationError> {
         if name.0.trim().is_empty() {
             return Err(ValidationError::new("The exercise name cannot be empty."));
         } else if self.exercises.iter().find(|e| e.name() == name).is_some() {
