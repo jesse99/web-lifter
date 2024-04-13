@@ -37,10 +37,7 @@ pub fn make_program() -> pages::AppState {
     default_program.add_workout(create_test());
 
     let user = match persist::load() {
-        Ok(u) => {
-            let v = fixup_program(u);
-            merge_program(v, default_program)
-        }
+        Ok(u) => fixup_program(u),
         Err(e) => {
             let errors = vec![format!("load had error {}", e.kind())];
             UserState {
@@ -561,52 +558,5 @@ fn creat_weight_sets() -> Weights {
 fn fixup_program(mut state: UserState) -> UserState {
     state.history.fixup();
     state.program.fixup();
-    state
-}
-
-fn merge_program(mut state: UserState, default_program: Program) -> UserState {
-    let loaded_names: Vec<_> = state
-        .program
-        .workouts()
-        .map(|w: &Workout| w.name.clone())
-        .collect();
-
-    for new_workout in default_program.workouts() {
-        if let Some(loaded_workout) = state.program.find_mut(&new_workout.name) {
-            let loaded_exercises: Vec<_> = loaded_workout
-                .exercises()
-                .map(|e: &Exercise| e.name().clone())
-                .collect();
-            for loaded_exercise in loaded_exercises {
-                if new_workout.find(&loaded_exercise).is_none() {
-                    println!(
-                        "removing old exercise '{}' from '{}'",
-                        loaded_exercise, new_workout.name
-                    );
-                    loaded_workout.remove_exercise(&loaded_exercise);
-                }
-            }
-            for new_exercise in new_workout.exercises() {
-                if loaded_workout.find(new_exercise.name()).is_none() {
-                    println!(
-                        "adding new exercise '{}' to '{}'",
-                        new_exercise.name(),
-                        new_workout.name
-                    );
-                    loaded_workout.add_exercise(new_exercise.clone());
-                }
-            }
-        } else {
-            println!("adding new workout '{}'", new_workout.name);
-            state.program.add_workout(new_workout.clone());
-        }
-    }
-
-    for loaded_workout in loaded_names {
-        if default_program.find(&loaded_workout).is_none() {
-            println!("removing old workout '{}'", loaded_workout);
-            state.program.remove_workout(&loaded_workout);
-        }
-    }
     state
 }

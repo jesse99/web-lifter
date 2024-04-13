@@ -47,6 +47,20 @@ function on_disable() {
     }
 }
 
+function on_delete() {
+    const list = document.getElementById('exercises');
+    const len = list.children.length;
+    for (let i = 0; i < len; i++) {
+        let child = list.children[i];
+        if (child.classList.contains('active')) {
+            list.removeChild(child);
+            update_value();
+            enable_menu();
+            break;
+        }
+    }
+}
+
 function on_move_down() {
     const list = document.getElementById('exercises');
     const len = list.children.length;
@@ -109,31 +123,34 @@ function update_value() {
 function enable_menu() {
     const list = document.getElementById('exercises');
     const len = list.children.length;
+
+    for (var name of ["delete-btn", "up-btn", "down-btn", "disable-btn", "enable-btn"]) {
+        let button = document.getElementById(name);
+        button.classList.add('disabled');
+    }
+
     for (let i = 0; i < len; i++) {
         let child = list.children[i];
         if (child.classList.contains('active')) {
-            let button = document.getElementById('up-btn');
-            if (i == 0) {
-                button.classList.add('disabled');
-            } else {
+            let button = document.getElementById('delete-btn');
+            button.classList.remove('disabled');
+
+            button = document.getElementById('up-btn');
+            if (i != 0) {
                 button.classList.remove('disabled');
             }
 
             button = document.getElementById('down-btn');
-            if (i == len - 1) {
-                button.classList.add('disabled');
-            } else {
+            if (i != len - 1) {
                 button.classList.remove('disabled');
             }
 
             let dbutton = document.getElementById('disable-btn');
             let ebutton = document.getElementById('enable-btn');
             if (child.classList.contains("text-black-50")) {
-                dbutton.classList.add('disabled');
                 ebutton.classList.remove('disabled');
             } else {
                 dbutton.classList.remove('disabled');
-                ebutton.classList.add('disabled');
             }
             break;
         }
