@@ -185,17 +185,6 @@ impl Program {
         self.do_add_workout(workout);
     }
 
-    // pub fn try_remove_workout(&mut self, name: &str) -> Result<(), ValidationError> {
-    //     self.validate_remove_workout(name)?;
-    //     self.do_remove_workout(name);
-    //     Ok(())
-    // }
-
-    pub fn remove_workout(&mut self, name: &str) {
-        assert!(self.validate_remove_workout(name).is_ok());
-        self.do_remove_workout(name);
-    }
-
     pub fn workouts(&self) -> impl Iterator<Item = &Workout> + '_ {
         self.workouts.iter()
     }
@@ -279,23 +268,5 @@ impl Program {
 
     fn do_add_workout(&mut self, workout: Workout) {
         self.workouts.push(workout);
-    }
-
-    fn validate_remove_workout(&self, name: &str) -> Result<(), ValidationError> {
-        if self.workouts.iter().find(|&w| w.name == *name).is_none() {
-            return Err(ValidationError::new("The workout name doesn't exist."));
-        }
-        Ok(())
-    }
-
-    fn do_remove_workout(&mut self, name: &str) {
-        let index = self.workouts.iter().position(|w| w.name == name).unwrap();
-        self.workouts.remove(index);
-
-        for block in self.blocks.iter_mut() {
-            if let Some(index) = block.workouts.iter().position(|n| n == name) {
-                block.workouts.remove(index);
-            }
-        }
     }
 }

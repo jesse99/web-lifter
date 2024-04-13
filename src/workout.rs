@@ -98,17 +98,6 @@ impl Workout {
         self.do_add_exercise(exercise);
     }
 
-    // pub fn try_remove_exercise(&mut self, name: &ExerciseName) -> Result<(), ValidationError> {
-    //     self.validate_remove_exercise(name)?;
-    //     self.do_remove_exercise(name);
-    //     Ok(())
-    // }
-
-    pub fn remove_exercise(&mut self, name: &ExerciseName) {
-        assert!(self.validate_remove_exercise(name).is_ok());
-        self.do_remove_exercise(name);
-    }
-
     pub fn exercises(&self) -> impl Iterator<Item = &Exercise> + '_ {
         self.exercises.iter()
     }
@@ -317,23 +306,6 @@ impl Workout {
 
     fn do_add_exercise(&mut self, exercise: Exercise) {
         self.exercises.push(exercise);
-    }
-
-    fn validate_remove_exercise(&self, name: &ExerciseName) -> Result<(), ValidationError> {
-        if self.exercises.iter().find(|&e| e.name() == name).is_none() {
-            return Err(ValidationError::new("The exercise name doesn't exist."));
-        }
-        Ok(())
-    }
-
-    fn do_remove_exercise(&mut self, name: &ExerciseName) {
-        let index = self
-            .exercises
-            .iter()
-            .position(|e| e.name() == name)
-            .unwrap();
-        self.exercises.remove(index);
-        self.completed.remove(&name);
     }
 
     fn validate_set_exercises(&self, exercises: &Vec<&str>) -> Result<(), ValidationError> {

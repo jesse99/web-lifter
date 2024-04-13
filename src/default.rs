@@ -1,8 +1,4 @@
 use self::{
-    exercise::{
-        BuildExercise, DurationsExercise, Exercise, ExerciseName, FixedRepsExercise, FormalName,
-        VariableRepsExercise, VariableSetsExercise,
-    },
     history::History,
     notes::Notes,
     pages::{AppState, UserState},
