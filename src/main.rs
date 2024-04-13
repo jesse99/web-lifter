@@ -24,7 +24,10 @@ use std::sync::RwLock;
 use tower::ServiceBuilder;
 use tower_http::add_extension::AddExtensionLayer;
 
-use crate::exercise::{FixedReps, VariableReps};
+use crate::exercise::{
+    BuildExercise, DurationsExercise, Exercise, ExerciseName, FixedReps, FixedRepsExercise,
+    FormalName, VariableReps, VariableRepsExercise, VariableSetsExercise,
+};
 
 #[tokio::main]
 async fn main() {
@@ -57,6 +60,7 @@ async fn main() {
         .route("/", get(get_program))
         .route("/workout/:name", get(get_workout))
         .route("/exercise/:workout/:exercise", get(get_exercise))
+        .route("/add-exercise/:workout", get(get_add_exercise))
         .route("/edit-exercises/:workout", get(get_edit_exercises))
         .route("/edit-weight/:workout/:exercise", get(get_edit_weight))
         .route(
@@ -90,6 +94,7 @@ async fn main() {
             post(post_next_var_set),
         )
         .route("/reset/exercise/:workout/:exercise", post(reset_exercise))
+        .route("/append-exercise/:workout", post(post_append_exercise))
         .route("/set-exercises/:workout", post(post_set_exercises))
         .route("/set-weight/:workout/:exercise", post(post_set_weight))
         .route("/revert-note/:workout/:exercise", post(post_revert_note))
@@ -180,6 +185,20 @@ async fn get_exercise(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_exercise_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_add_exercise(
+    Path(workout): Path<String>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_add_exercise_page(state, &workout)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -409,9 +428,9 @@ async fn reset_exercise(
 }
 
 #[derive(Debug, Deserialize)]
-struct SetExercises {
-    exercises: String, // "Exercise 1\tExercise 2"
-    disabled: String,  // "true\tfalse"
+struct AppendExercise {
+    name: String,  // exercise name
+    types: String, // "durations", "fixed", "var-reps", or "var-sets"
 }
 
 // The user experience of failed form validation is not great. The user will get a new
@@ -429,6 +448,77 @@ struct SetExercises {
 // would give us a nice UX and allow us to do things like style the offending widget but
 // means we'd have parallel code paths for validation and setting which is again quite
 // annoying.
+async fn post_append_exercise(
+    Path(workout): Path<String>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<AppendExercise>,
+) -> Result<impl IntoResponse, AppError> {
+    fn default_durations(name: &str) -> Exercise {
+        let e = DurationsExercise::new(vec![30; 3]);
+        let name = ExerciseName(name.to_owned());
+        let formal_name = FormalName("".to_owned());
+        BuildExercise::durations(name, formal_name, e).finalize()
+    }
+
+    fn default_fixed(name: &str) -> Exercise {
+        let sets = vec![5; 3];
+        let e = FixedRepsExercise::with_reps(sets);
+        let name = ExerciseName(name.to_owned());
+        let formal_name = FormalName("".to_owned());
+        BuildExercise::fixed_reps(name, formal_name, e)
+            .with_rest_mins(2.0)
+            .finalize()
+    }
+
+    fn default_var_reps(name: &str) -> Exercise {
+        let warmups = vec![
+            FixedReps::new(5, 70),
+            FixedReps::new(3, 80),
+            FixedReps::new(1, 90),
+        ];
+        let worksets = vec![VariableReps::new(3, 6, 100); 3];
+        let e = VariableRepsExercise::new(warmups, worksets);
+        let name = ExerciseName(name.to_owned());
+        let formal_name = FormalName("".to_owned());
+        BuildExercise::variable_reps(name.clone(), formal_name, e)
+            .with_rest_mins(2.5)
+            .finalize()
+    }
+
+    fn default_var_sets(name: &str) -> Exercise {
+        let e = VariableSetsExercise::new(15);
+        let name = ExerciseName(name.to_owned());
+        let formal_name = FormalName("".to_owned());
+        BuildExercise::variable_sets(name.clone(), formal_name, e)
+            .with_rest_mins(2.5)
+            .finalize()
+    }
+
+    let exercise = match payload.types.as_ref() {
+        "durations" => default_durations(&payload.name),
+        "fixed" => default_fixed(&payload.name),
+        "var-reps" => default_var_reps(&payload.name),
+        "var-sets" => default_var_sets(&payload.name),
+        _ => return Err(AppError::msg("bad exercise type")),
+    };
+    let new_url = pages::post_append_exercise(state, &workout, exercise)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetExercises {
+    exercises: String, // "Exercise 1\tExercise 2"
+    disabled: String,  // "true\tfalse"
+}
+
 async fn post_set_exercises(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,

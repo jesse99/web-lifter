@@ -6,6 +6,12 @@ use core::fmt;
 
 pub struct AppError(anyhow::Error);
 
+impl AppError {
+    pub fn msg(msg: &str) -> AppError {
+        AppError(anyhow::Error::msg(msg.to_owned()))
+    }
+}
+
 // Tell axum how to convert `AppError` into a response.
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {

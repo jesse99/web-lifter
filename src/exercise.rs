@@ -57,14 +57,14 @@ pub struct ExerciseData {
     pub enabled: bool,
     pub current_index: SetIndex,
     pub weightset: Option<String>,
-    pub weight: Option<f32>, // base weight to use for each workset, often modified by set percent
+    pub weight: Option<f32>, // base weight to use for each workset, often modified by per-set percent
     pub rest: Option<i32>,   // used for work sets
     pub last_rest: Option<i32>, // overrides rest.last()
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Exercise {
-    Durations(ExerciseData, DurationsExercise),
+    Durations(ExerciseData, DurationsExercise), // if a new type is added also update add_exercise page
     FixedReps(ExerciseData, FixedRepsExercise),
     VariableReps(ExerciseData, VariableRepsExercise),
     VariableSets(ExerciseData, VariableSetsExercise),

@@ -87,11 +87,11 @@ impl Workout {
     //     self.do_set_exercises(exercises, Vec::new());
     // }
 
-    // pub fn try_add_exercise(&mut self, exercise: Exercise) -> Result<(), ValidationError> {
-    //     self.validate_add_exercise(&exercise)?;
-    //     self.do_add_exercise(exercise);
-    //     Ok(())
-    // }
+    pub fn try_add_exercise(&mut self, exercise: Exercise) -> Result<(), ValidationError> {
+        self.validate_add_exercise(&exercise)?;
+        self.do_add_exercise(exercise);
+        Ok(())
+    }
 
     pub fn add_exercise(&mut self, exercise: Exercise) {
         assert!(self.validate_add_exercise(&exercise).is_ok());

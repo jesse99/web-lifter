@@ -1,9 +1,4 @@
-use crate::{
-    exercise::{self, Exercise, ExerciseName},
-    pages::SharedState,
-    program::Program,
-    weights::{self, Weights},
-};
+use crate::{exercise::Exercise, pages::SharedState, program::Program};
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 

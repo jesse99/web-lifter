@@ -79,6 +79,29 @@ pub fn post_reset_exercise(
     Ok(uri)
 }
 
+pub fn post_append_exercise(
+    state: SharedState,
+    workout_name: &str,
+    exercise: Exercise,
+) -> Result<Uri, anyhow::Error> {
+    {
+        let program = &mut state.write().unwrap().user.program;
+        let workout = program.find_mut(&workout_name).unwrap();
+        workout.try_add_exercise(exercise)?;
+    }
+
+    {
+        let user = &mut state.write().unwrap().user;
+        if let Err(e) = crate::persist::save(user) {
+            user.errors.push(format!("{e}")); // not fatal so we don't return an error
+        }
+    }
+
+    let path = format!("/workout/{workout_name}");
+    let uri = url_escape::encode_path(&path);
+    let uri = uri.parse()?;
+    Ok(uri)
+}
 pub fn post_set_exercises(
     state: SharedState,
     workout_name: &str,

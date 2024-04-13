@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>web lifter</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="/styles/style.css?version=2" rel="stylesheet">
+</head>
+
+<body style="--bs-body-font-size: 1.25rem">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <h2 class="text-center">Add Exercise</h2>
+
+    <form method="post" action="/append-exercise/{{workout}}" role=" form" class="mt-4 ms-2 me-2">
+        <!-- name text field -->
+        <div class="input-group">
+            <span class="input-group-text" id="name-label">Name</span>
+            <input type="text" name="name" class="form-control" id="name-field" aria-describedby="name-label name-help"
+                value="{{name}}" autofocus required>
+        </div>
+        <div class="form-text fst-italic fs-6 mb-4" id="name-help">Must be unique within the workout.</div>
+
+        <!-- exercise type radio buttons -->
+        <div class="input-group">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="types" id="durations-btn" value="durations">
+                <label class="form-check-label" for="durations-btn">
+                    Durations: 3 sets of 30s
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="types" id="fixed-btn" value="fixed">
+                <label class="form-check-label" for="fixed-btn">
+                    Fixed Reps: 3 sets of 12 reps
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="types" id="var-reps-btn" value="var-reps" checked>
+                <label class="form-check-label" for="var-reps-btn">
+                    Variable Reps: 3 sets of 4-8 reps
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="types" id="var-sets-btn" aria-describedby="type-help"
+                    value="var-sets">
+                <label class="form-check-label" for="var-sets-btn">
+                    Variable Sets: 3+ sets of 24 total reps
+                </label>
+            </div>
+        </div>
+        <div class="form-text fst-italic fs-6 mb-3" id="type-help">All exercise types may include a target weight,
+            weight set
+            (e.g. dumbbells or plates), and an amount of time to rest after each set.</div>
+
+        <div class="form-group mt-4">
+            <div class="row justify-content-evenly">
+                <!-- cancel button -->
+                <div class="col-4  align-self-center">
+                    <button type="submit" formmethod="get" formaction="/workout/{{workout}}" formnovalidate
+                        class="btn btn-secondary">Cancel</button>
+                </div>
+                <!-- save button -->
+                <div class="col-4  align-self-center">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</body>
+
+</html>
