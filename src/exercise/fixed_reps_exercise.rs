@@ -1,3 +1,6 @@
+// Quite similar to VariableReps but the reps are always fixed so the UI doesn't have
+// a reps dropdown when performing the exerise. (And the implementation is a bit simpler
+// since we don't bother with expected reps).
 use crate::{exercise::SetIndex, pages::ValidationError};
 use serde::{Deserialize, Serialize};
 

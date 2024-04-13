@@ -20,7 +20,7 @@ impl VariableReps {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VariableRepsExercise {
     warmups: Vec<FixedReps>,
-    worksets: Vec<VariableReps>, // TODO do we want back off sets? or would those just be work sets with less weight?
+    worksets: Vec<VariableReps>,
     expected: Vec<i32>,
 }
 

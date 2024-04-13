@@ -423,7 +423,7 @@ fn create_light() -> Workout {
     // Stack Complex 1
     let sets = vec![1; 4];
     let e = FixedRepsExercise::with_reps(sets);
-    let name = ExerciseName("Stack Complex 1".to_owned());
+    let name = ExerciseName("Complex A".to_owned());
     let formal_name = FormalName("Stack Complex".to_owned());
     let exercise = BuildExercise::fixed_reps(name, formal_name, e)
         .with_rest_secs(45)
@@ -434,7 +434,7 @@ fn create_light() -> Workout {
     // Stack Complex 2
     let sets = vec![1; 4];
     let e = FixedRepsExercise::with_reps(sets);
-    let name = ExerciseName("Stack Complex 2".to_owned());
+    let name = ExerciseName("Complex B".to_owned());
     let formal_name = FormalName("Stack Complex".to_owned());
     let exercise = BuildExercise::fixed_reps(name, formal_name, e)
         .with_rest_secs(45)
