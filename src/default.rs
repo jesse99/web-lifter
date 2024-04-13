@@ -75,6 +75,13 @@ fn create_test() -> Workout {
         .finalize();
     workout.add_exercise(exercise);
 
+    // Couch Stretch
+    let e = DurationsExercise::new(vec![20; 4]).with_target_secs(120);
+    let name = ExerciseName("Couch Stretch".to_owned());
+    let formal_name = FormalName("Couch Stretch".to_owned());
+    let exercise = BuildExercise::durations(name, formal_name, e).finalize();
+    workout.add_exercise(exercise);
+
     // Test Chin-ups
     let e = VariableSetsExercise::new(16);
     let name = ExerciseName("Test Chin-ups".to_owned());

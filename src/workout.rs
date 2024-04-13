@@ -1,12 +1,15 @@
 use crate::{
     days::Days,
-    exercise::{Exercise, ExerciseName},
+    exercise::{
+        BuildExercise, Exercise, ExerciseName, FixedReps, FormalName, VariableReps,
+        VariableRepsExercise,
+    },
     pages::ValidationError,
     program::BlockSchedule,
 };
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Schedule {
@@ -68,6 +71,17 @@ impl Workout {
             completed: HashMap::new(),
         }
     }
+
+    pub fn try_set_exercises(&mut self, exercises: Vec<&str>) -> Result<(), ValidationError> {
+        self.validate_set_exercises(&exercises)?;
+        self.do_set_exercises(exercises);
+        Ok(())
+    }
+
+    // pub fn set_exercises(&mut self, exercises: Vec<&str>) {
+    //     assert!(self.validate_set_exercises(&exercises).is_ok());
+    //     self.do_set_exercises(exercises);
+    // }
 
     // pub fn try_add_exercise(&mut self, exercise: Exercise) -> Result<(), ValidationError> {
     //     self.validate_add_exercise(&exercise)?;
@@ -317,11 +331,55 @@ impl Workout {
         self.exercises.remove(index);
         self.completed.remove(&name);
     }
+
+    fn validate_set_exercises(&self, exercises: &Vec<&str>) -> Result<(), ValidationError> {
+        let mut names = HashSet::new();
+        for name in exercises {
+            if name.trim().is_empty() {
+                return Err(ValidationError::new("The exercise name cannot be empty."));
+            } else {
+                let added = names.insert(name.to_owned());
+                if !added {
+                    return Err(ValidationError::new("'{name}' appears more than once."));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn do_set_exercises(&mut self, exercises: Vec<&str>) {
+        let mut new_exercises = Vec::with_capacity(exercises.len());
+        for name in exercises {
+            let exercise =
+                if let Some(index) = self.exercises.iter().position(|e| e.name().0 == *name) {
+                    self.exercises.remove(index)
+                } else {
+                    default_exercise(name.to_owned())
+                };
+            new_exercises.push(exercise);
+        }
+        self.exercises = new_exercises;
+    }
+}
+
+fn default_exercise(name: String) -> Exercise {
+    let warmups = vec![
+        FixedReps::new(5, 70),
+        FixedReps::new(3, 80),
+        FixedReps::new(1, 90),
+    ];
+    let worksets = vec![VariableReps::new(3, 5, 100); 3];
+    let e = VariableRepsExercise::new(warmups, worksets);
+    let name = ExerciseName(name);
+    let formal_name = FormalName("".to_owned());
+    BuildExercise::variable_reps(name, formal_name, e)
+        .with_rest_mins(2.0)
+        .finalize()
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::exercise::{BuildExercise, FixedRepsExercise, FormalName};
+    use crate::exercise::FixedRepsExercise;
 
     use super::*;
 

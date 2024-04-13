@@ -32,6 +32,27 @@ async fn main() {
 
     tracing_subscriber::fmt::init();
     let app = Router::new()
+        // data --------------------------------------------------------------------------
+        .route(
+            "/scripts/exercise.js",
+            get(|s| get_js(s, include_str!("../files/exercise.js"))),
+        )
+        .route(
+            "/scripts/exercises.js",
+            get(|s| get_js(s, include_str!("../files/exercises.js"))),
+        )
+        .route(
+            "/scripts/rest.js",
+            get(|s| get_js(s, include_str!("../files/rest.js"))),
+        )
+        .route(
+            "/scripts/durations.js",
+            get(|s| get_js(s, include_str!("../files/durations.js"))),
+        )
+        .route(
+            "/styles/style.css",
+            get(|s| get_css(s, include_str!("../files/styles.css"))),
+        )
         // get ---------------------------------------------------------------------------
         .route("/", get(get_program))
         .route("/workout/:name", get(get_workout))
@@ -62,22 +83,6 @@ async fn main() {
             "/edit-reps-record/:workout/:exercise/:id",
             get(get_edit_reps_record),
         )
-        .route(
-            "/scripts/exercise.js",
-            get(|s| get_js(s, include_str!("../files/exercise.js"))),
-        )
-        .route(
-            "/scripts/rest.js",
-            get(|s| get_js(s, include_str!("../files/rest.js"))),
-        )
-        .route(
-            "/scripts/durations.js",
-            get(|s| get_js(s, include_str!("../files/durations.js"))),
-        )
-        .route(
-            "/styles/style.css",
-            get(|s| get_css(s, include_str!("../files/styles.css"))),
-        )
         // post --------------------------------------------------------------------------
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
         .route(
@@ -85,6 +90,7 @@ async fn main() {
             post(post_next_var_set),
         )
         .route("/reset/exercise/:workout/:exercise", post(reset_exercise))
+        .route("/set-exercises/:workout", post(post_set_exercises))
         .route("/set-weight/:workout/:exercise", post(post_set_weight))
         .route("/revert-note/:workout/:exercise", post(post_revert_note))
         .route("/set-note/:workout/:exercise", post(post_set_note))
@@ -403,8 +409,8 @@ async fn reset_exercise(
 }
 
 #[derive(Debug, Deserialize)]
-struct SetWeight {
-    weight: String, // "25 lbs"
+struct SetExercises {
+    exercises: String, // "Exercise 1\tExercise 2"
 }
 
 // The user experience of failed form validation is not great. The user will get a new
@@ -422,6 +428,29 @@ struct SetWeight {
 // would give us a nice UX and allow us to do things like style the offending widget but
 // means we'd have parallel code paths for validation and setting which is again quite
 // annoying.
+async fn post_set_exercises(
+    Path(workout): Path<String>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetExercises>,
+) -> Result<impl IntoResponse, AppError> {
+    let exercises: Vec<_> = payload.exercises.split("\t").collect();
+    let new_url = pages::post_set_exercises(state, &workout, exercises)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetWeight {
+    weight: String, // "25 lbs"
+}
+
 async fn post_set_weight(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,

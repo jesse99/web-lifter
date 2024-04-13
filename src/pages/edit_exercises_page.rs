@@ -44,7 +44,7 @@ impl EditExercisesData {
 #[derive(Serialize, Deserialize)]
 struct ExercisesData {
     active: String,  // "active" or ""
-    current: String, // "current" or ""
+    current: String, // "true" or "false"
     exercise: String,
 }
 
@@ -56,9 +56,9 @@ impl ExercisesData {
             "".to_owned()
         };
         let current = if is_active {
-            "current".to_owned()
+            "true".to_owned()
         } else {
-            "".to_owned()
+            "false".to_owned()
         };
         let exercise = exercise.to_owned();
         ExercisesData {
