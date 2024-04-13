@@ -72,15 +72,19 @@ impl Workout {
         }
     }
 
-    pub fn try_set_exercises(&mut self, exercises: Vec<&str>) -> Result<(), ValidationError> {
+    pub fn try_set_exercises(
+        &mut self,
+        exercises: Vec<&str>,
+        disabled: Vec<bool>,
+    ) -> Result<(), ValidationError> {
         self.validate_set_exercises(&exercises)?;
-        self.do_set_exercises(exercises);
+        self.do_set_exercises(exercises, disabled);
         Ok(())
     }
 
     // pub fn set_exercises(&mut self, exercises: Vec<&str>) {
     //     assert!(self.validate_set_exercises(&exercises).is_ok());
-    //     self.do_set_exercises(exercises);
+    //     self.do_set_exercises(exercises, Vec::new());
     // }
 
     // pub fn try_add_exercise(&mut self, exercise: Exercise) -> Result<(), ValidationError> {
@@ -347,15 +351,19 @@ impl Workout {
         Ok(())
     }
 
-    fn do_set_exercises(&mut self, exercises: Vec<&str>) {
+    fn do_set_exercises(&mut self, exercises: Vec<&str>, disabled: Vec<bool>) {
         let mut new_exercises = Vec::with_capacity(exercises.len());
-        for name in exercises {
-            let exercise =
+        for (i, &name) in exercises.iter().enumerate() {
+            let mut exercise =
                 if let Some(index) = self.exercises.iter().position(|e| e.name().0 == *name) {
                     self.exercises.remove(index)
                 } else {
                     default_exercise(name.to_owned())
                 };
+            if i < disabled.len() {
+                let d = exercise.data_mut();
+                d.enabled = !disabled[i];
+            }
             new_exercises.push(exercise);
         }
         self.exercises = new_exercises;

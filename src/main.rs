@@ -411,6 +411,7 @@ async fn reset_exercise(
 #[derive(Debug, Deserialize)]
 struct SetExercises {
     exercises: String, // "Exercise 1\tExercise 2"
+    disabled: String,  // "true\tfalse"
 }
 
 // The user experience of failed form validation is not great. The user will get a new
@@ -434,7 +435,12 @@ async fn post_set_exercises(
     Form(payload): Form<SetExercises>,
 ) -> Result<impl IntoResponse, AppError> {
     let exercises: Vec<_> = payload.exercises.split("\t").collect();
-    let new_url = pages::post_set_exercises(state, &workout, exercises)?;
+    let disabled = payload
+        .disabled
+        .split("\t")
+        .map(|s| s.parse())
+        .collect::<Result<Vec<_>, _>>()?;
+    let new_url = pages::post_set_exercises(state, &workout, exercises, disabled)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

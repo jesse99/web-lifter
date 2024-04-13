@@ -47,6 +47,7 @@ impl WorkoutData {
         if let Some(workout) = program.find(name) {
             let exercises: Vec<ExerciseData> = workout
                 .exercises()
+                .filter(|e| e.data().enabled)
                 .map(|e| ExerciseData::new(history, weights, workout, e))
                 .collect();
             let total_duration = if let Some(started) = history.first_started(name) {

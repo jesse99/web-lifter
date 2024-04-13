@@ -5,7 +5,7 @@
 
 function on_loaded() {
     update_value();
-    enable();
+    enable_menu();
 }
 
 function on_click(item) {
@@ -16,7 +16,35 @@ function on_click(item) {
     }
     item.classList.add('active');
     item.setAttribute('aria-current', "true");
-    enable();
+    enable_menu();
+}
+
+function on_enable() {
+    const list = document.getElementById('exercises');
+    const len = list.children.length;
+    for (let i = 0; i < len; i++) {
+        let child = list.children[i];
+        if (child.classList.contains('active')) {
+            child.classList.remove('text-black-50');
+            update_value();
+            enable_menu();
+            break;
+        }
+    }
+}
+
+function on_disable() {
+    const list = document.getElementById('exercises');
+    const len = list.children.length;
+    for (let i = 0; i < len; i++) {
+        let child = list.children[i];
+        if (child.classList.contains('active')) {
+            child.classList.add('text-black-50');
+            update_value();
+            enable_menu();
+            break;
+        }
+    }
 }
 
 function on_move_down() {
@@ -32,7 +60,7 @@ function on_move_down() {
                 list.insertBefore(child, null);
             }
             update_value();
-            enable();
+            enable_menu();
             break;
         }
     }
@@ -49,26 +77,36 @@ function on_move_up() {
                 list.insertBefore(child, target);
             }
             update_value();
-            enable();
+            enable_menu();
             break;
         }
     }
 }
 
 function update_value() {
-    let value = "";
+    let exercises = "";
+    let disabled = "";
     const list = document.getElementById('exercises');
     for (var child of list.children) {
-        if (value) {
-            value += "\t";
+        if (exercises) {
+            exercises += "\t";
+            disabled += "\t";
         }
-        value += child.innerText;
+        exercises += child.innerText;
+        if (child.classList.contains("text-black-50")) {
+            disabled += "true";
+        } else {
+            disabled += "false";
+        }
     }
     let input = document.getElementById('exercises-btn');
-    input.value = value;
+    input.value = exercises;
+
+    input = document.getElementById('disabled-btn');
+    input.value = disabled;
 }
 
-function enable() {
+function enable_menu() {
     const list = document.getElementById('exercises');
     const len = list.children.length;
     for (let i = 0; i < len; i++) {
@@ -86,6 +124,16 @@ function enable() {
                 button.classList.add('disabled');
             } else {
                 button.classList.remove('disabled');
+            }
+
+            let dbutton = document.getElementById('disable-btn');
+            let ebutton = document.getElementById('enable-btn');
+            if (child.classList.contains("text-black-50")) {
+                dbutton.classList.add('disabled');
+                ebutton.classList.remove('disabled');
+            } else {
+                dbutton.classList.remove('disabled');
+                ebutton.classList.add('disabled');
             }
             break;
         }

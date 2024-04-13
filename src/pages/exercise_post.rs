@@ -82,12 +82,13 @@ pub fn post_reset_exercise(
 pub fn post_set_exercises(
     state: SharedState,
     workout_name: &str,
-    exercises: Vec<&str>,
+    enabled: Vec<&str>,
+    disabled: Vec<bool>,
 ) -> Result<Uri, anyhow::Error> {
     {
         let program = &mut state.write().unwrap().user.program;
         let workout = program.find_mut(&workout_name).unwrap();
-        workout.try_set_exercises(exercises)?;
+        workout.try_set_exercises(enabled, disabled)?;
     }
 
     {

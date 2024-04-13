@@ -54,6 +54,7 @@ pub struct ExerciseData {
     pub formal_name: FormalName,
     pub started: Option<DateTime<Local>>,
     pub finished: bool,
+    pub enabled: bool,
     pub current_index: SetIndex,
     pub weightset: Option<String>,
     pub weight: Option<f32>, // base weight to use for each workset, often modified by set percent
@@ -122,6 +123,15 @@ impl Exercise {
     }
 
     pub fn data(&self) -> &ExerciseData {
+        match self {
+            Exercise::Durations(d, _) => d,
+            Exercise::FixedReps(d, _) => d,
+            Exercise::VariableReps(d, _) => d,
+            Exercise::VariableSets(d, _) => d,
+        }
+    }
+
+    pub fn data_mut(&mut self) -> &mut ExerciseData {
         match self {
             Exercise::Durations(d, _) => d,
             Exercise::FixedReps(d, _) => d,
@@ -495,6 +505,7 @@ impl ExerciseData {
             formal_name,
             started: None,
             finished: false,
+            enabled: true,
             current_index: current_set,
             weightset: None,
             weight: None,

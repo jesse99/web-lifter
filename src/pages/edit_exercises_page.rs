@@ -1,5 +1,5 @@
 use crate::{
-    exercise::{self, ExerciseName},
+    exercise::{self, Exercise, ExerciseName},
     pages::SharedState,
     program::Program,
     weights::{self, Weights},
@@ -31,7 +31,7 @@ impl EditExercisesData {
         let exercises = workout
             .exercises()
             .enumerate()
-            .map(|(i, e)| ExercisesData::new(i == 0, &e.name().0))
+            .map(|(i, e)| ExercisesData::new(i == 0, e))
             .collect();
 
         Ok(EditExercisesData {
@@ -45,11 +45,12 @@ impl EditExercisesData {
 struct ExercisesData {
     active: String,  // "active" or ""
     current: String, // "true" or "false"
+    dimmed: String,  // "text-black-50" or ""
     exercise: String,
 }
 
 impl ExercisesData {
-    fn new(is_active: bool, exercise: &str) -> ExercisesData {
+    fn new(is_active: bool, exercise: &Exercise) -> ExercisesData {
         let active = if is_active {
             "active".to_owned()
         } else {
@@ -60,10 +61,18 @@ impl ExercisesData {
         } else {
             "false".to_owned()
         };
-        let exercise = exercise.to_owned();
+
+        let d = exercise.data();
+        let dimmed = if d.enabled {
+            "".to_owned()
+        } else {
+            "text-black-50".to_owned()
+        };
+        let exercise = exercise.name().0.to_owned();
         ExercisesData {
             active,
             current,
+            dimmed,
             exercise,
         }
     }

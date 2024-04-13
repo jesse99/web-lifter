@@ -38,8 +38,10 @@
                     <ul class="dropdown-menu">
                         <li><button class="dropdown-item disabled" type="button">Add</button></li>
                         <li><button class="dropdown-item disabled" type="button">Delete</button></li>
-                        <li><button class="dropdown-item disabled" type="button">Disable</button></li>
-                        <li><button class="dropdown-item disabled" type="button">Enable</button></li>
+                        <li><button id="disable-btn" class="dropdown-item disabled" onclick="on_disable()"
+                                type="button">Disable</button></li>
+                        <li><button id="enable-btn" class="dropdown-item disabled" onclick="on_enable()"
+                                type="button">Enable</button></li>
                         <li><button id="down-btn" class="dropdown-item" onclick="on_move_down()" type="button">Move
                                 Down</button></li>
                         <li><button id="up-btn" class="dropdown-item" onclick="on_move_up()" type="button">Move
@@ -55,7 +57,8 @@
         <!-- exercises list -->
         <ul class="list-group" id="exercises" aria-describedby="exercises-help">
             {{#each exercises}}
-            <li class="list-group-item {{this.active}}" aria-current="{{this.current}}" onclick="on_click(this)">
+            <li class="list-group-item {{this.active}} {{this.dimmed}}" aria-current="{{this.current}}"
+                onclick="on_click(this)">
                 {{this.exercise}}</li>
             {{/each}}
         </ul>
@@ -64,6 +67,7 @@
 
         <!-- hidden input used to submit exercises -->
         <input type="text" name="exercises" id="exercises-btn" value="" hidden></input>
+        <input type="text" name="disabled" id="disabled-btn" value="" hidden></input>
 
         <div class="form-group mt-4">
             <div class="row justify-content-evenly">
