@@ -104,7 +104,6 @@ struct ExData {
     reps_title: String,     // "8 reps"
     rep_items: Vec<RepItem>,
     notes: String,
-    exercise_type: String, // "Durations", "Fixed Reps", etc
     edit_weight_url: String,
     edit_exercise_url: String,
 }
@@ -244,7 +243,6 @@ impl ExData {
             reps_title,
             rep_items,
             notes,
-            exercise_type: "Durations".to_owned(),
             edit_weight_url,
             edit_exercise_url,
         }
@@ -336,7 +334,6 @@ impl ExData {
             reps_title,
             rep_items,
             notes,
-            exercise_type: "Fixed Reps".to_owned(),
             edit_weight_url,
             edit_exercise_url,
         }
@@ -450,7 +447,6 @@ impl ExData {
             reps_title,
             rep_items,
             notes,
-            exercise_type: "Variable Sets".to_owned(),
             edit_weight_url,
             edit_exercise_url,
         }
@@ -567,7 +563,6 @@ impl ExData {
             reps_title,
             rep_items,
             notes,
-            exercise_type: "Variable Reps".to_owned(),
             edit_weight_url,
             edit_exercise_url,
         }

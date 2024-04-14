@@ -88,7 +88,7 @@ impl Weight {
 pub enum WeightSet {
     /// Used for stuff like dumbbells and cable machines. Weights should be sorted from
     /// smallest to largest.
-    Discrete(Vec<f32>), // TODO: support extra weights, eg magnets for dumbbells
+    Discrete(Vec<f32>), // TODO: support extra weights, eg magnets for dumbbells, maybe allow user to name them "magnet" or whatever
 
     /// Used for stuff like barbell exercises and leg presses. Plates are added in pairs.
     /// Includes an optional bar weight. Plates should be sorted from smallest to largest.
