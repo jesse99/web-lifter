@@ -233,6 +233,17 @@ impl Exercise {
         }
     }
 
+    pub fn try_set_formal_name(&mut self, name: &str) -> Result<(), ValidationError> {
+        self.validate_formal_name(name)?;
+        self.do_set_formal_name(name);
+        Ok(())
+    }
+
+    // pub fn set_formal_name(&mut self, name: &str) {
+    //     assert!(self.validate_formal_name(name).is_ok());
+    //     self.do_set_formal_name(name);
+    // }
+
     pub fn try_set_weight(&mut self, weight: Option<f32>) -> Result<(), ValidationError> {
         self.validate_weight(weight)?;
         self.do_set_weight(weight);
@@ -324,6 +335,21 @@ impl Exercise {
             Exercise::FixedReps(d, _) => (d.weight, &d.weightset),
             Exercise::VariableReps(d, _) => (d.weight, &d.weightset),
             Exercise::VariableSets(d, _) => (d.weight, &d.weightset),
+        }
+    }
+
+    fn validate_formal_name(&self, _name: &str) -> Result<(), ValidationError> {
+        // Empty is OK. Weird stuff is, more or less fine, too for custom notes.
+        Ok(())
+    }
+
+    fn do_set_formal_name(&mut self, name: &str) {
+        let name = FormalName(name.to_owned());
+        match self {
+            Exercise::Durations(d, _) => d.formal_name = name,
+            Exercise::FixedReps(d, _) => d.formal_name = name,
+            Exercise::VariableReps(d, _) => d.formal_name = name,
+            Exercise::VariableSets(d, _) => d.formal_name = name,
         }
     }
 

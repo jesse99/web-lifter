@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use serde::{Serialize, Deserialize};
 use super::exercise::FormalName;
 
@@ -16,6 +16,18 @@ impl Notes {
             defaults: get_default_markup(),
             custom: HashMap::new(),
         }
+    }
+
+    /// Returns sorted list of standard and custom notes.
+    pub fn names(&self) -> Vec<&FormalName> {
+        let mut temp = HashSet::with_capacity(self.defaults.len() + self.custom.len());
+        temp.extend(self.defaults.keys());
+        temp.extend(self.custom.keys());
+
+        let mut names: Vec<_> = temp.iter().copied().collect();
+        names.sort();
+
+        names
     }
 
     pub fn set_markdown(&mut self, name: FormalName, markdown: String) {

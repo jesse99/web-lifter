@@ -1,9 +1,4 @@
-use crate::{
-    exercise::ExerciseName,
-    pages::SharedState,
-    program::Program,
-    weights::{self, Weights},
-};
+use crate::pages::SharedState;
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
@@ -44,34 +39,5 @@ impl EditNameData {
             help,
             value,
         })
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-struct WeightData {
-    weight: String,
-    selected: String,
-}
-
-impl WeightData {
-    fn new(weight: f32) -> WeightData {
-        WeightData {
-            weight: weights::format_weight(weight, " lbs"),
-            selected: "".to_owned(),
-        }
-    }
-
-    fn none() -> WeightData {
-        WeightData {
-            weight: "None".to_owned(),
-            selected: "".to_owned(),
-        }
-    }
-
-    fn selected(weight: f32) -> WeightData {
-        WeightData {
-            weight: weights::format_weight(weight, " lbs"),
-            selected: "selected".to_owned(),
-        }
     }
 }
