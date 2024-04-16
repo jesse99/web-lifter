@@ -35,7 +35,6 @@ pub struct FormalName(pub String);
 pub enum SetIndex {
     Warmup(usize),
     Workset(usize),
-    // Backoff(usize),
 }
 
 impl SetIndex {
@@ -50,6 +49,7 @@ impl SetIndex {
 /// State shared across exercise types.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ExerciseData {
+    // if this (or an exercise) changes then may need to update overview page
     pub name: ExerciseName,
     pub formal_name: FormalName,
     pub started: Option<DateTime<Local>>,

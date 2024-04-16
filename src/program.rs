@@ -185,6 +185,19 @@ impl Program {
         self.do_add_workout(workout);
     }
 
+    pub fn blocks(&self) -> impl Iterator<Item = &Block> + '_ {
+        self.blocks.iter()
+    }
+
+    pub fn current_block(&self) -> Option<(usize, &Block)> {
+        if let Some(blocks_start) = self.blocks_start {
+            let (i, _) = find_active(blocks_start, &self.blocks, Local::now());
+            Some((i + 1, &self.blocks[i]))
+        } else {
+            None
+        }
+    }
+
     pub fn workouts(&self) -> impl Iterator<Item = &Workout> + '_ {
         self.workouts.iter()
     }
@@ -202,26 +215,6 @@ impl Program {
     }
 
     fn block_schedule_from(&self, now: DateTime<Local>) -> BlockSchedule {
-        fn find_active(
-            blocks_start: DateTime<Local>,
-            blocks: &Vec<Block>,
-            now: DateTime<Local>,
-        ) -> (usize, DateTime<Local>) {
-            let mut block_start = blocks_start; // TODO should we bump this forward in fixup?
-            loop {
-                // loop because blocks_start might be way in the past
-                assert!(blocks_start.weekday() == Weekday::Mon);
-                for (i, block) in blocks.iter().enumerate() {
-                    assert!(block.num_weeks > 0);
-                    let block_end = block_start + Duration::weeks(block.num_weeks as i64);
-                    if block_start <= now && now < block_end {
-                        return (i, block_start);
-                    }
-                    block_start = block_end;
-                }
-            }
-        }
-
         if self.blocks_start.is_none() || self.blocks.is_empty() {
             return BlockSchedule { spans: vec![] };
         }
@@ -268,5 +261,25 @@ impl Program {
 
     fn do_add_workout(&mut self, workout: Workout) {
         self.workouts.push(workout);
+    }
+}
+
+fn find_active(
+    blocks_start: DateTime<Local>,
+    blocks: &Vec<Block>,
+    now: DateTime<Local>,
+) -> (usize, DateTime<Local>) {
+    let mut block_start = blocks_start; // TODO should we bump this forward in fixup?
+    loop {
+        // loop because blocks_start might be way in the past
+        assert!(blocks_start.weekday() == Weekday::Mon);
+        for (i, block) in blocks.iter().enumerate() {
+            assert!(block.num_weeks > 0);
+            let block_end = block_start + Duration::weeks(block.num_weeks as i64);
+            if block_start <= now && now < block_end {
+                return (i, block_start);
+            }
+            block_start = block_end;
+        }
     }
 }
