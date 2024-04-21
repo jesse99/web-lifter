@@ -9,6 +9,7 @@ axum = { version = "0.7", features = ["form", "query"] }            # web backen
 chrono = { version = "0.4", features = ["serde"] }                  # date and time
 dirs = "5.0"                                                        # system paths
 handlebars = "5.1"                                                  # template implementation
+html_tag = "0.1"                                                    # build HTML
 markdown = "0.3"                                                    # markdown to html
 serde = { version = "1.0", features = ["derive"] }                  # serialization
 serde_json = { version = "1.0", features = ["std"] }                # json serialization
