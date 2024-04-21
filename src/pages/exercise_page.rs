@@ -4,7 +4,7 @@ use crate::{
     notes::Notes,
     pages::{self, SharedState},
     program::Program,
-    weights::{self, Weights},
+    weights::{self, WeightSet, Weights},
     workout::Workout,
 };
 use anyhow::Context;
@@ -42,7 +42,17 @@ pub fn get_exercise_page(
     let exercise = workout
         .find(&exercise_name)
         .context("failed to find exercise")?;
-    let data = ExData::new(weights, notes, history, program, workout, exercise);
+    let untyped = UntypedData::new(history, exercise);
+    let data = ExData::new(
+        history,
+        notes,
+        weights,
+        program,
+        workout,
+        exercise,
+        exercise.data(),
+        untyped,
+    );
     Ok(handlebars
         .render_template(template, &data)
         .context("failed to render template")?)
@@ -85,30 +95,405 @@ struct RepItem {
     pub title: String,  // "4 reps"
 }
 
+enum UntypedReps {
+    Reps { min: i32, max: i32, unbounded: bool },
+    Wait(i32),
+}
+
+// Uses for var reps and var sets.
+struct Target {
+    expected: VariableReps,
+    new_reps: bool,
+    reached_target: bool,
+}
+
+// Allows ExData::new to avoid matching on Exercise.
+struct UntypedData {
+    kind: String,
+    num_warmups: usize,
+    num_worksets: usize,
+    variable_sets: bool,
+    reps: UntypedReps,
+    target: Option<Target>,
+    weight_details_suffix: String,
+}
+
+impl UntypedData {
+    fn new(history: &History, exercise: &Exercise) -> UntypedData {
+        let d = exercise.data();
+        let kind = match exercise {
+            Exercise::Durations(_, _) => "durations".to_owned(),
+            Exercise::FixedReps(_, _) => "fixed-reps".to_owned(),
+            Exercise::VariableReps(_, _) => "var-reps".to_owned(),
+            Exercise::VariableSets(_, _) => "var-sets".to_owned(),
+        };
+        let num_warmups = match exercise {
+            Exercise::Durations(_, _) => 0,
+            Exercise::FixedReps(_, e) => e.num_warmups(),
+            Exercise::VariableReps(_, e) => e.num_warmups(),
+            Exercise::VariableSets(_, _) => 0,
+        };
+        let num_worksets = match exercise {
+            Exercise::Durations(_, e) => e.num_sets(),
+            Exercise::FixedReps(_, e) => e.num_worksets(),
+            Exercise::VariableReps(_, e) => e.num_worksets(),
+            Exercise::VariableSets(_, e) => e.get_previous().len(),
+        };
+        let variable_sets = match exercise {
+            Exercise::VariableSets(_, _) => true,
+            _ => false,
+        };
+        let reps = match exercise {
+            Exercise::Durations(_, e) => UntypedReps::Wait(e.set(d.current_index)),
+            Exercise::FixedReps(_, e) => UntypedReps::Reps {
+                min: e.set(d.current_index).reps,
+                max: e.set(d.current_index).reps,
+                unbounded: false,
+            },
+            Exercise::VariableReps(_, e) => {
+                let range = e.expected_range(d.current_index);
+                UntypedReps::Reps {
+                    min: range.min,
+                    max: range.max,
+                    unbounded: false,
+                }
+            }
+            Exercise::VariableSets(_, e) => {
+                let previous = e.previous(d.current_index);
+                let done: i32 = if d.current_index.index() > 0 {
+                    get_var_reps_done(history, exercise.name()).iter().sum()
+                } else {
+                    0
+                };
+                let remaining = if done < e.target() {
+                    e.target() - done
+                } else {
+                    0
+                };
+                if d.finished {
+                    UntypedReps::Reps {
+                        min: 0,
+                        max: 0,
+                        unbounded: true,
+                    }
+                } else if previous == 0 {
+                    UntypedReps::Reps {
+                        min: remaining,
+                        max: remaining,
+                        unbounded: true,
+                    }
+                } else if previous < remaining {
+                    UntypedReps::Reps {
+                        min: previous,
+                        max: previous,
+                        unbounded: true,
+                    }
+                } else if previous == remaining {
+                    UntypedReps::Reps {
+                        min: remaining,
+                        max: remaining,
+                        unbounded: false, // sic
+                    }
+                } else {
+                    UntypedReps::Reps {
+                        min: remaining,
+                        max: remaining,
+                        unbounded: true,
+                    }
+                }
+            }
+        };
+        let target = match exercise {
+            Exercise::Durations(_, _) => None,
+            Exercise::FixedReps(_, _) => None,
+            Exercise::VariableReps(_, e) => {
+                let reps = get_var_reps_done(history, exercise.name());
+                Some(Target {
+                    expected: e.expected_range(d.current_index),
+                    new_reps: reps != *e.expected(),
+                    reached_target: reps >= e.max_expected(),
+                })
+            }
+            Exercise::VariableSets(_, e) => {
+                let previous = e.previous(d.current_index);
+                let done: i32 = if d.current_index.index() > 0 {
+                    get_var_reps_done(history, exercise.name()).iter().sum()
+                } else {
+                    0
+                };
+                let remaining = if done < e.target() {
+                    e.target() - done
+                } else {
+                    0
+                };
+                let (expected, max) = if previous > 0 {
+                    (previous, previous + 5)
+                } else if remaining < 5 {
+                    (remaining, remaining + 5)
+                } else {
+                    (5, 12)
+                };
+
+                let reps = get_var_reps_done(history, exercise.name());
+                Some(Target {
+                    expected: VariableReps::new(expected, max, 100),
+                    new_reps: reps != *e.get_previous(),
+                    reached_target: done >= e.target(),
+                })
+            }
+        };
+        let weight_details_suffix = match exercise {
+            Exercise::Durations(_, e) => e
+                .target()
+                .map(|t| format!("target is {t}s"))
+                .unwrap_or("".to_owned()),
+            _ => "".to_owned(),
+        };
+
+        UntypedData {
+            kind,
+            num_warmups,
+            num_worksets,
+            variable_sets,
+            reps,
+            target,
+            weight_details_suffix,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 struct ExData {
-    workout: String,              // "Full Body Exercises"
-    exercise: String,             // "RDL"
+    workout: String,  // "Full Body Exercises"
+    exercise: String, // "RDL"
+    rest: String,     // "" or "30" (seconds)
+    records: Vec<ExerciseDataRecord>,
+    notes: String,
+    edit_weight_url: String,
+    disable_edit_weight_set: String,
+    edit_weight_set_url: String,
+
     exercise_set: String,         // "Set 1 of 3"
     exercise_set_details: String, // "8 reps @ 145 lbs"
     weight_details: String,       // "45 + 10 + 5"
     wait: String,                 // "" or "30" (seconds), this is for durations type exercises
-    rest: String,                 // "" or "30" (seconds)
     button_title: String,         // "Next", "Start", "Done", "Exit", etc
-    records: Vec<ExerciseDataRecord>,
-    hide_reps: String,      // "hidden" or ""
-    update_hidden: String,  // "hidden" or ""
-    advance_hidden: String, // "hidden" or ""
-    update_value: String,   // "1" or "0"
-    advance_value: String,  // "1" or "0"
-    reps_title: String,     // "8 reps"
+    hide_reps: String,            // "hidden" or ""
+    update_hidden: String,        // "hidden" or ""
+    advance_hidden: String,       // "hidden" or ""
+    update_value: String,         // "1" or "0"
+    advance_value: String,        // "1" or "0"
+    reps_title: String,           // "8 reps"
     rep_items: Vec<RepItem>,
-    notes: String,
-    edit_weight_url: String,
     edit_exercise_url: String,
 }
 
 impl ExData {
+    fn new(
+        history: &History,
+        notes: &Notes,
+        weights: &Weights,
+        program: &Program,
+        workout: &Workout,
+        exercise: &Exercise,
+        d: &ExerciseData,
+        data: UntypedData,
+    ) -> ExData {
+        // Below is common to all exercise types.
+        let rest = if d.finished {
+            "0".to_owned()
+        } else {
+            match d.current_index {
+                SetIndex::Warmup(_) => "0".to_owned(),
+                SetIndex::Workset(_) => exercise
+                    .rest(d.current_index)
+                    .map_or("0".to_owned(), |r| format!("{r}")),
+            }
+        };
+        let records = ExData::get_records(history, program, workout, exercise);
+        let notes = notes.html(&d.formal_name);
+        let edit_weight_url = if d.weightset.is_some() {
+            format!("/edit-weight/{}/{}", workout.name, exercise.name())
+        } else {
+            format!("/edit-any-weight/{}/{}", workout.name, exercise.name())
+        };
+        let (disable_edit_weight_set, edit_weight_set_url) = if let Some(name) = &d.weightset {
+            match weights.get(&name) {
+                Some(WeightSet::Discrete(_)) => (
+                    "".to_owned(),
+                    format!("/edit-discrete-weight/{}/{}", workout.name, exercise.name()),
+                ),
+                Some(WeightSet::DualPlates(_, _)) => (
+                    "".to_owned(),
+                    format!("/edit-plates-weight/{}/{}", workout.name, exercise.name()),
+                ),
+                None => ("disabled".to_owned(), "#".to_owned()),
+            }
+        } else {
+            ("disabled".to_owned(), "#".to_owned())
+        };
+
+        // Below depends on the exercise type.
+        let exercise_set = if data.variable_sets {
+            if data.num_worksets > 0 && !d.finished {
+                format!(
+                    "Set {} of {}+",
+                    d.current_index.index() + 1,
+                    data.num_worksets
+                )
+            } else {
+                format!("Set {}", d.current_index.index() + 1,)
+            }
+        } else if data.num_warmups > 0 {
+            match d.current_index {
+                SetIndex::Warmup(i) => format!("Warmup {} of {}", i + 1, data.num_warmups),
+                SetIndex::Workset(i) => {
+                    format!("Workset {} of {}", i + 1, data.num_worksets)
+                }
+            }
+        } else {
+            format!(
+                "Set {} of {}",
+                d.current_index.index() + 1,
+                data.num_worksets
+            )
+        };
+
+        let w = match d.current_index {
+            SetIndex::Warmup(_) => exercise.closest_weight(weights, d.current_index),
+            SetIndex::Workset(_) => exercise.lower_weight(weights, d.current_index),
+        };
+        let suffix = w
+            .clone()
+            .map_or("".to_owned(), |w| format!(" @ {}", w.text()));
+        let exercise_set_details = match data.reps {
+            UntypedReps::Reps {
+                min,
+                max,
+                unbounded,
+            } => {
+                if unbounded {
+                    format!("{max}+ reps{suffix}")
+                } else if min < max {
+                    format!("{min}-{max} reps{suffix}")
+                } else if max == 1 {
+                    format!("1 rep{suffix}")
+                } else {
+                    format!("{max} reps{suffix}")
+                }
+            }
+            UntypedReps::Wait(w) => format!("{w}s{suffix}"),
+        };
+
+        let wdetails = w
+            .clone()
+            .map(|w| w.details())
+            .flatten()
+            .unwrap_or("".to_owned());
+        let weight_details = if data.weight_details_suffix.is_empty() {
+            wdetails
+        } else {
+            format!("{wdetails} ({})", data.weight_details_suffix) // kinda lame formatting (tho this will likely be rare)
+        };
+
+        let wait = match data.reps {
+            UntypedReps::Wait(w) => {
+                if d.finished {
+                    "0".to_owned()
+                } else {
+                    format!("{w}")
+                }
+            }
+            _ => "0".to_owned(),
+        };
+
+        let button_title = if d.finished {
+            "Exit".to_owned()
+        } else {
+            match data.reps {
+                UntypedReps::Wait(_) => "Start".to_owned(),
+                _ => {
+                    if data.variable_sets {
+                        "Next".to_owned()
+                    } else {
+                        match d.current_index {
+                            SetIndex::Warmup(_) => "Next".to_owned(),
+                            SetIndex::Workset(i) => {
+                                if i + 1 < data.num_worksets {
+                                    "Next".to_owned()
+                                } else {
+                                    "Done".to_owned()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        let edit_exercise_url = format!("/edit-{}/{}/{}", data.kind, workout.name, exercise.name());
+
+        let mut hide_reps = "hidden".to_owned();
+        let mut reps_title = "".to_owned();
+        let mut rep_items = Vec::new();
+        let mut update_hidden = "hidden".to_owned();
+        let mut update_value = "0".to_owned();
+        let mut advance_hidden = "hidden".to_owned();
+        let mut advance_value = "0".to_owned();
+        if let Some(target) = data.target {
+            let in_workset = if let SetIndex::Workset(_) = d.current_index {
+                true
+            } else {
+                false
+            };
+            hide_reps = if d.finished || !in_workset {
+                "hidden".to_owned()
+            } else {
+                "".to_owned()
+            };
+            reps_title = reps_to_title(target.expected.min);
+            rep_items = reps_to_vec(target.expected);
+
+            (update_hidden, update_value) = if d.finished && target.new_reps {
+                ("".to_owned(), "1".to_owned())
+            } else {
+                ("hidden".to_owned(), "0".to_owned())
+            };
+
+            (advance_hidden, advance_value) = if d.finished && w.is_some() && target.reached_target
+            {
+                ("".to_owned(), "0".to_owned())
+            } else {
+                ("hidden".to_owned(), "0".to_owned())
+            };
+        }
+
+        ExData {
+            workout: workout.name.clone(),
+            exercise: exercise.name().0.clone(),
+            rest,
+            records,
+            notes,
+            edit_weight_url,
+            disable_edit_weight_set,
+            edit_weight_set_url,
+
+            exercise_set,
+            exercise_set_details,
+            weight_details,
+            wait,
+            button_title,
+            edit_exercise_url,
+
+            hide_reps,
+            update_hidden,
+            advance_hidden,
+            update_value,
+            advance_value,
+            reps_title,
+            rep_items,
+        }
+    }
+
     fn get_records(
         history: &History,
         program: &Program,
@@ -132,464 +517,6 @@ impl ExData {
             .enumerate()
             .map(|(i, r)| record_to_record(get_delta(&records, i), r, i == 0 && in_progress))
             .collect()
-    }
-
-    fn common(
-        workout: &Workout,
-        exercise: &Exercise,
-        d: &ExerciseData,
-    ) -> (String, String, String) {
-        let rest = if d.finished {
-            "0".to_owned()
-        } else {
-            match d.current_index {
-                SetIndex::Warmup(_) => "0".to_owned(),
-                SetIndex::Workset(_) => exercise
-                    .rest(d.current_index)
-                    .map_or("0".to_owned(), |r| format!("{r}")),
-            }
-        };
-
-        let workout_name = url_escape::encode_path(&workout.name);
-        let exercise_name = url_escape::encode_path(&exercise.name().0);
-        let edit_weight_url = if d.weightset.is_some() {
-            format!("/edit-weight/{workout_name}/{exercise_name}")
-        } else {
-            format!("/edit-any-weight/{workout_name}/{exercise_name}")
-        };
-
-        let edit_exercise_url = match exercise {
-            Exercise::Durations(_, _) => format!("/edit-durations/{workout_name}/{exercise_name}"),
-            Exercise::FixedReps(_, _) => format!("/edit-fixed-reps/{workout_name}/{exercise_name}"),
-            Exercise::VariableReps(_, _) => {
-                format!("/edit-var-reps/{workout_name}/{exercise_name}")
-            }
-            Exercise::VariableSets(_, _) => {
-                format!("/edit-var-sets/{workout_name}/{exercise_name}")
-            }
-        };
-
-        (rest, edit_weight_url, edit_exercise_url)
-    }
-
-    fn with_durations(
-        weights: &Weights,
-        notes: &Notes,
-        history: &History,
-        program: &Program,
-        workout: &Workout,
-        exercise: &Exercise,
-    ) -> ExData {
-        let (d, e) = exercise.expect_durations();
-        let exercise_set = format!("Set {} of {}", d.current_index.index() + 1, e.num_sets());
-
-        let w = exercise.closest_weight(weights, d.current_index);
-        let suffix = w
-            .clone()
-            .map_or("".to_owned(), |w| format!(" @ {}", w.text()));
-        let exercise_set_details = format!("{}s{suffix}", e.set(d.current_index));
-
-        let wdetails = w.map(|w| w.details()).flatten().unwrap_or("".to_owned());
-        let tdetails = e
-            .target()
-            .map(|t| format!("target is {t}s"))
-            .unwrap_or("".to_owned());
-        let weight_details = if wdetails.is_empty() {
-            tdetails
-        } else {
-            format!("{wdetails} ({tdetails})") // kinda lame formatting (tho this will likely be rare)
-        };
-
-        let wait = if d.finished {
-            "0".to_owned()
-        } else {
-            format!("{}", e.set(d.current_index))
-        };
-        let (rest, edit_weight_url, edit_exercise_url) = ExData::common(workout, exercise, d);
-        let records = ExData::get_records(history, program, workout, exercise);
-        let button_title = if d.finished {
-            "Exit".to_owned()
-        } else {
-            "Start".to_owned()
-        };
-
-        let notes = notes.html(&d.formal_name);
-
-        let hide_reps = "hidden".to_owned(); // these are all for var reps exercises
-        let update_hidden = "hidden".to_owned();
-        let advance_hidden = "hidden".to_owned();
-        let update_value = "0".to_owned();
-        let advance_value = "0".to_owned();
-        let reps_title = "".to_owned();
-        let rep_items = Vec::new();
-
-        let workout = workout.name.clone();
-        let exercise = exercise.name().0.clone();
-        ExData {
-            workout,
-            exercise,
-            exercise_set,
-            exercise_set_details,
-            weight_details,
-            wait,
-            rest,
-            records,
-            button_title,
-            hide_reps,
-            update_hidden,
-            advance_hidden,
-            update_value,
-            advance_value,
-            reps_title,
-            rep_items,
-            notes,
-            edit_weight_url,
-            edit_exercise_url,
-        }
-    }
-
-    fn with_fixed_reps(
-        weights: &Weights,
-        notes: &Notes,
-        history: &History,
-        program: &Program,
-        workout: &Workout,
-        exercise: &Exercise,
-    ) -> ExData {
-        let (d, e) = exercise.expect_fixed_reps();
-        let exercise_set = if e.num_warmups() > 0 {
-            match d.current_index {
-                SetIndex::Warmup(i) => format!("Warmup {} of {}", i + 1, e.num_warmups()),
-                SetIndex::Workset(i) => format!("Workset {} of {}", i + 1, e.num_worksets()),
-            }
-        } else {
-            format!(
-                "Set {} of {}",
-                d.current_index.index() + 1,
-                e.num_worksets()
-            )
-        };
-
-        let w = match d.current_index {
-            SetIndex::Warmup(_) => exercise.closest_weight(weights, d.current_index),
-            SetIndex::Workset(_) => exercise.lower_weight(weights, d.current_index),
-        };
-        let suffix = w
-            .clone()
-            .map_or("".to_owned(), |w| format!(" @ {}", w.text()));
-        let reps = e.set(d.current_index).reps;
-        let reps = if reps == 1 {
-            "1 rep".to_owned()
-        } else {
-            format!("{reps} reps")
-        };
-        let exercise_set_details = format!("{reps}{suffix}");
-        let weight_details = w.map(|w| w.details()).flatten().unwrap_or("".to_owned());
-
-        let wait = "0".to_owned(); // for durations
-        let (rest, edit_weight_url, edit_exercise_url) = ExData::common(workout, exercise, d);
-        let records = ExData::get_records(history, program, workout, exercise);
-        let button_title = if d.finished {
-            "Exit".to_owned()
-        } else {
-            match d.current_index {
-                SetIndex::Warmup(_) => "Next".to_owned(),
-                SetIndex::Workset(i) => {
-                    if i + 1 < e.num_worksets() {
-                        "Next".to_owned()
-                    } else {
-                        "Done".to_owned()
-                    }
-                }
-            }
-        };
-
-        let notes = notes.html(&d.formal_name);
-
-        let hide_reps = "hidden".to_owned(); // these are all for var reps exercises
-        let update_hidden = "hidden".to_owned();
-        let advance_hidden = "hidden".to_owned();
-        let update_value = "0".to_owned();
-        let advance_value = "0".to_owned();
-        let reps_title = "".to_owned();
-        let rep_items = Vec::new();
-
-        let workout = workout.name.clone();
-        let exercise = exercise.name().0.clone();
-        ExData {
-            workout,
-            exercise,
-            exercise_set,
-            exercise_set_details,
-            weight_details,
-            wait,
-            rest,
-            records,
-            button_title,
-            hide_reps,
-            update_hidden,
-            advance_hidden,
-            update_value,
-            advance_value,
-            reps_title,
-            rep_items,
-            notes,
-            edit_weight_url,
-            edit_exercise_url,
-        }
-    }
-
-    fn with_var_sets(
-        weights: &Weights,
-        notes: &Notes,
-        history: &History,
-        program: &Program,
-        workout: &Workout,
-        exercise: &Exercise,
-    ) -> ExData {
-        let (d, e) = exercise.expect_var_sets();
-        let num_sets = e.get_previous().len();
-        let exercise_set = if num_sets > 0 && !d.finished {
-            format!("Set {} of {}+", d.current_index.index() + 1, num_sets)
-        } else {
-            format!("Set {}", d.current_index.index() + 1,)
-        };
-
-        let w = exercise.lower_weight(weights, d.current_index);
-        let suffix = w
-            .clone()
-            .map_or("".to_owned(), |w| format!(" @ {}", w.text()));
-
-        let done: i32 = if d.current_index.index() > 0 {
-            get_var_reps_done(history, exercise.name()).iter().sum()
-        } else {
-            0
-        };
-        let remaining = if done < e.target() {
-            e.target() - done
-        } else {
-            0
-        };
-        let previous = e.previous(d.current_index);
-        let exercise_set_details = if d.finished {
-            "".to_owned()
-        } else if previous == 0 {
-            format!("{}+ reps{suffix}", remaining)
-        } else if previous < remaining {
-            format!("{}+ reps{suffix}", previous)
-        } else if previous == remaining {
-            format!("{} reps{suffix}", remaining)
-        } else {
-            format!("{}+ reps{suffix}", remaining)
-        };
-        let weight_details = w
-            .clone()
-            .map(|w| w.details())
-            .flatten()
-            .unwrap_or("".to_owned());
-
-        let wait = "0".to_owned(); // for durations
-        let (rest, edit_weight_url, edit_exercise_url) = ExData::common(workout, exercise, d);
-        let records = ExData::get_records(history, program, workout, exercise);
-        let button_title = if d.finished {
-            "Exit".to_owned()
-        } else {
-            "Next".to_owned()
-        };
-
-        let notes = notes.html(&d.formal_name);
-
-        let hide_reps = if d.finished {
-            "hidden".to_owned()
-        } else {
-            "".to_owned()
-        };
-        let (expected, max) = if previous > 0 {
-            (previous, previous + 5)
-        } else if remaining < 5 {
-            (remaining, remaining + 5)
-        } else {
-            (5, 12)
-        };
-        let reps_title = reps_to_title(expected);
-        let rep_items = reps_to_vec(VariableReps::new(expected, max, 100));
-
-        let reps = get_var_reps_done(history, exercise.name());
-        let (update_hidden, update_value) = if d.finished && reps != *e.get_previous() {
-            ("".to_owned(), "1".to_owned())
-        } else {
-            ("hidden".to_owned(), "0".to_owned())
-        };
-
-        let (advance_hidden, advance_value) = if d.finished && w.is_some() && done >= e.target() {
-            ("".to_owned(), "0".to_owned())
-        } else {
-            ("hidden".to_owned(), "0".to_owned())
-        };
-
-        let workout = workout.name.clone();
-        let exercise = exercise.name().0.clone();
-        ExData {
-            workout,
-            exercise,
-            exercise_set,
-            exercise_set_details,
-            weight_details,
-            wait,
-            rest,
-            records,
-            button_title,
-            hide_reps,
-            update_hidden,
-            advance_hidden,
-            update_value,
-            advance_value,
-            reps_title,
-            rep_items,
-            notes,
-            edit_weight_url,
-            edit_exercise_url,
-        }
-    }
-
-    fn with_var_reps(
-        weights: &Weights,
-        notes: &Notes,
-        history: &History,
-        program: &Program,
-        workout: &Workout,
-        exercise: &Exercise,
-    ) -> ExData {
-        let (d, e) = exercise.expect_var_reps();
-        let exercise_set = if e.num_warmups() > 0 {
-            match d.current_index {
-                SetIndex::Warmup(i) => format!("Warmup {} of {}", i + 1, e.num_warmups()),
-                SetIndex::Workset(i) => format!("Workset {} of {}", i + 1, e.num_worksets()),
-            }
-        } else {
-            format!(
-                "Set {} of {}",
-                d.current_index.index() + 1,
-                e.num_worksets()
-            )
-        };
-
-        let w = match d.current_index {
-            SetIndex::Warmup(_) => exercise.closest_weight(weights, d.current_index),
-            SetIndex::Workset(_) => exercise.lower_weight(weights, d.current_index),
-        };
-        let suffix = w
-            .clone()
-            .map_or("".to_owned(), |w| format!(" @ {}", w.text()));
-        let exercise_set_details = {
-            let range = e.expected_range(d.current_index);
-            if range.min < range.max {
-                format!("{}-{} reps{suffix}", range.min, range.max)
-            } else {
-                format!("{} reps{suffix}", range.max)
-            }
-        };
-        let weight_details = w
-            .clone()
-            .map(|w| w.details())
-            .flatten()
-            .unwrap_or("".to_owned());
-
-        let wait = "0".to_owned(); // for durations
-        let (rest, edit_weight_url, edit_exercise_url) = ExData::common(workout, exercise, d);
-        let records = ExData::get_records(history, program, workout, exercise);
-        let button_title = if d.finished {
-            "Exit".to_owned()
-        } else {
-            match d.current_index {
-                SetIndex::Warmup(_) => "Next".to_owned(),
-                SetIndex::Workset(i) => {
-                    if i + 1 < e.num_worksets() {
-                        "Next".to_owned()
-                    } else {
-                        "Done".to_owned()
-                    }
-                }
-            }
-        };
-
-        let notes = notes.html(&d.formal_name);
-
-        let in_workset = if let SetIndex::Workset(_) = d.current_index {
-            true
-        } else {
-            false
-        };
-        let hide_reps = if d.finished || !in_workset {
-            "hidden".to_owned()
-        } else {
-            "".to_owned()
-        };
-        let expected = e.expected_range(d.current_index);
-        let reps_title = reps_to_title(expected.min);
-        let rep_items = reps_to_vec(expected);
-
-        let reps = get_var_reps_done(history, exercise.name());
-        let (update_hidden, update_value) = if d.finished && reps != *e.expected() {
-            ("".to_owned(), "1".to_owned())
-        } else {
-            ("hidden".to_owned(), "0".to_owned())
-        };
-
-        let (advance_hidden, advance_value) =
-            if d.finished && w.is_some() && reps >= e.max_expected() {
-                ("".to_owned(), "0".to_owned())
-            } else {
-                ("hidden".to_owned(), "0".to_owned())
-            };
-
-        let workout = workout.name.clone();
-        let exercise = exercise.name().0.clone();
-        ExData {
-            workout,
-            exercise,
-            exercise_set,
-            exercise_set_details,
-            weight_details,
-            wait,
-            rest,
-            records,
-            button_title,
-            hide_reps,
-            update_hidden,
-            advance_hidden,
-            update_value,
-            advance_value,
-            reps_title,
-            rep_items,
-            notes,
-            edit_weight_url,
-            edit_exercise_url,
-        }
-    }
-
-    fn new(
-        weights: &Weights,
-        notes: &Notes,
-        history: &History,
-        program: &Program,
-        workout: &Workout,
-        exercise: &Exercise,
-    ) -> ExData {
-        match exercise {
-            Exercise::Durations(_, _) => {
-                ExData::with_durations(weights, notes, history, program, workout, exercise)
-            }
-            Exercise::FixedReps(_, _) => {
-                ExData::with_fixed_reps(weights, notes, history, program, workout, exercise)
-            }
-            Exercise::VariableReps(_, _) => {
-                ExData::with_var_reps(weights, notes, history, program, workout, exercise)
-            }
-            Exercise::VariableSets(_, _) => {
-                ExData::with_var_sets(weights, notes, history, program, workout, exercise)
-            }
-        }
     }
 }
 

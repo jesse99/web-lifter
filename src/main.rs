@@ -37,6 +37,14 @@ async fn main() {
     let app = Router::new()
         // data --------------------------------------------------------------------------
         .route(
+            "/scripts/current.js",
+            get(|s| get_js(s, include_str!("../files/current.js"))),
+        )
+        .route(
+            "/scripts/discrete.js",
+            get(|s| get_js(s, include_str!("../files/discrete.js"))),
+        )
+        .route(
             "/scripts/exercise.js",
             get(|s| get_js(s, include_str!("../files/exercise.js"))),
         )
@@ -77,6 +85,10 @@ async fn main() {
             "/edit-any-weight/:workout/:exercise",
             get(get_edit_any_weight),
         )
+        // .route(
+        //     "/edit-discrete-weight/:workout/:exercise",
+        //     get(get_edit_discrete_weight),
+        // )
         .route(
             "/edit-durations/:workout/:exercise",
             get(get_edit_durations),
@@ -97,6 +109,7 @@ async fn main() {
             "/edit-reps-record/:workout/:exercise/:id",
             get(get_edit_reps_record),
         )
+        .route("/edit-current-set/:workout/:exercise", get(get_current_set))
         // post --------------------------------------------------------------------------
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
         .route(
@@ -114,6 +127,10 @@ async fn main() {
         .route("/set-weight/:workout/:exercise", post(post_set_weight))
         .route("/revert-note/:workout/:exercise", post(post_revert_note))
         .route("/set-note/:workout/:exercise", post(post_set_note))
+        .route(
+            "/set-current-set/:workout/:exercise",
+            post(post_set_current_set),
+        )
         .route(
             "/set-durations/:workout/:exercise",
             post(post_set_durations),
@@ -353,6 +370,20 @@ async fn get_edit_note(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_note_page(state, &workout, &exercise)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_current_set(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_current_set_page(state, &workout, &exercise)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -689,6 +720,28 @@ async fn post_set_any_weight(
     headers.insert("Expires", "0".parse().unwrap());
     headers.insert("Location", new_url.path().parse().unwrap());
     // Ok((StatusCode::BAD_REQUEST, "Weight has to be less than 20.0"))
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetCurrentSet {
+    sets: String,
+}
+
+async fn post_set_current_set(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetCurrentSet>,
+) -> Result<impl IntoResponse, AppError> {
+    let new_url = pages::post_set_current_set(state, &workout, &exercise, payload.sets)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
     Ok((StatusCode::SEE_OTHER, headers))
 }
 

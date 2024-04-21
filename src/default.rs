@@ -198,6 +198,13 @@ fn create_heavy_ohp() -> Workout {
         .finalize();
     workout.add_exercise(exercise);
 
+    // Quad Stretch
+    let e = DurationsExercise::new(vec![20; 4]);
+    let name = ExerciseName("Quad Stretch".to_owned());
+    let formal_name = FormalName("Standing Quad Stretch".to_owned());
+    let exercise = BuildExercise::durations(name, formal_name, e).finalize();
+    workout.add_exercise(exercise);
+
     // Heavy Leg Press
     let warmups = vec![
         FixedReps::new(5, 50),
@@ -324,6 +331,13 @@ fn create_medium_ohp() -> Workout {
         .with_weight(75.0)
         .with_rest_mins(3.5)
         .finalize();
+    workout.add_exercise(exercise);
+
+    // Quad Stretch
+    let e = DurationsExercise::new(vec![20; 4]);
+    let name = ExerciseName("Quad Stretch".to_owned());
+    let formal_name = FormalName("Standing Quad Stretch".to_owned());
+    let exercise = BuildExercise::durations(name, formal_name, e).finalize();
     workout.add_exercise(exercise);
 
     // Leg Press

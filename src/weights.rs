@@ -109,6 +109,14 @@ impl Weights {
         }
     }
 
+    pub fn names(&self) -> impl Iterator<Item = &String> + '_ {
+        self.sets.keys()
+    }
+
+    pub fn get(&self, name: &str) -> Option<&WeightSet> {
+        self.sets.get(name)
+    }
+
     pub fn add(&mut self, name: String, set: WeightSet) {
         let old = self.sets.insert(name, set);
         assert!(old.is_none());

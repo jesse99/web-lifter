@@ -76,6 +76,7 @@ function on_next(event) {
         start_resting();
     } else if (timer == TIMER_RESTING) {
         // User said he is done resting
+        timer = TIMER_OFF;
         clearInterval(timer_id);
         timer_id = undefined;
         post_next_set();
@@ -121,6 +122,7 @@ function start_resting() {
         let button = document.getElementById('next_button');
         button.innerHTML = "Stop Resting";
 
+        timer = TIMER_RESTING;
         start_time = seconds();
         deadline = start_time + rest;
         update_rest();

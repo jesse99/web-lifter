@@ -1,156 +1,204 @@
 {\rtf1\ansi\ansicpg1252\cocoartf2709
 \cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fswiss\fcharset0 Helvetica;\f2\fswiss\fcharset0 Helvetica-Oblique;
 \f3\froman\fcharset0 Times-Roman;}
-{\colortbl;\red255\green255\blue255;\red203\green0\blue77;\red60\green60\blue59;\red117\green66\blue151;
-\red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;\red117\green66\blue151;\red9\green76\blue116;
-\red2\green2\blue2;\red25\green28\blue31;\red130\green130\blue130;\red130\green130\blue130;\red0\green0\blue0;
-\red11\green12\blue12;\red0\green0\blue0;}
-{\*\expandedcolortbl;;\cssrgb\c84314\c0\c37255;\cssrgb\c30196\c30196\c29804;\cssrgb\c53725\c34902\c65882;
-\cssrgb\c30196\c30196\c29804;\cssrgb\c84314\c0\c37255;\cssrgb\c0\c37255\c52941;\cssrgb\c53725\c34902\c65882;\cssrgb\c0\c37255\c52941;
-\csgenericrgb\c784\c784\c784;\cssrgb\c12941\c14510\c16078;\cssrgb\c58039\c58039\c58039;\cssrgb\c58039\c58039\c58039;\csgray\c0;
-\cssrgb\c4706\c5098\c5490;\cssrgb\c0\c0\c0;}
+{\colortbl;\red255\green255\blue255;\red60\green60\blue59;\red117\green66\blue151;\red130\green130\blue130;
+\red203\green0\blue77;\red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;\red117\green66\blue151;
+\red9\green76\blue116;\red2\green2\blue2;\red25\green28\blue31;\red130\green130\blue130;\red0\green0\blue0;
+\red95\green124\blue3;\red11\green12\blue12;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c30196\c30196\c29804;\cssrgb\c53725\c34902\c65882;\cssrgb\c58039\c58039\c58039;
+\cssrgb\c84314\c0\c37255;\cssrgb\c30196\c30196\c29804;\cssrgb\c84314\c0\c37255;\cssrgb\c0\c37255\c52941;\cssrgb\c53725\c34902\c65882;
+\cssrgb\c0\c37255\c52941;\csgenericrgb\c784\c784\c784;\cssrgb\c12941\c14510\c16078;\cssrgb\c58039\c58039\c58039;\csgray\c0;
+\cssrgb\c44314\c54902\c0;\cssrgb\c4706\c5098\c5490;\cssrgb\c0\c0\c0;}
 \deftab720
 \pard\pardeftab720\partightenfactor0
 
-\f0\fs36 \cf2 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  FixedReps \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 reps\cf3 \strokec3 : i32,\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 percent\cf3 \strokec3 : i32,\
+\f0\fs32 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2     \cf3 \strokec3 exercise_set\cf2 \strokec2 : String,         \cf4 \strokec4 // "Set 1 of 3"\cf2 \strokec2 \
+    \cf3 \strokec3 exercise_set_details\cf2 \strokec2 : String, \cf4 \strokec4 // "8 reps @ 145 lbs"\cf2 \strokec2 \
+    \cf3 \strokec3 weight_details\cf2 \strokec2 : String,       \cf4 \strokec4 // "45 + 10 + 5"\cf2 \strokec2 \
+    \cf3 \strokec3 wait\cf2 \strokec2 : String,                 \cf4 \strokec4 // "" or "30" (seconds), this is for durations type exercises\cf2 \strokec2 \
+    \cf3 \strokec3 button_title\cf2 \strokec2 : String,         \cf4 \strokec4 // "Next", "Start", "Done", "Exit", etc\cf2 \strokec2 \
+    \cf3 \strokec3 hide_reps\cf2 \strokec2 : String,            \cf4 \strokec4 // "hidden" or ""\cf2 \strokec2 \
+    \cf3 \strokec3 update_hidden\cf2 \strokec2 : String,        \cf4 \strokec4 // "hidden" or ""\cf2 \strokec2 \
+    \cf3 \strokec3 advance_hidden\cf2 \strokec2 : String,       \cf4 \strokec4 // "hidden" or ""\cf2 \strokec2 \
+    \cf3 \strokec3 update_value\cf2 \strokec2 : String,         \cf4 \strokec4 // "1" or "0"\cf2 \strokec2 \
+    \cf3 \strokec3 advance_value\cf2 \strokec2 : String,        \cf4 \strokec4 // "1" or "0"\cf2 \strokec2 \
+    \cf3 \strokec3 reps_title\cf2 \strokec2 : String,           \cf4 \strokec4 // "8 reps"\cf2 \strokec2 \
+    \cf3 \strokec3 rep_items\cf2 \strokec2 : Vec<RepItem>,\
+    \cf3 \strokec3 edit_exercise_url\cf2 \strokec2 : String,\
+\
+\
 \pard\pardeftab720\partightenfactor0
 
-\fs40 \cf5 \outl0\strokewidth0 \
-\pard\pardeftab720\partightenfactor0
-
-\fs36 \cf6 impl\cf5  FixedRepsExercise \{\
-\pard\pardeftab720\partightenfactor0
-\cf3 \outl0\strokewidth0 \strokec3     \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 num_warmups\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> usize \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 num_worksets\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> usize \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 set\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 , \cf4 \strokec4 index\cf3 \strokec3 : SetIndex) -> &FixedReps \{\
+\fs36 \cf5 \strokec5 \
+\
+\
+\
+pub\cf2 \strokec2  \cf5 \strokec5 struct\cf2 \strokec2  FixedReps \{\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf3 \strokec3 reps\cf2 \strokec2 : i32,\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf3 \strokec3 percent\cf2 \strokec2 : i32,\
 \pard\pardeftab720\partightenfactor0
 
 \fs40 \cf6 \outl0\strokewidth0 \
 \pard\pardeftab720\partightenfactor0
 
-\fs36 \cf6 pub\cf5  \cf6 struct\cf5  DurationsExercise \{\
-    \cf8 secs\cf5 : Vec<i32>,\
-    \cf8 target_secs\cf5 : Option<i32>,\
+\fs36 \cf7 impl\cf6  FixedRepsExercise \{\
+\pard\pardeftab720\partightenfactor0
+\cf2 \outl0\strokewidth0 \strokec2     \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 fn\cf2 \strokec2  \cf8 \strokec8 num_warmups\cf2 \strokec2 (&\cf3 \strokec3 self\cf2 \strokec2 ) -> usize \{\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 fn\cf2 \strokec2  \cf8 \strokec8 num_worksets\cf2 \strokec2 (&\cf3 \strokec3 self\cf2 \strokec2 ) -> usize \{\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 fn\cf2 \strokec2  \cf8 \strokec8 set\cf2 \strokec2 (&\cf3 \strokec3 self\cf2 \strokec2 , \cf3 \strokec3 index\cf2 \strokec2 : SetIndex) -> &FixedReps \{\
 \pard\pardeftab720\partightenfactor0
 
-\fs32 \cf3 \outl0\strokewidth0 \strokec3 \
+\fs40 \cf7 \outl0\strokewidth0 \
 \pard\pardeftab720\partightenfactor0
 
-\fs36 \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 enum\cf3 \strokec3  SetIndex \{\
-    \cf7 \strokec7 Warmup\cf3 \strokec3 (usize),\
-    \cf7 \strokec7 Workset\cf3 \strokec3 (usize),\
-    \cf7 \strokec7 Backoff\cf3 \strokec3 (usize),\
+\fs36 \cf7 pub\cf6  \cf7 struct\cf6  DurationsExercise \{\
+    \cf9 secs\cf6 : Vec<i32>,\
+    \cf9 target_secs\cf6 : Option<i32>,\
 \pard\pardeftab720\partightenfactor0
 
-\fs32 \cf3 \
+\fs32 \cf2 \outl0\strokewidth0 \strokec2 \
 \pard\pardeftab720\partightenfactor0
 
-\fs36 \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  Sets \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 finished\cf3 \strokec3 : bool,\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 current_index\cf3 \strokec3 : SetIndex,\
+\fs36 \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 enum\cf2 \strokec2  SetIndex \{\
+    \cf8 \strokec8 Warmup\cf2 \strokec2 (usize),\
+    \cf8 \strokec8 Workset\cf2 \strokec2 (usize),\
+    \cf8 \strokec8 Backoff\cf2 \strokec2 (usize),\
 \pard\pardeftab720\partightenfactor0
-\cf5 \outl0\strokewidth0 \
-\cf6 pub\cf5  \cf6 enum\cf5  Exercise \{\
-    \cf9 Durations\cf5 (ExerciseName, FormalName, DurationsExercise, Sets),\
-    \cf9 FixedReps\cf5 (ExerciseName, FormalName, FixedRepsExercise, Sets),\
+
+\fs32 \cf2 \
+\pard\pardeftab720\partightenfactor0
+
+\fs36 \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 struct\cf2 \strokec2  Sets \{\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf3 \strokec3 finished\cf2 \strokec2 : bool,\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf3 \strokec3 current_index\cf2 \strokec2 : SetIndex,\
+\pard\pardeftab720\partightenfactor0
+\cf6 \outl0\strokewidth0 \
+\cf7 pub\cf6  \cf7 enum\cf6  Exercise \{\
+    \cf10 Durations\cf6 (ExerciseName, FormalName, DurationsExercise, Sets),\
+    \cf10 FixedReps\cf6 (ExerciseName, FormalName, FixedRepsExercise, Sets),\
 	\
 \pard\pardeftab720\partightenfactor0
-\cf2 \outl0\strokewidth0 \strokec2 impl\cf3 \strokec3  Exercise \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 current_set\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> (SetIndex, usize) \{\
+\cf5 \outl0\strokewidth0 \strokec5 impl\cf2 \strokec2  Exercise \{\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 fn\cf2 \strokec2  \cf8 \strokec8 current_set\cf2 \strokec2 (&\cf3 \strokec3 self\cf2 \strokec2 ) -> (SetIndex, usize) \{\
 \
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 weight\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 , \cf4 \strokec4 index\cf3 \strokec3 : SetIndex) -> Option<f32> \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 rest\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 , \cf4 \strokec4 index\cf3 \strokec3 : SetIndex) -> Option<i32> \{
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 fn\cf2 \strokec2  \cf8 \strokec8 weight\cf2 \strokec2 (&\cf3 \strokec3 self\cf2 \strokec2 , \cf3 \strokec3 index\cf2 \strokec2 : SetIndex) -> Option<f32> \{\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 fn\cf2 \strokec2  \cf8 \strokec8 rest\cf2 \strokec2 (&\cf3 \strokec3 self\cf2 \strokec2 , \cf3 \strokec3 index\cf2 \strokec2 : SetIndex) -> Option<i32> \{
 \fs32 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
+\f1\fs48 \cf11 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
 \pard\pardeftab720\partightenfactor0
 
-\f0\fs36 \cf2 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  Weight \{\
-    \cf4 \strokec4 weight\cf3 \strokec3 : InternalWeight,\
+\f0\fs36 \cf5 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 struct\cf2 \strokec2  Weight \{\
+    \cf3 \strokec3 weight\cf2 \strokec2 : InternalWeight,\
 \
-\cf2 \strokec2 impl\cf3 \strokec3  Weight \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 value\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> f32 \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 text\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> String \{     // \cf12 \outl0\strokewidth0 \'93165 lbs"\cf3 \outl0\strokewidth0 \strokec3 \
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 fn\cf3 \strokec3  \cf7 \strokec7 details\cf3 \strokec3 (&\cf4 \strokec4 self\cf3 \strokec3 ) -> Option<String> \{  // \cf12 \outl0\strokewidth0 \'9345 + 10 + 5"
-\fs32 \cf3 \outl0\strokewidth0 \strokec3 \
+\cf5 \strokec5 impl\cf2 \strokec2  Weight \{\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 fn\cf2 \strokec2  \cf8 \strokec8 value\cf2 \strokec2 (&\cf3 \strokec3 self\cf2 \strokec2 ) -> f32 \{\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 fn\cf2 \strokec2  \cf8 \strokec8 text\cf2 \strokec2 (&\cf3 \strokec3 self\cf2 \strokec2 ) -> String \{     // \cf13 \outl0\strokewidth0 \'93165 lbs"\cf2 \outl0\strokewidth0 \strokec2 \
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 fn\cf2 \strokec2  \cf8 \strokec8 details\cf2 \strokec2 (&\cf3 \strokec3 self\cf2 \strokec2 ) -> Option<String> \{  // \cf13 \outl0\strokewidth0 \'9345 + 10 + 5"
+\fs32 \cf2 \outl0\strokewidth0 \strokec2 \
 \
 
-\fs36 \cf2 \strokec2 pub\cf3 \strokec3  \cf2 \strokec2 struct\cf3 \strokec3  ExerciseData \{\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 name\cf3 \strokec3 : ExerciseName,\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 formal_name\cf3 \strokec3 : FormalName,\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 started\cf3 \strokec3 : Option<DateTime<Local>>,\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 finished\cf3 \strokec3 : bool,\
-    \cf2 \strokec2 pub\cf3 \strokec3  \cf4 \strokec4 current_index\cf3 \strokec3 : SetIndex,\
-    \cf4 \strokec4 weightset\cf3 \strokec3 : Option<String>,\
-    \cf4 \strokec4 weight\cf3 \strokec3 : Option<f32>, \cf13 \strokec13 // base weight to use for each workset, often modified by set percent\cf3 \strokec3 \
-    \cf4 \strokec4 rest\cf3 \strokec3 : Option<i32>,   \cf13 \strokec13 // used for work sets\cf3 \strokec3 \
-    \cf4 \strokec4 last_rest\cf3 \strokec3 : Option<i32>, \cf13 \strokec13 // overrides rest.last() \cf3 \strokec3 \
+\fs36 \cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 struct\cf2 \strokec2  ExerciseData \{\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf3 \strokec3 name\cf2 \strokec2 : ExerciseName,\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf3 \strokec3 formal_name\cf2 \strokec2 : FormalName,\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf3 \strokec3 started\cf2 \strokec2 : Option<DateTime<Local>>,\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf3 \strokec3 finished\cf2 \strokec2 : bool,\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf3 \strokec3 current_index\cf2 \strokec2 : SetIndex,\
+    \cf3 \strokec3 weightset\cf2 \strokec2 : Option<String>,\
+    \cf3 \strokec3 weight\cf2 \strokec2 : Option<f32>, \cf4 \strokec4 // base weight to use for each workset, often modified by set percent\cf2 \strokec2 \
+    \cf3 \strokec3 rest\cf2 \strokec2 : Option<i32>,   \cf4 \strokec4 // used for work sets\cf2 \strokec2 \
+    \cf3 \strokec3 last_rest\cf2 \strokec2 : Option<i32>, \cf4 \strokec4 // overrides rest.last() \cf2 \strokec2 \
 \pard\pardeftab720\partightenfactor0
 
-\fs32 \cf3 \
+\fs32 \cf2 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
 \fs36 \cf14 \kerning1\expnd0\expndtw0 \CocoaLigature0 \outl0\strokewidth0 \
 localhost:3000/ \
 73.140.78.74:3000/
-\f1\fs48 \cf10 \CocoaLigature1      \cf10 https://whatismyip.uno/ (https://superuser.com/a/1629435)\
+\f1\fs48 \cf11 \CocoaLigature1      \cf11 https://whatismyip.uno/ (https://superuser.com/a/1629435)\
 	                              have to connect using 5G (or from public internet)\
 \pard\pardeftab720\partightenfactor0
 
-\f0\fs32 \cf3 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec3 \
+\f0\fs32 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \
+\pard\pardeftab720\partightenfactor0
+\cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 struct\cf2 \strokec2  Plate \{\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf3 \strokec3 weight\cf2 \strokec2 : f32,\
+    \cf5 \strokec5 pub\cf2 \strokec2  \cf3 \strokec3 count\cf2 \strokec2 : i32, \
+\
+\cf5 \strokec5 pub\cf2 \strokec2  \cf5 \strokec5 enum\cf2 \strokec2  WeightSet \{\
+    \cf8 \strokec8 Discrete\cf2 \strokec2 (Vec<f32>),\
+\
+    \cf8 \strokec8 DualPlates\cf2 \strokec2 (Vec<Plate>, Option<f32>),\
+\
+\pard\pardeftab720\partightenfactor0
+\cf15 \strokec15 \{\{workout\}\}/\{\{exercise\}\}\cf2 \strokec2 \
+\cf15 \strokec15 \{\{name\}\}\cf2 \strokec2 \
+\{\{#each weights\}\}\
+	\{\{this.weight\}\}\
+	\
+\cf15 \strokec15 edit_weight_set_url\cf2 \strokec2 \
+\
+	\cf3 \strokec3 get_edit_discrete_weight\cf2 \strokec2 \
+\
 \
 \
 \pard\pardeftab720\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95 Finish up exercise editing\
-	- select weight set     
-\f2\i \cf10 in exercise page, show details on click
-\f1\i0 \cf10 \
-	- edit weight set        
-\f2\i \cf10 in exercise page, name/weights
-\f1\i0 \cf10 \
+\f1\fs48 \cf11 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95 Do a commit\
+\'95 Does it make sense to generate edit pages?\
+\'95\'a0Edit discrete weight set\
+	- enable the menu item in exercise html\
+		` but only if there is a weight set\
+	- add GET methods for the html and js\
+	- wire up the getter\
+	- make sure selection works properly (need to enable menu items too)\
+	- get menu items working, will need to show a modal\
+	- can\'92t name a weight set \'93None\'94\
+\'95\'a0Edit plates weight set  \
+	- include bar\
+\'95 Finish up exercise editing\
 	- edit weight sets      
-\f2\i \cf10 in program page
-\f1\i0 \cf10 \
+\f2\i \cf11 in program page\
+		` can\'92t name a weight set \'93None\'94
+\f1\i0 \cf11 \
+	- add a stretch to heavy OHP workout\
 \'95 Try adding a couple exercises from scatch\
 \'95 Use a helper with render_template\
 	- verify that there are no \'93\{\{stuff\}\}\'94 or \'93\{\{\{stuff\}\}\}\'94 strings left un-expanded\
 	- use an attribute so that the scan code is debug only\
 \pard\pardeftab720\partightenfactor0
-\cf10 \'95\'a0Finish up workout editing:\
+\cf11 \'95\'a0Finish up workout editing:\
 	- name, use existing EditName\
 	- schedule    
 \f2\i may need dynamic widgets (can show and hide)\
 	                    would be nice to avoid that, better to have overview with help
 \f1\i0 \
 \pard\pardeftab720\partightenfactor0
-\cf10 \'95 Support program editing\
+\cf11 \'95 Support program editing\
 	- add workout\
 	- edit workouts\
 	- edit name\
 	- edit blocks\
-	- show overview\
 	- options\
 \'95 Get rid of fixup code\
 \pard\pardeftab720\partightenfactor0
-\cf10 \'95 Also a way to export history\
+\cf11 \'95 Also a way to export history\
 	- maybe as json or csv\
 \'95\'a0Supporting editing:\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 	- options (eg font scaling, save keyed with device name)\
+\cf11 	- options (eg font scaling, save keyed with device name)\
 		` options would also be available in program and workout pages\
 		  or should this just be at top level?\
 		` for scaling can set bs-body-font-size in body elements\
 		  would be nice if font size was per device\
 \'95\'a0Fonts didn\'92t seem any larger on iOS?\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95 Light workout should start on wed\
+\cf11 \'95 Light workout should start on wed\
 \'95 Circuit1, Circuit2, and Circuit3 have no notes\
 \'95 Perry Complex has kind of crappy notes\
 \'95 Would be nice if exercises had notes\
@@ -160,57 +208,57 @@ localhost:3000/ \
 \'95\'a0Disable start timer if waiting or resting\
 	- add disabled to class\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95 Does last_rest make sense for variable sets?\
+\cf11 \'95 Does last_rest make sense for variable sets?\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95 Do timers work when switch to a new page and then back?\
+\cf11 \'95 Do timers work when switch to a new page and then back?\
 	- can we use some sort of web storage?\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0To avoid annoying if let chains, can\
+\cf11 \'95\'a0To avoid annoying if let chains, can\
 	- match a tuple\
 	- extract to a function and use ? operator (if the lets all want the same type)\
 
 \fs52 		
-\f3\fs30\fsmilli15333 \cf15 \expnd0\expndtw0\kerning0
+\f3\fs30\fsmilli15333 \cf16 \expnd0\expndtw0\kerning0
 fn get_result() -> Option<u64> \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 let i = func1()?;
+\f3\fs30\fsmilli15333 \cf16 \'a0 let i = func1()?;
 \f1\fs33\fsmilli16667 \cf0 \
 \pard\pardeftab720\partightenfactor0
 \cf0 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 let j = func2(i)?;
+\f3\fs30\fsmilli15333 \cf16 \'a0 let j = func2(i)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 let k = func3(j)?;
+\f3\fs30\fsmilli15333 \cf16 \'a0 let k = func3(j)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 func3(k)
+\f3\fs30\fsmilli15333 \cf16 \'a0 func3(k)
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \}
+\f3\fs30\fsmilli15333 \cf16 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0
+\f3\fs30\fsmilli15333 \cf16 \'a0
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 fn main() \{
+\f3\fs30\fsmilli15333 \cf16 fn main() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 if let Some(result) = get_result() \{
+\f3\fs30\fsmilli15333 \cf16 \'a0 if let Some(result) = get_result() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0\'a0\'a0 // do something
+\f3\fs30\fsmilli15333 \cf16 \'a0\'a0\'a0 // do something
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \'a0 \}
+\f3\fs30\fsmilli15333 \cf16 \'a0 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf15 \}\
+\f3\fs30\fsmilli15333 \cf16 \}\
 \pard\pardeftab720\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \'95\'a0Set label flaked out for a second after finishing last set\
+\f1\fs48 \cf11 \kerning1\expnd0\expndtw0 \'95\'a0Set label flaked out for a second after finishing last set\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 	- think it said Set 1\
+\cf11 	- think it said Set 1\
 	- may want to add a bit of delay\
 \'95\'a0Switch to medium RDL at some point\
 \'95 Turn this into a Progressive Web App (PWA)? \
@@ -219,19 +267,19 @@ fn get_result() -> Option<u64> \{
 	- there\'92s a vibration API but it doesn\'92t work on iOS\
 	- also a notification API which needs permission from user and https\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Add some logging/tracing\
+\cf11 \'95\'a0Add some logging/tracing\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95 Add support for rest weeks\
+\cf11 \'95 Add support for rest weeks\
 	- maybe treat this as a periodization variant\
 \'95 Do something with favicon\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Replace www.bodybuilding.com links with something else\
+\cf11 \'95\'a0Replace www.bodybuilding.com links with something else\
 	- think www.bodybuilding.com has some aggresive throttling\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95 Add a /health_check edpoint\
+\cf11 \'95 Add a /health_check edpoint\
 	- or maybe /status, could include connections/sec, num active users, etc)\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Should be able to edit workouts\
+\cf11 \'95\'a0Should be able to edit workouts\
 \'95\'a0Should be able to edit programs\
 \'95\'a0Support multiple users\
 	- allow guest for people who don\'92t want to register\
@@ -243,33 +291,33 @@ fn get_result() -> Option<u64> \{
 	- cap number of concurrent users? think there\'92s a tower thing for this\
 \'95 May want an option for bootstrap\'92s dark theme\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \'95\'a0Should log ops.\
+\cf11 \'95\'a0Should log ops.\
 \'95\'a0May want a way to replay ops.\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
-\cf10 \'95 Variable reps needs to support backoff sets\
+\cf11 \'95 Variable reps needs to support backoff sets\
 \'95 Should fixed reps support backoff sets?\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 \
+\cf11 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f0\fs36 \cf6 \expnd0\expndtw0\kerning0
+\f0\fs36 \cf7 \expnd0\expndtw0\kerning0
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f1\fs48 \cf10 \kerning1\expnd0\expndtw0 \
+\f1\fs48 \cf11 \kerning1\expnd0\expndtw0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
-\cf10 https://www.shuttle.rs/blog/2023/12/06/using-axum-rustJeremy Chone has a good axum tutorial\
+\cf11 https://www.shuttle.rs/blog/2023/12/06/using-axum-rustJeremy Chone has a good axum tutorial\
 Jeremy Chone has a good axum tutorial\
 		\
 http://localhost:3000/
-\f0\fs32 \cf5 \expnd0\expndtw0\kerning0
+\f0\fs32 \cf6 \expnd0\expndtw0\kerning0
 \
 \pard\pardeftab720\partightenfactor0
-\cf5 \
+\cf6 \
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f1\fs48 \cf10 https://squatuniversity.com/2017/05/30/how-to-fix-it-band-pain/\cf10 \kerning1\expnd0\expndtw0 \
+\f1\fs48 \cf11 https://squatuniversity.com/2017/05/30/how-to-fix-it-band-pain/\cf11 \kerning1\expnd0\expndtw0 \
 foam roll \
 \
 Eloquent JavaScript 4th edition\

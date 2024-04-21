@@ -255,6 +255,17 @@ impl Exercise {
         self.do_set_weight(weight);
     }
 
+    pub fn try_set_weight_set(&mut self, name: Option<String>) -> Result<(), ValidationError> {
+        self.validate_weight_set(&name)?;
+        self.do_set_weight_set(name);
+        Ok(())
+    }
+
+    // pub fn set_weight_set(&mut self, name: Option<String>) {
+    //     assert!(self.validate_weight_set(&name).is_ok());
+    //     self.do_set_weight_set(name);
+    // }
+
     pub fn try_set_rest(&mut self, rest: Option<i32>) -> Result<(), ValidationError> {
         self.validate_rest(rest)?;
         self.do_set_rest(rest);
@@ -374,6 +385,28 @@ impl Exercise {
             Exercise::FixedReps(d, _) => d.weight = weight,
             Exercise::VariableReps(d, _) => d.weight = weight,
             Exercise::VariableSets(d, _) => d.weight = weight,
+        }
+    }
+
+    fn validate_weight_set(&self, name: &Option<String>) -> Result<(), ValidationError> {
+        if let Some(name) = name {
+            if name.trim().is_empty() {
+                return Err(ValidationError::new("The weight set name cannot be empty."));
+            } else if name == "None" {
+                return Err(ValidationError::new(
+                    "The weight set name cannot be 'None'.",
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    fn do_set_weight_set(&mut self, name: Option<String>) {
+        match self {
+            Exercise::Durations(d, _) => d.weightset = name,
+            Exercise::FixedReps(d, _) => d.weightset = name,
+            Exercise::VariableReps(d, _) => d.weightset = name,
+            Exercise::VariableSets(d, _) => d.weightset = name,
         }
     }
 
