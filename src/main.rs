@@ -37,10 +37,6 @@ async fn main() {
     let app = Router::new()
         // data --------------------------------------------------------------------------
         .route(
-            "/scripts/current.js",
-            get(|s| get_js(s, include_str!("../files/current.js"))),
-        )
-        .route(
             "/scripts/discrete.js",
             get(|s| get_js(s, include_str!("../files/discrete.js"))),
         )
@@ -383,7 +379,7 @@ async fn get_current_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let contents = pages::get_current_set_page(state, &workout, &exercise)?;
+    let contents = pages::get_current_set(state, &workout, &exercise);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),

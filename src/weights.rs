@@ -109,8 +109,12 @@ impl Weights {
         }
     }
 
-    pub fn names(&self) -> impl Iterator<Item = &String> + '_ {
-        self.sets.keys()
+    // pub fn names(&self) -> impl Iterator<Item = &String> + '_ {
+    //     self.sets.keys()
+    // }
+
+    pub fn items(&self) -> impl Iterator<Item = (&String, &WeightSet)> + '_ {
+        self.sets.iter()
     }
 
     pub fn get(&self, name: &str) -> Option<&WeightSet> {

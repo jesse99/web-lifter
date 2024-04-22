@@ -1,7 +1,7 @@
 mod app_state;
 mod edit_add_exercise_page;
 mod edit_any_weight;
-mod edit_current_set_page;
+mod edit_current_set;
 mod edit_durations_page;
 mod edit_durs_record_page;
 mod edit_exercises_page;
@@ -26,7 +26,7 @@ pub use app_state::*;
 use axum::http::Uri;
 pub use edit_add_exercise_page::*;
 pub use edit_any_weight::*;
-pub use edit_current_set_page::*;
+pub use edit_current_set::*;
 pub use edit_durations_page::*;
 pub use edit_durs_record_page::*;
 pub use edit_exercises_page::*;
@@ -47,7 +47,7 @@ pub use overview_page::*;
 pub use program_page::*;
 pub use workout_page::*;
 
-pub fn post_post(state: SharedState, path: &str) -> Result<Uri, anyhow::Error> {
+pub fn post_epilog(state: SharedState, path: &str) -> Result<Uri, anyhow::Error> {
     {
         let user = &mut state.write().unwrap().user;
         if let Err(e) = crate::persist::save(user) {

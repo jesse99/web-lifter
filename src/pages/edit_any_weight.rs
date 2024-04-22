@@ -1,7 +1,6 @@
-use axum::http::Uri;
-
 use super::{EditorBuilder, SharedState};
 use crate::{exercise::ExerciseName, weights};
+use axum::http::Uri;
 
 pub fn get_edit_any_weight(state: SharedState, workout: &str, exercise: &str) -> String {
     let post_url = format!("/set-any-weight/{workout}/{exercise}");
@@ -47,5 +46,5 @@ pub fn post_set_weight(
         exercise.try_set_weight(weight)?;
     }
 
-    super::post_post(state, &path)
+    super::post_epilog(state, &path)
 }

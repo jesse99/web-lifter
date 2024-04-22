@@ -1,5 +1,29 @@
 use html_tag::HtmlTag;
 
+/// Used with `EditorBuilder::with_list`.
+pub struct Item {
+    pub name: String,
+    pub help: String,
+}
+
+impl Item {
+    // /// Item that simply displays the name.
+    // pub fn new(name: &str) -> Item {
+    //     Item {
+    //         name: name.to_owned(),
+    //         help: "".to_owned(),
+    //     }
+    // }
+
+    /// List help text changes to match the selected item's help.
+    pub fn with_help(name: &str, help: &str) -> Item {
+        Item {
+            name: name.to_owned(),
+            help: help.to_owned(),
+        }
+    }
+}
+
 /// Edit pages are rather regular and share many of the same components so rather than
 /// hand-code a whole bunch of html, templating, and javascript we'll generate all that.
 pub struct EditorBuilder {
@@ -80,6 +104,7 @@ impl EditorBuilder {
         self
     }
 
+    /// Text field that requires floating point input.
     pub fn with_float_input(
         mut self,
         name: &str,
@@ -122,6 +147,54 @@ impl EditorBuilder {
             .with_class("form-text fst-italic fs-6")
             .with_body(help);
         self.form.add_child(help);
+        self
+    }
+
+    /// Selectable item list. If active matches an item name then that item will start
+    /// out selected.
+    pub fn with_list(mut self, name: &str, items: Vec<Item>, active: &str) -> EditorBuilder {
+        // list
+        let mut list = HtmlTag::new("ul")
+            .with_id("list") // we'll assume only one list on the page so we don't need to qualify the id
+            .with_class("list-group")
+            .with_attribute("aria-describedby", "list-help");
+        for item in items {
+            let mut entry = HtmlTag::new("li")
+                .with_class("list-group-item")
+                .with_attribute("onclick", "on_click(this)")
+                .with_body(&item.name);
+            if item.name == active {
+                entry.add_class("active");
+                entry.add_attribute("aria-current", "true");
+            }
+            if !item.help.is_empty() {
+                entry.add_attribute("data-help", &item.help);
+            }
+            list.add_child(entry);
+        }
+        self.form.add_child(list);
+
+        // help
+        let div = HtmlTag::new("div")
+            .with_id("list-help")
+            .with_class("form-text fst-italic fs-6");
+        self.form.add_child(div);
+
+        // hidden button (used with post to send the selected item name)
+        let button = HtmlTag::new("input")
+            .with_id("list-button")
+            .with_attribute("type", "text")
+            .with_attribute("name", name)
+            .with_attribute("value", "")
+            .with_attribute("hidden", "");
+        self.form.add_child(button);
+
+        // javascript
+        let js = HtmlTag::new("script")
+            .with_attribute("type", "text/javascript")
+            .with_body(include_str!("../../files/list.js"));
+        self.prolog.push(js);
+
         self
     }
 
@@ -170,11 +243,20 @@ impl EditorBuilder {
             text += &t.construct();
         }
         text += "\n";
+        text += "\n";
 
         text += &self.form.construct();
         text += "</body>\n";
         text += "</html>\n";
         text
+    }
+}
+
+fn has_children(tag: &HtmlTag) -> bool {
+    if let Some(children) = &tag.children {
+        !children.is_empty()
+    } else {
+        false
     }
 }
 
@@ -199,11 +281,3 @@ impl EditorBuilder {
 //         assert_eq!("bar", "");
 //     }
 // }
-
-fn has_children(tag: &HtmlTag) -> bool {
-    if let Some(children) = &tag.children {
-        !children.is_empty()
-    } else {
-        false
-    }
-}
