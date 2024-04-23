@@ -3,7 +3,7 @@ use axum::http::Uri;
 use super::{EditorBuilder, SharedState};
 use crate::{
     exercise::ExerciseName,
-    pages::Item,
+    pages::ListItem,
     weights::{self, WeightSet},
 };
 
@@ -46,10 +46,10 @@ pub fn get_current_set(state: SharedState, workout: &str, exercise: &str) -> Str
     let active = data.weightset.clone().map_or("None".to_owned(), |n| n);
     let mut items: Vec<_> = weights
         .items()
-        .map(|(n, ws)| Item::with_help(n, &get_help(ws)))
+        .map(|(n, ws)| ListItem::with_help(n, &get_help(ws)))
         .collect();
     items.sort_by(|a, b| a.name.partial_cmp(&b.name).unwrap());
-    items.push(Item::with_help("None", "no weights"));
+    items.push(ListItem::with_help("None", "no weights"));
 
     EditorBuilder::new(&post_url)
         .with_title("Select Weight Set")

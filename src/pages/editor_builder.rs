@@ -1,12 +1,29 @@
 use html_tag::HtmlTag;
 
+/// Used with `EditorBuilder::with_edit_dropdown`.
+pub struct EditItem {
+    pub id: String,
+    pub method: String,
+    pub text: String,
+}
+
+impl EditItem {
+    pub fn new(id: &str, method: &str, text: &str) -> EditItem {
+        EditItem {
+            id: id.to_owned(),
+            method: method.to_owned(),
+            text: text.to_owned(),
+        }
+    }
+}
+
 /// Used with `EditorBuilder::with_list`.
-pub struct Item {
+pub struct ListItem {
     pub name: String,
     pub help: String,
 }
 
-impl Item {
+impl ListItem {
     // /// Item that simply displays the name.
     // pub fn new(name: &str) -> Item {
     //     Item {
@@ -16,8 +33,8 @@ impl Item {
     // }
 
     /// List help text changes to match the selected item's help.
-    pub fn with_help(name: &str, help: &str) -> Item {
-        Item {
+    pub fn with_help(name: &str, help: &str) -> ListItem {
+        ListItem {
             name: name.to_owned(),
             help: help.to_owned(),
         }
@@ -104,6 +121,71 @@ impl EditorBuilder {
         self
     }
 
+    /// Call this or with_title.
+    pub fn with_edit_dropdown(
+        mut self,
+        title: &str,
+        items: Vec<EditItem>,
+        javascript: &str,
+    ) -> EditorBuilder {
+        // javascript
+        let js = HtmlTag::new("script")
+            .with_attribute("type", "text/javascript")
+            .with_body(javascript);
+        self.prolog.push(js);
+
+        let mut div = HtmlTag::new("div").with_class("d-flex");
+
+        // helps center title
+        let nbps = " ".repeat(if title.len() < 25 {
+            25 - title.len()
+        } else {
+            1
+        });
+        let div2 = HtmlTag::new("div").with_class("p-1").with_body(&nbps);
+        div.add_child(div2);
+
+        let mut div2 = HtmlTag::new("div").with_class("p-1 flex-fill");
+        div2.add_child(
+            HtmlTag::new("h2")
+                .with_class("text-center")
+                .with_body(&title),
+        );
+        div.add_child(div2);
+
+        let mut div2 = HtmlTag::new("div").with_class("p-1 pe-2 justify-content-end");
+        let mut div3 = HtmlTag::new("div").with_class("col justify-content-end");
+
+        let mut div4 = HtmlTag::new("div").with_class("btn-group");
+        let button = HtmlTag::new("button")
+            .with_class("btn btn-primary btn-sm dropdown-toggle")
+            .with_attribute("type", "dropdown")
+            .with_attribute("aria-expanded", "false")
+            .with_attribute("data-bs-toggle", "dropdown");
+        div4.add_child(button);
+
+        let mut ul = HtmlTag::new("ul").with_class("dropdown-menu");
+        for item in items {
+            let mut li = HtmlTag::new("li");
+            li.add_child(
+                HtmlTag::new("button")
+                    .with_id(&item.id)
+                    .with_class("dropdown-item")
+                    .with_attribute("type", "dropdown")
+                    .with_attribute("onclick", &item.method)
+                    .with_body(&item.text),
+            );
+            ul.add_child(li);
+        }
+        div4.add_child(ul);
+        div3.add_child(div4);
+        div2.add_child(div3);
+        div.add_child(div2);
+
+        self.prolog.push(div);
+        self
+    }
+
     /// Text field that requires floating point input.
     pub fn with_float_input(
         mut self,
@@ -152,7 +234,7 @@ impl EditorBuilder {
 
     /// Selectable item list. If active matches an item name then that item will start
     /// out selected.
-    pub fn with_list(mut self, name: &str, items: Vec<Item>, active: &str) -> EditorBuilder {
+    pub fn with_list(mut self, name: &str, items: Vec<ListItem>, active: &str) -> EditorBuilder {
         // list
         let mut list = HtmlTag::new("ul")
             .with_id("list") // we'll assume only one list on the page so we don't need to qualify the id
