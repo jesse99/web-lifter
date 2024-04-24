@@ -206,7 +206,7 @@ impl EditorBuilder {
         mut self,
         label: &str,
         value: &str,
-        pattern: &Option<&str>,
+        pattern: Option<&str>,
         help: &str,
     ) -> EditorBuilder {
         let key = label.to_lowercase();

@@ -1,7 +1,6 @@
-use axum::http::Uri;
-
 use super::{DropItem, EditorBuilder, SharedState};
 use crate::exercise::{ExerciseName, SetIndex};
+use axum::http::Uri;
 
 pub fn get_edit_durations(state: SharedState, workout: &str, exercise: &str) -> String {
     let post_url = format!("/set-durations/{workout}/{exercise}");
@@ -36,8 +35,8 @@ pub fn get_edit_durations(state: SharedState, workout: &str, exercise: &str) -> 
         .with_text_input(
             "Times",
             &durations,
-            &Some(r#"\s*\d+(\.\d+)?(\s+\d+(\.\d+)?)*"#),
-            "Space separated amount of time to wait for each set",
+            Some(r#"\s*\d+(\.\d+)?(\s+\d+(\.\d+)?)*"#),
+            "Space separated amount of time to wait for each set.",
         )
         .with_float_input(
             "Target",

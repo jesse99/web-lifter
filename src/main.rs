@@ -410,7 +410,7 @@ async fn get_edit_durs_record(
     let id: u64 = id
         .parse()
         .context(format!("expected int for id but found '{id}'"))?;
-    let contents = pages::get_edit_durs_record_page(state, &workout, &exercise, id)?;
+    let contents = pages::get_edit_durs_record(state, &workout, &exercise, id)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -996,7 +996,7 @@ async fn post_set_rest(
 
 #[derive(Debug, Deserialize)]
 struct SetDurationsRecord {
-    durations: String,
+    times: String,
     weights: String,
     comment: String,
     units: String, // "secs", "mins", or "hours"
@@ -1008,9 +1008,9 @@ async fn post_set_durs_record(
     Form(payload): Form<SetDurationsRecord>,
 ) -> Result<impl IntoResponse, AppError> {
     let durations = payload
-        .durations
+        .times
         .split_whitespace()
-        .map(|s| parse_time("durations", s, &payload.units))
+        .map(|s| parse_time("times", s, &payload.units))
         .collect::<Result<Vec<_>, _>>()?;
     let durations = durations.iter().filter_map(|o| *o).collect();
     let weights = payload
