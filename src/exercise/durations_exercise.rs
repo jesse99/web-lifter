@@ -72,7 +72,7 @@ impl DurationsExercise {
                 return Err(ValidationError::new("duration cannot be negative"));
             }
             if *duration == 0 {
-                return Err(ValidationError::new("duration cannot zero negative"));
+                return Err(ValidationError::new("duration cannot be zero"));
             }
         }
         Ok(())

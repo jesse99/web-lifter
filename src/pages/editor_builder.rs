@@ -24,19 +24,34 @@ pub struct ListItem {
 }
 
 impl ListItem {
-    // /// Item that simply displays the name.
-    // pub fn new(name: &str) -> Item {
-    //     Item {
-    //         name: name.to_owned(),
-    //         help: "".to_owned(),
-    //     }
-    // }
+    /// Item that simply displays the name.
+    pub fn new(name: &str) -> ListItem {
+        ListItem {
+            name: name.to_owned(),
+            help: "".to_owned(),
+        }
+    }
 
     /// List help text changes to match the selected item's help.
     pub fn with_help(name: &str, help: &str) -> ListItem {
         ListItem {
             name: name.to_owned(),
             help: help.to_owned(),
+        }
+    }
+}
+
+/// Used with `EditorBuilder::with_dropdown`.
+pub struct DropItem {
+    pub label: String,
+    pub value: String,
+}
+
+impl DropItem {
+    pub fn new(label: &str, value: &str) -> DropItem {
+        DropItem {
+            label: label.to_owned(),
+            value: value.to_owned(),
         }
     }
 }
@@ -125,7 +140,7 @@ impl EditorBuilder {
     pub fn with_edit_dropdown(
         mut self,
         title: &str,
-        items: Vec<EditItem>,
+        buttons: Vec<EditItem>,
         javascript: &str,
     ) -> EditorBuilder {
         // javascript
@@ -165,7 +180,7 @@ impl EditorBuilder {
         div4.add_child(button);
 
         let mut ul = HtmlTag::new("ul").with_class("dropdown-menu");
-        for item in items {
+        for item in buttons {
             let mut li = HtmlTag::new("li");
             li.add_child(
                 HtmlTag::new("button")
@@ -186,16 +201,61 @@ impl EditorBuilder {
         self
     }
 
+    /// Text field with optional regex validation.
+    pub fn with_text_input(
+        mut self,
+        label: &str,
+        value: &str,
+        pattern: &Option<&str>,
+        help: &str,
+    ) -> EditorBuilder {
+        let key = label.to_lowercase();
+        let key = key.replace(" ", "-");
+
+        let label_id = format!("{key}-label");
+        let input_id = format!("{key}-input");
+        let help_id = format!("{key}-help");
+
+        let mut div = HtmlTag::new("div").with_class("input-group");
+        let span = HtmlTag::new("span")
+            .with_id(&label_id)
+            .with_class("input-group-text")
+            .with_body(label);
+        div.add_child(span);
+        let mut input = HtmlTag::new("input")
+            .with_id(&input_id)
+            .with_class("form-control")
+            .with_attribute("type", "text")
+            .with_attribute("name", &key)
+            .with_attribute("aria-describedby", &format!("{label_id} {help_id}"))
+            .with_attribute("value", value);
+        if let Some(pattern) = pattern {
+            input.add_attribute("pattern", pattern);
+        }
+        if !has_children(&self.form) {
+            input.add_attribute("autofocus", "");
+        }
+        div.add_child(input);
+        self.form.add_child(div);
+
+        let help = HtmlTag::new("div")
+            .with_id(&help_id)
+            .with_class("form-text fst-italic fs-6 mb-4")
+            .with_body(help);
+        self.form.add_child(help);
+        self
+    }
+
     /// Text field that requires floating point input.
     pub fn with_float_input(
         mut self,
-        name: &str,
+        label: &str,
         value: &str,
         min: &str,
         step: &str,
         help: &str,
     ) -> EditorBuilder {
-        let key = name.to_lowercase();
+        let key = label.to_lowercase();
         let key = key.replace(" ", "-");
 
         let label_id = format!("{key}-label");
@@ -207,7 +267,7 @@ impl EditorBuilder {
             HtmlTag::new("span")
                 .with_id(&label_id)
                 .with_class("input-group-text")
-                .with_body(name),
+                .with_body(label),
         );
         let mut input = HtmlTag::new("input")
             .with_id(&input_id)
@@ -226,7 +286,7 @@ impl EditorBuilder {
 
         let help = HtmlTag::new("div")
             .with_id(&help_id)
-            .with_class("form-text fst-italic fs-6")
+            .with_class("form-text fst-italic fs-6 mb-4")
             .with_body(help);
         self.form.add_child(help);
         self
@@ -259,7 +319,7 @@ impl EditorBuilder {
         // help
         let div = HtmlTag::new("div")
             .with_id("list-help")
-            .with_class("form-text fst-italic fs-6");
+            .with_class("form-text fst-italic fs-6 mb-4");
         self.form.add_child(div);
 
         // hidden button (used with post to send the selected item name)
@@ -275,6 +335,51 @@ impl EditorBuilder {
         let js = HtmlTag::new("script")
             .with_attribute("type", "text/javascript")
             .with_body(include_str!("../../files/list.js"));
+        self.prolog.push(js);
+
+        self
+    }
+
+    pub fn with_dropdown(
+        mut self,
+        label: &str,
+        items: Vec<DropItem>,
+        active: &str,
+        javascript: &str,
+    ) -> EditorBuilder {
+        let key = label.to_lowercase();
+        let key = key.replace(" ", "-");
+
+        let select_id = format!("{key}-select");
+
+        let mut div = HtmlTag::new("div").with_class("input-group mb-4");
+        let span = HtmlTag::new("span")
+            .with_class("input-group-text")
+            .with_body(label);
+        div.add_child(span);
+
+        let mut select = HtmlTag::new("select")
+            .with_id(&select_id)
+            .with_class("form-select")
+            .with_attribute("aria-label", &key)
+            .with_attribute("name", &key);
+        for item in items {
+            let mut option = HtmlTag::new("option")
+                .with_attribute("value", &item.value)
+                .with_body(&item.label);
+            if item.label == active {
+                option.add_attribute("selected", "");
+            }
+            select.add_child(option);
+        }
+        div.add_child(select);
+
+        self.form.add_child(div);
+
+        // javascript
+        let js = HtmlTag::new("script")
+            .with_attribute("type", "text/javascript")
+            .with_body(javascript);
         self.prolog.push(js);
 
         self

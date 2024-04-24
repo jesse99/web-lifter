@@ -6,7 +6,7 @@
 let old_units = "mins";
 
 function on_loaded() {
-    const units = document.getElementById('units');
+    const units = document.getElementById('units-select');
     units.addEventListener("change", on_units_change, null);
 }
 
@@ -15,18 +15,18 @@ function on_units_change(event) {
     let mins = event.target.children[1];
     let hours = event.target.children[2];
     if (secs.selected) {
-        convert_times("durations-field", "secs", 0)
-        convert_time("target-field", "secs", 0)
+        convert_times("times-input", "secs", 0)
+        convert_time("target-input", "secs", 0)
         old_units = "secs";
 
     } else if (mins.selected) {
-        convert_times("durations-field", "mins", 2)
-        convert_time("target-field", "mins", 2)
+        convert_times("times-input", "mins", 2)
+        convert_time("target-input", "mins", 2)
         old_units = "mins";
 
     } else if (hours.selected) {
-        convert_times("durations-field", "hours", 4)
-        convert_time("target-field", "hours", 4)
+        convert_times("times-input", "hours", 4)
+        convert_time("target-input", "hours", 4)
         old_units = "hours";
     }
 }
@@ -68,3 +68,4 @@ function convert(value, new_units, decimals) {
     return time.toFixed(decimals);
 }
 
+window.addEventListener('DOMContentLoaded', on_loaded);

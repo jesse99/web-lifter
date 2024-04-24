@@ -1,8 +1,10 @@
+use axum::http::Uri;
+
 mod app_state;
 mod edit_add_exercise_page;
 mod edit_any_weight;
 mod edit_current_set;
-mod edit_durations_page;
+mod edit_durations;
 mod edit_durs_record_page;
 mod edit_exercises_page;
 mod edit_fixed_reps_page;
@@ -23,11 +25,10 @@ mod program_page;
 mod workout_page;
 
 pub use app_state::*;
-use axum::http::Uri;
 pub use edit_add_exercise_page::*;
 pub use edit_any_weight::*;
 pub use edit_current_set::*;
-pub use edit_durations_page::*;
+pub use edit_durations::*;
 pub use edit_durs_record_page::*;
 pub use edit_exercises_page::*;
 pub use edit_fixed_reps_page::*;

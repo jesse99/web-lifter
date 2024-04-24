@@ -309,7 +309,7 @@ async fn get_edit_durations(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let contents = pages::get_edit_durations_page(state, &workout, &exercise)?;
+    let contents = pages::get_edit_durations(state, &workout, &exercise);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -781,7 +781,7 @@ async fn post_revert_note(
 
 #[derive(Debug, Deserialize)]
 struct SetDurations {
-    durations: String,
+    times: String,
     target: String,
     units: String, // "secs", "mins", or "hours"
 }
@@ -792,7 +792,7 @@ async fn post_set_durations(
     Form(payload): Form<SetDurations>,
 ) -> Result<impl IntoResponse, AppError> {
     let durations = payload
-        .durations
+        .times
         .split_whitespace()
         .map(|s| parse_time("durations", s, &payload.units))
         .collect::<Result<Vec<_>, _>>()?;
