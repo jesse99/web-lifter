@@ -53,7 +53,7 @@ pub fn get_current_set(state: SharedState, workout: &str, exercise: &str) -> Str
 
     EditorBuilder::new(&post_url)
         .with_title("Select Weight Set")
-        .with_list("sets", items, &active)
+        .with_list("sets", items, &active, None, false)
         .with_std_buttons(&cancel_url)
         .finalize()
 }

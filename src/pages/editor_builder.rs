@@ -21,6 +21,7 @@ impl EditItem {
 pub struct ListItem {
     pub name: String,
     pub help: String,
+    pub custom: Vec<String>,
 }
 
 impl ListItem {
@@ -29,6 +30,7 @@ impl ListItem {
         ListItem {
             name: name.to_owned(),
             help: "".to_owned(),
+            custom: Vec::new(),
         }
     }
 
@@ -37,6 +39,17 @@ impl ListItem {
         ListItem {
             name: name.to_owned(),
             help: help.to_owned(),
+            custom: Vec::new(),
+        }
+    }
+
+    /// Item with custom class values.
+    pub fn with_class(name: &str, custom: &[&str]) -> ListItem {
+        let custom = custom.iter().map(|s| s.to_string()).collect();
+        ListItem {
+            name: name.to_owned(),
+            help: "".to_owned(),
+            custom,
         }
     }
 }
@@ -292,9 +305,32 @@ impl EditorBuilder {
         self
     }
 
+    /// Hidden input field used with javascript.
+    pub fn with_hidden_input(mut self, name: &str) -> EditorBuilder {
+        let key = name.to_lowercase();
+        let key = key.replace(" ", "-");
+
+        let id = format!("{key}-btn");
+        let input = HtmlTag::new("input")
+            .with_id(&id)
+            .with_attribute("type", "text")
+            .with_attribute("name", name)
+            .with_attribute("value", "")
+            .with_attribute("hidden", "");
+        self.form.add_child(input);
+        self
+    }
+
     /// Selectable item list. If active matches an item name then that item will start
     /// out selected.
-    pub fn with_list(mut self, name: &str, items: Vec<ListItem>, active: &str) -> EditorBuilder {
+    pub fn with_list(
+        mut self,
+        name: &str,
+        items: Vec<ListItem>,
+        active: &str,
+        help: Option<&str>,
+        custom_js: bool,
+    ) -> EditorBuilder {
         // list
         let mut list = HtmlTag::new("ul")
             .with_id("list") // we'll assume only one list on the page so we don't need to qualify the id
@@ -310,16 +346,23 @@ impl EditorBuilder {
                 entry.add_attribute("aria-current", "true");
             }
             if !item.help.is_empty() {
+                assert!(help.is_none());
                 entry.add_attribute("data-help", &item.help);
+            }
+            for name in item.custom.iter() {
+                entry.add_class(&name);
             }
             list.add_child(entry);
         }
         self.form.add_child(list);
 
         // help
-        let div = HtmlTag::new("div")
+        let mut div = HtmlTag::new("div")
             .with_id("list-help")
             .with_class("form-text fst-italic fs-6 mb-4");
+        if let Some(help) = help {
+            div.set_body(help);
+        }
         self.form.add_child(div);
 
         // hidden button (used with post to send the selected item name)
@@ -332,10 +375,13 @@ impl EditorBuilder {
         self.form.add_child(button);
 
         // javascript
-        let js = HtmlTag::new("script")
-            .with_attribute("type", "text/javascript")
-            .with_body(include_str!("../../files/list.js"));
-        self.prolog.push(js);
+        if !custom_js {
+            let javascript = include_str!("../../files/list.js");
+            let js = HtmlTag::new("script")
+                .with_attribute("type", "text/javascript")
+                .with_body(javascript);
+            self.prolog.push(js);
+        }
 
         self
     }

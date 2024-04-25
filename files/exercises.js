@@ -9,7 +9,7 @@ function on_loaded() {
 }
 
 function on_click(item) {
-    const list = document.getElementById('exercises');
+    const list = document.getElementById('list');
     for (var child of list.children) {
         child.classList.remove('active');
         child.setAttribute('aria-current', "false");
@@ -20,7 +20,7 @@ function on_click(item) {
 }
 
 function on_enable() {
-    const list = document.getElementById('exercises');
+    const list = document.getElementById('list');
     const len = list.children.length;
     for (let i = 0; i < len; i++) {
         let child = list.children[i];
@@ -34,7 +34,7 @@ function on_enable() {
 }
 
 function on_disable() {
-    const list = document.getElementById('exercises');
+    const list = document.getElementById('list');
     const len = list.children.length;
     for (let i = 0; i < len; i++) {
         let child = list.children[i];
@@ -48,7 +48,7 @@ function on_disable() {
 }
 
 function on_delete() {
-    const list = document.getElementById('exercises');
+    const list = document.getElementById('list');
     const len = list.children.length;
     for (let i = 0; i < len; i++) {
         let child = list.children[i];
@@ -62,7 +62,7 @@ function on_delete() {
 }
 
 function on_move_down() {
-    const list = document.getElementById('exercises');
+    const list = document.getElementById('list');
     const len = list.children.length;
     for (let i = 0; i < len - 1; i++) {
         let child = list.children[i];
@@ -81,7 +81,7 @@ function on_move_down() {
 }
 
 function on_move_up() {
-    const list = document.getElementById('exercises');
+    const list = document.getElementById('list');
     const len = list.children.length;
     for (let i = 1; i < len; i++) {
         let child = list.children[i];
@@ -100,7 +100,7 @@ function on_move_up() {
 function update_value() {
     let exercises = "";
     let disabled = "";
-    const list = document.getElementById('exercises');
+    const list = document.getElementById('list');
     for (var child of list.children) {
         if (exercises) {
             exercises += "\t";
@@ -113,7 +113,7 @@ function update_value() {
             disabled += "false";
         }
     }
-    let input = document.getElementById('exercises-btn');
+    let input = document.getElementById('list-button');
     input.value = exercises;
 
     input = document.getElementById('disabled-btn');
@@ -121,7 +121,7 @@ function update_value() {
 }
 
 function enable_menu() {
-    const list = document.getElementById('exercises');
+    const list = document.getElementById('list');
     const len = list.children.length;
 
     for (var name of ["delete-btn", "up-btn", "down-btn", "disable-btn", "enable-btn"]) {
@@ -156,3 +156,5 @@ function enable_menu() {
         }
     }
 }
+
+window.addEventListener('DOMContentLoaded', on_loaded);

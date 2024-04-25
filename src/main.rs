@@ -253,7 +253,7 @@ async fn get_edit_exercises(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let contents = pages::get_edit_exercises_page(state, &workout)?;
+    let contents = pages::get_edit_exercises(state, &workout);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
