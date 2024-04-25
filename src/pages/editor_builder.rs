@@ -329,7 +329,7 @@ impl EditorBuilder {
         items: Vec<ListItem>,
         active: &str,
         help: Option<&str>,
-        custom_js: bool,
+        custom_js: Option<&str>,
     ) -> EditorBuilder {
         // list
         let mut list = HtmlTag::new("ul")
@@ -375,8 +375,8 @@ impl EditorBuilder {
         self.form.add_child(button);
 
         // javascript
-        if !custom_js {
-            let javascript = include_str!("../../files/list.js");
+        let javascript = custom_js.unwrap_or(include_str!("../../files/list.js"));
+        if !javascript.is_empty() {
             let js = HtmlTag::new("script")
                 .with_attribute("type", "text/javascript")
                 .with_body(javascript);

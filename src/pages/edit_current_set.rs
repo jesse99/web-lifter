@@ -1,11 +1,10 @@
-use axum::http::Uri;
-
 use super::{EditorBuilder, SharedState};
 use crate::{
     exercise::ExerciseName,
     pages::ListItem,
     weights::{self, WeightSet},
 };
+use axum::http::Uri;
 
 pub fn get_current_set(state: SharedState, workout: &str, exercise: &str) -> String {
     fn get_help(ws: &WeightSet) -> String {
@@ -53,7 +52,7 @@ pub fn get_current_set(state: SharedState, workout: &str, exercise: &str) -> Str
 
     EditorBuilder::new(&post_url)
         .with_title("Select Weight Set")
-        .with_list("sets", items, &active, None, false)
+        .with_list("sets", items, &active, None, None)
         .with_std_buttons(&cancel_url)
         .finalize()
 }

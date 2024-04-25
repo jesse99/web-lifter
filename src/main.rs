@@ -281,7 +281,7 @@ async fn get_edit_formal_name(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let contents = pages::get_edit_formal_name_page(state, &workout, &exercise)?;
+    let contents = pages::get_formal_name(state, &workout, &exercise);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),

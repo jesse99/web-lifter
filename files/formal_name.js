@@ -4,7 +4,7 @@
 "use strict";
 
 function on_loaded() {
-    let name = document.getElementById('name-field');
+    let name = document.getElementById('name-input');
     name.addEventListener("input", on_name_change);
 
     filter_menu();
@@ -15,24 +15,26 @@ function on_name_change(event) {
 }
 
 function on_click(item) {
-    const list = document.getElementById('names');
-    for (var child of list.children) {
-        child.classList.remove('active');
-        child.setAttribute('aria-current', "false");
+    if (item.innerText != "…") {
+        const list = document.getElementById('list');
+        for (var child of list.children) {
+            child.classList.remove('active');
+            child.setAttribute('aria-current', "false");
+        }
+        item.classList.add('active');
+        item.setAttribute('aria-current', "true");
+        update_value();
+        // filter_menu();
     }
-    item.classList.add('active');
-    item.setAttribute('aria-current', "true");
-    update_value();
-    // filter_menu();
 }
 
 function update_value() {
-    const list = document.getElementById('names');
+    const list = document.getElementById('list');
     const len = list.children.length;
     for (let i = 0; i < len; i++) {
         let child = list.children[i];
         if (child.classList.contains('active')) {
-            let name = document.getElementById('name-field');
+            let name = document.getElementById('name-input');
             name.value = child.innerText;
             filter_menu();
             break;
@@ -48,10 +50,10 @@ function update_value() {
 // introduce annoying latency when typing). Not clear how useful this would be tho.
 function filter_menu() {
     const MAX_COUNT = 50;
-    let name = document.getElementById('name-field').value.toLowerCase();
+    let name = document.getElementById('name-input').value.toLowerCase();
 
     let filtered_in = 0;
-    const list = document.getElementById('names');
+    const list = document.getElementById('list');
     for (let i = 0; i < list.children.length; i++) {
         let child = list.children[i];
         if (child.innerText.toLowerCase().includes(name)) {
@@ -66,10 +68,12 @@ function filter_menu() {
         }
     }
 
-    let ellipsis = document.getElementById('ellipsis');
+    let ellipsis = list.children[list.children.length - 1];
     if (filtered_in < MAX_COUNT) {
         ellipsis.setAttribute('hidden', "true");
     } else {
         ellipsis.removeAttribute('hidden');
     }
 }
+
+window.addEventListener('DOMContentLoaded', on_loaded);

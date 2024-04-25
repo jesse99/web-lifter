@@ -33,7 +33,7 @@ pub fn get_edit_exercises(state: SharedState, workout: &str) -> String {
 
     EditorBuilder::new(&post_url)
         .with_edit_dropdown("Edit Exercises", buttons, javascript)
-        .with_list("exercises", items, &active, help, true)
+        .with_list("exercises", items, &active, help, Some(""))
         .with_hidden_input("disabled")
         .with_std_buttons(&cancel_url)
         .finalize()
