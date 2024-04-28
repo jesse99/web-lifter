@@ -1,25 +1,28 @@
-use super::SharedState;
 use crate::pages::editor_builder::*;
-use crate::{exercise::ExerciseName, history::CompletedSets, weights};
+use crate::{
+    exercise::ExerciseName,
+    history::CompletedSets,
+    pages::SharedState,
+    weights::{self},
+};
 use axum::http::Uri;
 
-pub fn get_edit_durs_record(
+pub fn get_edit_reps_record(
     state: SharedState,
     workout: &str,
     exercise: &str,
     id: u64,
 ) -> Result<String, anyhow::Error> {
-    let post_url = format!("/set-durs-record/{workout}/{exercise}/{id}");
+    let post_url = format!("/set-reps-record/{workout}/{exercise}/{id}");
     let cancel_url = format!("/exercise/{workout}/{exercise}");
 
-    let name = ExerciseName(exercise.to_owned());
     let history = &state.read().unwrap().user.history;
-
+    let name = ExerciseName(exercise.to_owned());
     let record = history.find_record(&name, id)?;
-    let (durations, weights) = match &record.sets {
-        Some(CompletedSets::Durations(r)) => (
+    let (reps, weights) = match &record.sets {
+        Some(CompletedSets::Reps(r)) => (
             r.iter()
-                .map(|x| format!("{:.2}", x.0 as f32 / 60.0))
+                .map(|x| format!("{}", x.0))
                 .collect::<Vec<String>>()
                 .join(" "),
             r.iter()
@@ -27,26 +30,24 @@ pub fn get_edit_durs_record(
                 .collect::<Vec<String>>()
                 .join(" "),
         ),
-        Some(_) => panic!("expected durations sets"),
-        None => panic!("expected non-empty durations sets"),
+        Some(_) => panic!("expected reps sets"),
+        None => panic!("expected non-empty reps sets"),
     };
     let comment = if let Some(c) = &record.comment {
         c.clone()
     } else {
         "".to_owned()
     };
-    let items = [("Secs", "secs"), ("Mins", "mins"), ("Hours", "hours")];
-    let javascript = include_str!("../../files/durations.js");
 
     let widgets: Vec<Box<dyn Widget>> = vec![
-        Box::new(Prolog::with_title("Edit Durations Record")),
+        Box::new(Prolog::with_title("Edit Reps Record")),
         Box::new(
             TextInput::new(
-                "Times",
-                &durations,
-                "Space separated list of times that were done for each set.",
+                "Reps",
+                &reps,
+                "Space separated list of reps that were done for each set.",
             )
-            .with_pattern(r#"\s*\d+(\.\d+)?(\s+\d+(\.\d+)?)*"#)
+            .with_pattern(r#"\s*\d+(\s+\d+)*\s*"#)
             .with_required(),
         ),
         Box::new(
@@ -62,42 +63,37 @@ pub fn get_edit_durs_record(
             &comment,
             "Optional comment, e.g. for exercise difficulty.",
         )),
-        Box::new(Dropdown::new("Units", &items, javascript).with_active("Mins")),
         Box::new(StdButtons::new(&cancel_url)),
     ];
 
     Ok(build_editor(&post_url, widgets))
 }
 
-pub fn post_set_durs_record(
+pub fn post_set_reps_record(
     state: SharedState,
-    workout: &str,
-    exercise: &str,
-    durations: Vec<i32>,
+    workout_name: &str,
+    exercise_name: &str,
+    reps: Vec<i32>,
     weights: Vec<f32>,
     comment: String,
     id: u64,
 ) -> Result<Uri, anyhow::Error> {
-    let path = format!("/exercise/{workout}/{exercise}");
-    let exercise = ExerciseName(exercise.to_owned());
+    let exercise_name = ExerciseName(exercise_name.to_owned());
 
     {
         let history = &mut state.write().unwrap().user.history;
-        let record = history.find_record_mut(&exercise, id)?;
-        let sets = if durations.len() == weights.len() {
-            durations
-                .iter()
+        let record = history.find_record_mut(&exercise_name, id)?;
+        let sets = if reps.len() == weights.len() {
+            reps.iter()
                 .copied()
                 .zip(weights.iter().map(|w| Some(*w)))
                 .collect()
         } else if weights.is_empty() {
-            durations.iter().map(|r| (*r, None)).collect()
+            reps.iter().map(|r| (*r, None)).collect()
         } else {
-            return Err(anyhow::Error::msg(
-                "Weights must be empty or match durations",
-            ));
+            return Err(anyhow::Error::msg("Weights must be empty or match reps"));
         };
-        record.sets = Some(CompletedSets::Durations(sets));
+        record.sets = Some(CompletedSets::Reps(sets));
         if !comment.is_empty() {
             record.comment = Some(comment);
         } else {
@@ -105,6 +101,7 @@ pub fn post_set_durs_record(
         }
     }
 
+    let path = format!("/exercise/{workout_name}/{exercise_name}");
     let uri = url_escape::encode_path(&path);
     let uri = uri.parse()?;
     Ok(uri)

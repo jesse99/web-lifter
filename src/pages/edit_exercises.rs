@@ -1,4 +1,5 @@
-use super::{EditItem, EditorBuilder, ListItem, SharedState};
+use super::SharedState;
+use crate::pages::editor_builder::*;
 use axum::http::Uri;
 
 pub fn get_edit_exercises(state: SharedState, workout: &str) -> String {
@@ -8,58 +9,62 @@ pub fn get_edit_exercises(state: SharedState, workout: &str) -> String {
     let program = &state.read().unwrap().user.program;
     let workout = program.find(workout).unwrap();
 
-    let buttons = vec![
-        EditItem::new("delete-btn", "on_delete()", "Delete"),
-        EditItem::new("disable-btn", "on_disable()", "Disable"),
-        EditItem::new("enable-btn", "on_enable()", "Enable"),
-        EditItem::new("down-btn", "on_move_down()", "Move Down"),
-        EditItem::new("up-btn", "on_move_up()", "Move Up"),
+    let buttons = [
+        ("delete-btn", "on_delete()", "Delete"),
+        ("disable-btn", "on_disable()", "Disable"),
+        ("enable-btn", "on_enable()", "Enable"),
+        ("down-btn", "on_move_down()", "Move Down"),
+        ("up-btn", "on_move_up()", "Move Up"),
     ];
     let javascript = include_str!("../../files/exercises.js");
 
     let active = workout.exercises().nth(0).map_or("", |e| &e.name().0);
-    let items = workout
+    let items: Vec<(String, String)> = workout
         .exercises()
         .map(|e| {
             let d = e.data();
             if d.enabled {
-                ListItem::new(&e.name().0)
+                (e.name().0.clone(), "".to_owned())
             } else {
-                ListItem::with_class(&e.name().0, &["text-black-50"])
+                (e.name().0.clone(), "text-black-50".to_owned())
             }
         })
         .collect();
-    let help = Some("Ordered list of exercises to perform for the workout.");
 
-    EditorBuilder::new(&post_url)
-        .with_edit_dropdown("Edit Exercises", buttons, javascript)
-        .with_list("exercises", items, &active, help, Some(""))
-        .with_hidden_input("disabled")
-        .with_std_buttons(&cancel_url)
-        .finalize()
+    let widgets: Vec<Box<dyn Widget>> = vec![
+        Box::new(Prolog::with_edit_menu(
+            "Edit Exercises",
+            &buttons,
+            javascript,
+        )),
+        Box::new(
+            List::with_class(
+                "exercises",
+                items,
+                "Ordered list of exercises to perform for the workout.",
+            )
+            .with_active(active)
+            .without_js(),
+        ),
+        Box::new(HiddenInput::new("disabled")),
+        Box::new(StdButtons::new(&cancel_url)),
+    ];
+
+    build_editor(&post_url, widgets)
 }
 
 pub fn post_set_exercises(
     state: SharedState,
-    workout_name: &str,
+    workout: &str,
     enabled: Vec<&str>,
     disabled: Vec<bool>,
 ) -> Result<Uri, anyhow::Error> {
+    let path = format!("/workout/{workout}");
     {
         let program = &mut state.write().unwrap().user.program;
-        let workout = program.find_mut(&workout_name).unwrap();
+        let workout = program.find_mut(&workout).unwrap();
         workout.try_set_exercises(enabled, disabled)?;
     }
 
-    {
-        let user = &mut state.write().unwrap().user;
-        if let Err(e) = crate::persist::save(user) {
-            user.errors.push(format!("{e}")); // not fatal so we don't return an error
-        }
-    }
-
-    let path = format!("/workout/{workout_name}");
-    let uri = url_escape::encode_path(&path);
-    let uri = uri.parse()?;
-    Ok(uri)
+    super::post_epilog(state, &path)
 }

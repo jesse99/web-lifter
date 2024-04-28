@@ -237,9 +237,9 @@ async fn get_exercise(
 
 async fn get_add_exercise(
     Path(workout): Path<String>,
-    Extension(state): Extension<SharedState>,
+    Extension(_state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let contents = pages::get_add_exercise_page(state, &workout)?;
+    let contents = pages::get_add_exercise(&workout);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -265,9 +265,13 @@ async fn get_edit_exercises(
 
 async fn get_edit_name(
     Path((workout, exercise)): Path<(String, String)>,
-    Extension(state): Extension<SharedState>,
+    Extension(_state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let contents = pages::get_edit_name_page(state, &workout, &exercise)?;
+    let post_url = format!("/set-name/{}/{}", workout, exercise);
+    let cancel_url = format!("/exercise/{}/{}", workout, exercise);
+    let value = exercise.to_owned();
+    let help = "Must be unique within the workout";
+    let contents = pages::get_edit_name(&value, help, &post_url, &cancel_url);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -295,7 +299,7 @@ async fn get_edit_weight(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let contents = pages::get_edit_weight_page(state, &workout, &exercise)?;
+    let contents = pages::get_edit_weight(state, &workout, &exercise);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -337,7 +341,7 @@ async fn get_edit_var_reps(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let contents = pages::get_edit_var_reps_page(state, &workout, &exercise)?;
+    let contents = pages::get_edit_var_reps(state, &workout, &exercise);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -351,7 +355,7 @@ async fn get_edit_var_sets(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let contents = pages::get_edit_var_sets_page(state, &workout, &exercise)?;
+    let contents = pages::get_edit_var_sets(state, &workout, &exercise);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -365,7 +369,7 @@ async fn get_edit_note(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let contents = pages::get_edit_note_page(state, &workout, &exercise)?;
+    let contents = pages::get_edit_note(state, &workout, &exercise);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -393,7 +397,7 @@ async fn get_edit_rest(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let contents = pages::get_edit_rest_page(state, &workout, &exercise)?;
+    let contents = pages::get_edit_rest(state, &workout, &exercise);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -427,7 +431,7 @@ async fn get_edit_reps_record(
     let id: u64 = id
         .parse()
         .context(format!("expected int for id but found '{id}'"))?;
-    let contents = pages::get_edit_reps_record_page(state, &workout, &exercise, id)?;
+    let contents = pages::get_edit_reps_record(state, &workout, &exercise, id)?;
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),

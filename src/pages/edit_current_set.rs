@@ -1,7 +1,7 @@
-use super::{EditorBuilder, SharedState};
+use super::SharedState;
+use crate::pages::editor_builder::*;
 use crate::{
     exercise::ExerciseName,
-    pages::ListItem,
     weights::{self, WeightSet},
 };
 use axum::http::Uri;
@@ -45,16 +45,18 @@ pub fn get_current_set(state: SharedState, workout: &str, exercise: &str) -> Str
     let active = data.weightset.clone().map_or("None".to_owned(), |n| n);
     let mut items: Vec<_> = weights
         .items()
-        .map(|(n, ws)| ListItem::with_help(n, &get_help(ws)))
+        .map(|(n, ws)| (n.clone(), get_help(ws)))
         .collect();
-    items.sort_by(|a, b| a.name.partial_cmp(&b.name).unwrap());
-    items.push(ListItem::with_help("None", "no weights"));
+    items.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    items.push(("None".to_string(), "no weights".to_string()));
 
-    EditorBuilder::new(&post_url)
-        .with_title("Select Weight Set")
-        .with_list("sets", items, &active, None, None)
-        .with_std_buttons(&cancel_url)
-        .finalize()
+    let widgets: Vec<Box<dyn Widget>> = vec![
+        Box::new(Prolog::with_title("Select Weight Set")),
+        Box::new(List::with_help("sets", items).with_active(&active)),
+        Box::new(StdButtons::new(&cancel_url)),
+    ];
+
+    build_editor(&post_url, widgets)
 }
 
 pub fn post_set_current_set(

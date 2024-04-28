@@ -13,19 +13,19 @@ use serde::{Deserialize, Serialize};
 
 pub fn get_exercise_page(
     state: SharedState,
-    workout_name: &str,
-    exercise_name: &str,
+    workout: &str,
+    exercise: &str,
 ) -> Result<String, anyhow::Error> {
-    let exercise_name = ExerciseName(exercise_name.to_owned());
-    let reset = reset_old(&state, workout_name, &exercise_name.0);
+    let exercise = ExerciseName(exercise.to_owned());
+    let reset = reset_old(&state, workout, &exercise.0);
     {
         let program_name = {
             let program = &state.read().unwrap().user.program;
             program.name.to_owned()
         };
         let history = &mut state.write().unwrap().user.history;
-        if reset || history.is_completed(&exercise_name) {
-            history.start(&program_name, workout_name, &exercise_name, Local::now());
+        if reset || history.is_completed(&exercise) || !history.has_record(&exercise) {
+            history.start(&program_name, workout, &exercise, Local::now());
         }
     }
 
@@ -36,12 +36,8 @@ pub fn get_exercise_page(
     let program = &state.read().unwrap().user.program;
 
     let template = include_str!("../../files/exercise.html");
-    let workout = program
-        .find(&workout_name)
-        .context("failed to find workout")?;
-    let exercise = workout
-        .find(&exercise_name)
-        .context("failed to find exercise")?;
+    let workout = program.find(&workout).context("failed to find workout")?;
+    let exercise = workout.find(&exercise).context("failed to find exercise")?;
     let untyped = UntypedData::new(history, exercise);
     let data = ExData::new(
         history,
@@ -58,11 +54,11 @@ pub fn get_exercise_page(
         .context("failed to render template")?)
 }
 
-fn reset_old(state: &SharedState, workout_name: &str, exercise_name: &str) -> bool {
+fn reset_old(state: &SharedState, workout: &str, exercise: &str) -> bool {
     let program = &mut state.write().unwrap().user.program;
-    let workout = program.find_mut(&workout_name).unwrap();
+    let workout = program.find_mut(&workout).unwrap();
     let exercise = workout
-        .find_mut(&ExerciseName(exercise_name.to_owned()))
+        .find_mut(&ExerciseName(exercise.to_owned()))
         .unwrap();
     let now = Local::now();
     if let Some(started) = exercise.started() {

@@ -175,6 +175,10 @@ impl History {
             .is_some()
     }
 
+    pub fn has_record(&self, name: &ExerciseName) -> bool {
+        self.records(name).last().is_some()
+    }
+
     pub fn recently_completed(&self, workout: &str, name: &ExerciseName) -> Option<&Record> {
         if let Some(records) = self.records.get(name) {
             for record in records.iter().rev() {
