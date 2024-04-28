@@ -168,14 +168,29 @@ fn summarize(weights: &Weights, exercise: &Exercise) -> String {
             .collect(),
         Exercise::VariableSets(_, e) => {
             let previous = e.get_previous().iter().sum();
+            let index = SetIndex::Workset(0);
+            let w = exercise.lower_weight(weights, index);
+            let suffix = w.map_or("".to_owned(), |w| format!(" @ {}", w.text()));
             vec![if previous == 0 {
-                format!("{} reps over 1+ sets", e.target())
+                format!("{} reps over 1+ sets{suffix}", e.target())
             } else if e.target() == previous {
-                format!("{} reps over {} sets", e.target(), e.get_previous().len())
+                format!(
+                    "{} reps over {} sets{suffix}",
+                    e.target(),
+                    e.get_previous().len()
+                )
             } else if e.target() > previous {
-                format!("{} reps over {}+ sets", e.target(), e.get_previous().len())
+                format!(
+                    "{} reps over {}+ sets{suffix}",
+                    e.target(),
+                    e.get_previous().len()
+                )
             } else {
-                format!("{} reps over {} sets", e.target(), e.get_previous().len())
+                format!(
+                    "{} reps over {} sets{suffix}",
+                    e.target(),
+                    e.get_previous().len()
+                )
             }]
         }
     };
