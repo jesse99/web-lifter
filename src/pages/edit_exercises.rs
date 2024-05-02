@@ -9,12 +9,12 @@ pub fn get_edit_exercises(state: SharedState, workout: &str) -> String {
     let program = &state.read().unwrap().user.program;
     let workout = program.find(workout).unwrap();
 
-    let buttons = [
-        ("delete-btn", "on_delete()", "Delete"),
-        ("disable-btn", "on_disable()", "Disable"),
-        ("enable-btn", "on_enable()", "Enable"),
-        ("down-btn", "on_move_down()", "Move Down"),
-        ("up-btn", "on_move_up()", "Move Up"),
+    let buttons = vec![
+        EditButton::new("delete-btn", "on_delete()", "Delete"),
+        EditButton::new("disable-btn", "on_disable()", "Disable"),
+        EditButton::new("enable-btn", "on_enable()", "Enable"),
+        EditButton::new("down-btn", "on_move_down()", "Move Down"),
+        EditButton::new("up-btn", "on_move_up()", "Move Up"),
     ];
     let javascript = include_str!("../../files/exercises.js");
 
@@ -34,7 +34,7 @@ pub fn get_edit_exercises(state: SharedState, workout: &str) -> String {
     let widgets: Vec<Box<dyn Widget>> = vec![
         Box::new(Prolog::with_edit_menu(
             "Edit Exercises",
-            &buttons,
+            buttons,
             javascript,
         )),
         Box::new(

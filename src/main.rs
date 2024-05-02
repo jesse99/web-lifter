@@ -81,10 +81,10 @@ async fn main() {
             "/edit-any-weight/:workout/:exercise",
             get(get_edit_any_weight),
         )
-        // .route(
-        //     "/edit-discrete-weight/:workout/:exercise",
-        //     get(get_edit_discrete_weight),
-        // )
+        .route(
+            "/edit-discrete-weight/:workout/:exercise",
+            get(get_edit_discrete_set),
+        )
         .route(
             "/edit-durations/:workout/:exercise",
             get(get_edit_durations),
@@ -432,6 +432,20 @@ async fn get_edit_reps_record(
         .parse()
         .context(format!("expected int for id but found '{id}'"))?;
     let contents = pages::get_edit_reps_record(state, &workout, &exercise, id)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_discrete_set(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_discrete_set(state, &workout, &exercise);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),

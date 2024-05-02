@@ -6,6 +6,7 @@ pub struct EditorBuilder {
     head: HtmlTag,
     prolog: Vec<HtmlTag>, // first half of body
     form: HtmlTag,        // second half of body
+    custom: String,       // arbitrary HTML added after the form
 }
 
 pub trait Widget {
@@ -85,6 +86,9 @@ pub fn build_editor(post_url: &str, widgets: Vec<Box<dyn Widget>>) -> String {
         text += "\n";
 
         text += &builder.form.construct();
+        if !builder.custom.is_empty() {
+            text += &builder.custom;
+        }
         text += "</body>\n";
         text += "</html>\n";
         text
@@ -94,6 +98,7 @@ pub fn build_editor(post_url: &str, widgets: Vec<Box<dyn Widget>>) -> String {
         head: make_head(),
         prolog: make_prolog(),
         form: make_form(post_url),
+        custom: String::new(),
     };
     for widget in widgets {
         widget.build(&mut builder);
@@ -319,6 +324,26 @@ impl Widget for HiddenInput {
             .with_attribute("value", "")
             .with_attribute("hidden", "");
         builder.form.add_child(input);
+    }
+}
+
+// =======================================================================================
+/// Arbitrary injected HTML, used for things like modals.
+pub struct Html {
+    content: String,
+}
+
+impl Html {
+    pub fn new(content: &str) -> Html {
+        Html {
+            content: content.to_owned(),
+        }
+    }
+}
+
+impl Widget for Html {
+    fn build(&self, builder: &mut EditorBuilder) {
+        builder.custom += &self.content;
     }
 }
 
@@ -552,10 +577,33 @@ impl Widget for Radio {
 }
 
 // =======================================================================================
+pub struct EditButton {
+    id: String,
+    onclick: String,
+    body: String,
+    attrs: HashMap<String, String>,
+}
+
+impl EditButton {
+    pub fn new(id: &str, onclick: &str, body: &str) -> EditButton {
+        EditButton {
+            id: id.to_string(),
+            onclick: onclick.to_string(),
+            body: body.to_string(),
+            attrs: HashMap::new(),
+        }
+    }
+
+    pub fn with_attr(mut self, name: &str, value: &str) -> EditButton {
+        self.attrs.insert(name.to_string(), value.to_string());
+        self
+    }
+}
+
 /// Construct these with the Prolog::with_* methods.
 pub enum Prolog {
     Title(String),
-    Editable(String, Vec<(String, String, String)>, String),
+    Editable(String, Vec<EditButton>, String),
 }
 
 impl Prolog {
@@ -566,11 +614,7 @@ impl Prolog {
 
     /// Prolog has a title and an edit menu populated with a slice of (id, onclick, body)
     /// entries.
-    pub fn with_edit_menu(title: &str, buttons: &[(&str, &str, &str)], javascript: &str) -> Prolog {
-        let buttons = buttons
-            .iter()
-            .map(|(i, o, b)| (i.to_string(), o.to_string(), b.to_string()))
-            .collect();
+    pub fn with_edit_menu(title: &str, buttons: Vec<EditButton>, javascript: &str) -> Prolog {
         Prolog::Editable(title.to_owned(), buttons, javascript.to_owned())
     }
 }
@@ -624,14 +668,18 @@ impl Widget for Prolog {
                 let mut ul = HtmlTag::new("ul").with_class("dropdown-menu");
                 for item in items.iter() {
                     let mut li = HtmlTag::new("li");
-                    li.add_child(
-                        HtmlTag::new("button")
-                            .with_id(&item.0)
-                            .with_class("dropdown-item")
-                            .with_attribute("type", "dropdown")
-                            .with_attribute("onclick", &item.1)
-                            .with_body(&item.2),
-                    );
+                    let mut button = HtmlTag::new("button")
+                        .with_id(&item.id)
+                        .with_class("dropdown-item")
+                        .with_attribute("type", "dropdown")
+                        .with_body(&item.body);
+                    if !item.onclick.is_empty() {
+                        button.add_attribute("onclick", &item.onclick);
+                    }
+                    for (name, value) in item.attrs.iter() {
+                        button.add_attribute(name, value);
+                    }
+                    li.add_child(button);
                     ul.add_child(li);
                 }
                 div4.add_child(ul);

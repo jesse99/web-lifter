@@ -1,0 +1,22 @@
+<div class="modal fade" id="add_modal" tabindex="-1" role="dialog" aria-labelledby="add_modal_label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="add_modal_label">Add Weight</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <input type="text" id="weight-input" value="" aria-describedby="weight-help"></input>
+                    <div class="form-text fst-italic fs-6" id="weight-help">The weight can be a simple value or a
+                        range, e.g. "10" or "10-100 by 10".</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                    onclick='on_add("weight-input")'>Save</button>
+            </div>
+        </div>
+    </div>
+</div>
