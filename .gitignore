@@ -17,3 +17,5 @@ Cargo.lock
 # Mac
 *-back-color.xml
 **/.DS_Store
+
+.vscode/
