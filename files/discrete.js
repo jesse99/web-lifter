@@ -52,30 +52,76 @@ function resort() {
         .forEach(node => list.appendChild(node));
 }
 
-// TODO would be great to validate the input within the modal
-// 1) dismiss the modal only if it validates
-// 2) provide some sort of indication that it's invalid, popup? error text?
-// 3) be sure to catch empty (or all whitespace) too
-// https://stackoverflow.com/questions/27968361/validate-input-text-in-bootstrap-modal
-function on_add(id) {
-    let weight = document.getElementById(id);
-    if (weight.value) {
-        let parts = weight.value.split(" ");
-        let value = parseFloat(parts[0]);
-        if (value > 0.0 && !has_value(value)) {
-            let item = document.createElement("li");
-            item.classList.add("list-group-item");
-            item.setAttribute("onclick", "on_click(this)");
-            item.innerText = `${weight.value} lbs`;
+function parse_values() {
+    let input = document.getElementById("weight-input");
+    if (input.value) {
+        // 5-100 by 10
+        let parts = input.value.trim().split(/\s+/);
+        if (parts.length == 3 && parts[1] == "by") {
+            let step = parseFloat(parts[2]);
+            parts = parts[0].split("-");
+            if (step && step > 0.0 && parts.length == 2) {
+                let min = parseFloat(parts[0]);
+                let max = parseFloat(parts[1]);
+                if (min && max && min > 0.0 && min <= max) {
+                    let weight = min;
+                    let weights = [];
+                    while (weight <= max) {
+                        weights.push(weight);
+                        weight += step;
+                    }
+                    return weights;
+                }
+            }
+        } else if (parts.length == 1) {
+            // 45
+            let weight = parseFloat(parts[0]);
+            if (weight > 0.0) {
+                return [weight];
+            }
+        }
+    }
+    return undefined;
+}
 
-            const list = document.getElementById('list');
-            list.appendChild(item);
+function on_save() {
+    const weights = parse_values();
 
+    let help = document.getElementById("weight-help");
+    if (weights) {
+        help.classList.remove("text-danger");
+
+        let added = false;
+        for (var weight of weights) {
+            if (add_weight(weight)) {
+                added = true;
+            }
+        }
+        if (added) {
             resort();
             update_value();
             enable_menu();
         }
+
+        let modal = document.getElementById("add_modal");
+        bootstrap.Modal.getInstance(modal).hide();
+    } else {
+        help.classList.add("text-danger");
     }
+}
+
+function add_weight(weight) {
+    if (!has_value(weight)) {
+        let item = document.createElement("li");
+        item.classList.add("list-group-item");
+        item.setAttribute("onclick", "on_click(this)");
+        item.innerText = `${weight} lbs`;
+
+        const list = document.getElementById('list');
+        list.appendChild(item);
+        return true;
+    }
+    return false;
 }
 
 function on_delete() {
