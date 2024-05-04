@@ -1,5 +1,8 @@
+use axum::http::Uri;
+
 use super::SharedState;
 use crate::pages::editor_builder::*;
+use crate::weights::WeightSet;
 use crate::{
     exercise::ExerciseName,
     weights::{self, Weights},
@@ -60,4 +63,39 @@ pub fn get_edit_discrete_set(state: SharedState, workout: &str, exercise: &str) 
     ];
 
     build_editor(&post_url, widgets)
+}
+
+pub fn post_set_weight_set(
+    state: SharedState,
+    workout: &str,
+    exercise: &str,
+    set_name: &str,
+    weights: Vec<f32>,
+) -> Result<Uri, anyhow::Error> {
+    let path = format!("/exercise/{workout}/{exercise}");
+    let exercise = ExerciseName(exercise.to_owned());
+
+    {
+        let old_name = {
+            let program = &state.write().unwrap().user.program;
+            let workout = program.find(&workout).unwrap();
+            let exercise = workout.find(&exercise).unwrap();
+            let d = exercise.data();
+            d.weightset.clone().map_or("".to_string(), |s| s)
+        };
+        {
+            let weights = WeightSet::Discrete(weights);
+            let wghts = &mut state.write().unwrap().user.weights;
+            wghts.try_change_set(&old_name, set_name, weights)?;
+        }
+        if old_name != set_name {
+            let program = &mut state.write().unwrap().user.program;
+            let workout = program.find_mut(&workout).unwrap();
+            let exercise = workout.find_mut(&exercise).unwrap();
+            let d = exercise.data_mut();
+            d.weightset = Some(set_name.to_string()); // try_change_set has handled name validation
+        }
+    }
+
+    super::post_epilog(state, &path)
 }

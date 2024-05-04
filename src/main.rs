@@ -121,6 +121,10 @@ async fn main() {
             post(post_set_formal_name),
         )
         .route("/set-weight/:workout/:exercise", post(post_set_weight))
+        .route(
+            "/set-weight-set/:workout/:exercise",
+            post(post_set_weight_set),
+        )
         .route("/revert-note/:workout/:exercise", post(post_revert_note))
         .route("/set-note/:workout/:exercise", post(post_set_note))
         .route(
@@ -701,6 +705,34 @@ async fn post_set_weight(
         Some(x)
     };
     let new_url = pages::post_set_weight(state, &workout, &exercise, w)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetWeightSet {
+    name: String,
+    weights: String, // weights like "25.000" separated by "¦"
+}
+
+async fn post_set_weight_set(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetWeightSet>,
+) -> Result<impl IntoResponse, AppError> {
+    let weights = payload
+        .weights
+        .split("¦")
+        .map(|s| s.parse::<f32>())
+        .collect::<Result<Vec<_>, _>>()?;
+    let new_url = pages::post_set_weight_set(state, &workout, &exercise, &payload.name, weights)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

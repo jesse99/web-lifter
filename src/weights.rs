@@ -1,3 +1,4 @@
+use crate::pages::ValidationError;
 use core::fmt;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Formatter};
@@ -171,6 +172,102 @@ impl Weights {
         } else {
             Weight::error(format!("There is no weight set named '{name}'"), target)
         }
+    }
+
+    pub fn try_change_set(
+        &mut self,
+        old_name: &str,
+        new_name: &str,
+        weights: WeightSet,
+    ) -> Result<(), ValidationError> {
+        self.validate_change_set(old_name, new_name, &weights)?;
+        self.do_change_set(old_name, new_name, weights);
+        Ok(())
+    }
+
+    fn validate_change_set(
+        &self,
+        old_name: &str,
+        new_name: &str,
+        weights: &WeightSet,
+    ) -> Result<(), ValidationError> {
+        fn validate_discrete(weights: &Vec<f32>) -> Result<(), ValidationError> {
+            if weights.is_empty() {
+                return Err(ValidationError::new("There should be at least one weight."));
+            }
+            for (i, weight) in weights.iter().enumerate() {
+                if *weight < 0.0 {
+                    return Err(ValidationError::new("Weights cannot be negative."));
+                } else if *weight == 0.0 {
+                    return Err(ValidationError::new("Weights cannot be zero."));
+                } else if i + 1 < weights.len() && (*weight - weights[i + 1]).abs() < 0.001 {
+                    return Err(ValidationError::new(
+                        "Weights cannot have duplicate values.",
+                    ));
+                } else if i + 1 < weights.len() && *weight > weights[i + 1] {
+                    return Err(ValidationError::new(
+                        "Weights should be from smaller to larger.",
+                    ));
+                }
+            }
+            Ok(())
+        }
+
+        fn validate_dual(plates: &Vec<Plate>, bar: &Option<f32>) -> Result<(), ValidationError> {
+            if plates.is_empty() {
+                return Err(ValidationError::new("There should be at least one plate."));
+            }
+            for (i, plate) in plates.iter().enumerate() {
+                if plate.weight < 0.0 {
+                    return Err(ValidationError::new("Plate weights cannot be negative."));
+                } else if plate.weight == 0.0 {
+                    return Err(ValidationError::new("Plate weights cannot be zero."));
+                } else if i + 1 < plates.len()
+                    && (plate.weight - plates[i + 1].weight).abs() < 0.001
+                {
+                    return Err(ValidationError::new(
+                        "Plate weights cannot have duplicate values.",
+                    ));
+                } else if i + 1 < plates.len() && plate.weight > plates[i + 1].weight {
+                    return Err(ValidationError::new(
+                        "Plate weights should be from smaller to larger.",
+                    ));
+                }
+            }
+            if let Some(weight) = bar {
+                if *weight < 0.0 {
+                    return Err(ValidationError::new("Bar weight cannot be negative."));
+                } else if *weight == 0.0 {
+                    return Err(ValidationError::new("Bar weight cannot be zero."));
+                }
+            }
+            Ok(())
+        }
+
+        if new_name.trim().is_empty() {
+            return Err(ValidationError::new("The weight set name cannot be empty."));
+        } else if new_name == "None" {
+            return Err(ValidationError::new(
+                "The weight set name cannot be 'None'.",
+            ));
+        } else if new_name != old_name && self.get(new_name).is_some() {
+            return Err(ValidationError::new(
+                "The new weight set name already exists.",
+            ));
+        }
+
+        match weights {
+            WeightSet::Discrete(weights) => validate_discrete(&weights)?,
+            WeightSet::DualPlates(plates, bar) => validate_dual(&plates, bar)?,
+        }
+
+        Ok(())
+    }
+
+    fn do_change_set(&mut self, _old_name: &str, new_name: &str, weights: WeightSet) {
+        // Might make more sense to remove the old weightset but if we do that we'll
+        // also need to change each exercise to use the new name.
+        self.sets.insert(new_name.to_string(), weights);
     }
 }
 

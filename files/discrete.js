@@ -150,14 +150,11 @@ function on_click(item) {
 }
 
 function update_value() {
-    let input = document.getElementById('list-button');
-    input.value = "";
+    let values = get_values()
+    values = values.map((s) => s.toFixed(3));
 
-    const list = document.getElementById('list');
-    for (var child of list.children) {
-        input.value += child.innerText;
-        input.value += " ";
-    }
+    let input = document.getElementById('list-button');
+    input.value = values.join("¦");
 }
 
 function enable_menu() {
