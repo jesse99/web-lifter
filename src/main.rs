@@ -86,6 +86,10 @@ async fn main() {
             get(get_edit_discrete_set),
         )
         .route(
+            "/edit-plates-weight/:workout/:exercise",
+            get(get_edit_plate_set),
+        )
+        .route(
             "/edit-durations/:workout/:exercise",
             get(get_edit_durations),
         )
@@ -122,8 +126,12 @@ async fn main() {
         )
         .route("/set-weight/:workout/:exercise", post(post_set_weight))
         .route(
-            "/set-weight-set/:workout/:exercise",
-            post(post_set_weight_set),
+            "/set-discrete-set/:workout/:exercise",
+            post(post_set_discrete_set),
+        )
+        .route(
+            "/set-plates-set/:workout/:exercise",
+            post(post_set_plates_set),
         )
         .route("/revert-note/:workout/:exercise", post(post_revert_note))
         .route("/set-note/:workout/:exercise", post(post_set_note))
@@ -459,6 +467,20 @@ async fn get_edit_discrete_set(
     ))
 }
 
+async fn get_edit_plate_set(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_plate_set(state, &workout, &exercise);
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
 async fn get_edit_any_weight(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
@@ -717,22 +739,74 @@ async fn post_set_weight(
 }
 
 #[derive(Debug, Deserialize)]
-struct SetWeightSet {
+struct SetDiscreteSet {
     name: String,
     weights: String, // weights like "25.000" separated by "¦"
 }
 
-async fn post_set_weight_set(
+async fn post_set_discrete_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-    Form(payload): Form<SetWeightSet>,
+    Form(payload): Form<SetDiscreteSet>,
 ) -> Result<impl IntoResponse, AppError> {
     let weights = payload
         .weights
         .split("¦")
         .map(|s| s.parse::<f32>())
         .collect::<Result<Vec<_>, _>>()?;
-    let new_url = pages::post_set_weight_set(state, &workout, &exercise, &payload.name, weights)?;
+    let new_url = pages::post_set_discrete_set(state, &workout, &exercise, &payload.name, weights)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetPlateSet {
+    name: String,
+    weights: String, // weights like "25.000x4" separated by "¦"
+    bar: String,
+}
+
+async fn post_set_plates_set(
+    Path((workout, exercise)): Path<(String, String)>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetPlateSet>,
+) -> Result<impl IntoResponse, AppError> {
+    fn parse_plate(value: &str) -> Result<(f32, i32), anyhow::Error> {
+        let parts: Vec<_> = value.split("x").collect();
+        if parts.len() == 2 {
+            let weight: f32 = parts[0]
+                .parse()
+                .context(format!("expected float for weight but found '{value}'"))?;
+            let count: i32 = parts[1]
+                .parse()
+                .context(format!("expected int for count but found '{value}'"))?;
+            return Ok((weight, count));
+        } else {
+            return Err(anyhow::Error::msg(format!(
+                "Expected weightxcount but found '{value}'"
+            )));
+        }
+    }
+
+    let plates = payload
+        .weights
+        .split("¦")
+        .map(|s| parse_plate(s))
+        .collect::<Result<Vec<_>, _>>()?;
+    let bar = if payload.bar.is_empty() {
+        None
+    } else {
+        Some(payload.bar.parse::<f32>()?)
+    };
+    let new_url =
+        pages::post_set_plate_set(state, &workout, &exercise, &payload.name, plates, bar)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

@@ -1,0 +1,29 @@
+<div class="modal fade" id="add_modal" tabindex="-1" role="dialog" aria-labelledby="add_modal_label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="add_modal_label">Add Plates</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <span class="input-group-text" id="weight-label">Weight</span>
+                    <input type="number" min="0.1" step="0.1" id="weight-input" value=""
+                        aria-describedby="weight-label weight-help"></input>
+                    <div class="form-text fst-italic fs-6 mb-4" id="weight-help">A weight like 10 or 45.</div>
+                </div>
+                <div class="input-group">
+                    <span class="input-group-text" id="count-label">Count</span>
+                    <input type="number" min="1" step="1" id="count-input" value=""
+                        aria-describedby="count-label count-help"></input>
+                    <div class="form-text fst-italic fs-6" id="count-help">The number of plates available at this
+                        weight.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick='on_save()'>Save</button>
+            </div>
+        </div>
+    </div>
+</div>

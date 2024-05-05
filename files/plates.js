@@ -1,6 +1,5 @@
 /* eslint-env es6 */
 /* eslint no-undef: "off" */
-/* eslint no-console: "warn" */
 "use strict";
 
 function on_loaded() {
@@ -10,8 +9,10 @@ function on_loaded() {
     // autofocus attribute doesn't work within modals so we need to do it manually
     let modal = document.getElementById("add_modal");
     let weight = document.getElementById("weight-input");
+    let count = document.getElementById("count-input");
     modal.addEventListener('shown.bs.modal', () => {
         weight.value = "";
+        count.value = "";
         weight.focus()
     })
 }
@@ -30,16 +31,30 @@ function get_values() {
     return values;
 }
 
-function has_value(value) {
+function get_counts() {
+    let values = [];
+
+    const list = document.getElementById('list');
+    const len = list.children.length;
+    for (let i = 0; i < len; i++) {
+        let child = list.children[i];
+        let parts = child.innerText.split(" ");
+        values.push(parseInt(parts[2].slice(1)));
+    }
+
+    return values;
+}
+
+function find_value(value) {
     let values = get_values();
 
-    for (const candidate of values) {
-        if (Math.abs(candidate - value) < 0.01) {
-            return true;
+    for (let i = 0; i < values.length; i++) {
+        if (Math.abs(value - values[i]) < 0.01) {
+            return i;
         }
     }
 
-    return false;
+    return undefined;
 }
 
 function resort() {
@@ -53,76 +68,72 @@ function resort() {
         .forEach(node => list.appendChild(node));
 }
 
-function parse_values() {
+function parse_value() {
     let input = document.getElementById("weight-input");
     if (input.value) {
-        // 5-100 by 10
-        let parts = input.value.trim().split(/\s+/);
-        if (parts.length == 3 && parts[1] == "by") {
-            let step = parseFloat(parts[2]);
-            parts = parts[0].split("-");
-            if (step && step > 0.0 && parts.length == 2) {
-                let min = parseFloat(parts[0]);
-                let max = parseFloat(parts[1]);
-                if (min && max && min > 0.0 && min <= max) {
-                    let weight = min;
-                    let weights = [];
-                    while (weight <= max) {
-                        weights.push(weight);
-                        weight += step;
-                    }
-                    return weights;
-                }
-            }
-        } else if (parts.length == 1) {
-            // 45
-            let weight = parseFloat(parts[0]);
-            if (weight > 0.0) {
-                return [weight];
-            }
+        let weight = parseFloat(input.value);
+        if (weight > 0.0) {
+            return weight;
+        }
+    }
+    return undefined;
+}
+
+function parse_count() {
+    let input = document.getElementById("count-input");
+    if (input.value) {
+        let count = parseInt(input.value);
+        if (count > 0) {
+            return count;
         }
     }
     return undefined;
 }
 
 function on_save() {
-    const weights = parse_values();
+    const weight = parse_value();
+    const count = parse_count();
 
     let help = document.getElementById("weight-help");
-    if (weights) {
+    if (weight) {
         help.classList.remove("text-danger");
-
-        let added = false;
-        for (var weight of weights) {
-            if (add_weight(weight)) {
-                added = true;
-            }
-        }
-        if (added) {
-            resort();
-            update_value();
-            enable_menu();
-        }
-
-        let modal = document.getElementById("add_modal");
-        bootstrap.Modal.getInstance(modal).hide();
     } else {
         help.classList.add("text-danger");
     }
+
+    help = document.getElementById("count-help");
+    if (count) {
+        help.classList.remove("text-danger");
+    } else {
+        help.classList.add("text-danger");
+    }
+
+    if (weight && count) {
+        add_plate(weight, count);
+        resort();
+        update_value();
+        enable_menu();
+
+        let modal = document.getElementById("add_modal");
+        bootstrap.Modal.getInstance(modal).hide();
+    }
 }
 
-function add_weight(weight) {
-    if (!has_value(weight)) {
-        let item = document.createElement("li");
-        item.classList.add("list-group-item");
-        item.setAttribute("onclick", "on_click(this)");
-        item.innerText = `${weight} lbs`;
-
+function add_plate(weight, count) {
+    let i = find_value(weight);
+    if (i !== undefined) {
         const list = document.getElementById('list');
-        list.appendChild(item);
-        return true;
+        let child = list.children[i];
+        list.removeChild(child);
     }
-    return false;
+
+    let item = document.createElement("li");
+    item.classList.add("list-group-item");
+    item.setAttribute("onclick", "on_click(this)");
+    item.innerText = `${weight} lbs x${count}`;
+
+    const list = document.getElementById('list');
+    list.appendChild(item);
 }
 
 function on_delete() {
@@ -151,11 +162,18 @@ function on_click(item) {
 }
 
 function update_value() {
-    let values = get_values()
+    let values = get_values();
+    let counts = get_counts();
     values = values.map((s) => s.toFixed(3));
+    console.assert(values.length == counts.length);
+
+    let items = [];
+    for (let i = 0; i < values.length; i++) {
+        items.push(`${values[i]}x${counts[i]}`)
+    }
 
     let input = document.getElementById('list-button');
-    input.value = values.join("¦");
+    input.value = items.join("¦");
 }
 
 function enable_menu() {

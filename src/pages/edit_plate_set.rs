@@ -2,28 +2,33 @@ use axum::http::Uri;
 
 use super::SharedState;
 use crate::pages::editor_builder::*;
-use crate::weights::WeightSet;
+use crate::weights::{Plate, WeightSet};
 use crate::{
     exercise::ExerciseName,
     weights::{self, Weights},
 };
 
-pub fn get_edit_discrete_set(state: SharedState, workout: &str, exercise: &str) -> String {
-    fn make_labels(weights: &Weights, set_name: &str) -> Vec<String> {
+pub fn get_edit_plate_set(state: SharedState, workout: &str, exercise: &str) -> String {
+    fn make_labels(weights: &Weights, set_name: &str) -> (Vec<String>, Option<f32>) {
         if let Some(set) = weights.get(set_name) {
             match set {
-                weights::WeightSet::Discrete(values) => values
-                    .iter()
-                    .map(|w| weights::format_weight(*w, " lbs"))
-                    .collect(),
-                weights::WeightSet::DualPlates(_, _) => panic!("expected discrete weights"),
+                weights::WeightSet::Discrete(_) => panic!("expected plate weights"),
+                weights::WeightSet::DualPlates(plates, bar) => (
+                    plates
+                        .iter()
+                        .map(|p| {
+                            format!("{} x{}", weights::format_weight(p.weight, " lbs"), p.count,)
+                        })
+                        .collect(),
+                    *bar,
+                ),
             }
         } else {
-            Vec::new()
+            (Vec::new(), None)
         }
     }
 
-    let post_url = format!("/set-discrete-set/{workout}/{exercise}");
+    let post_url = format!("/set-plates-set/{workout}/{exercise}");
     let cancel_url = format!("/exercise/{workout}/{exercise}");
 
     let weights = &state.read().unwrap().user.weights;
@@ -39,25 +44,26 @@ pub fn get_edit_discrete_set(state: SharedState, workout: &str, exercise: &str) 
         EditButton::new("delete-btn", "on_delete()", "Delete"),
     ];
     let set_name = data.weightset.clone().unwrap(); // only land in this function if there is a weightset
-    let items = make_labels(weights, &set_name);
-    let javascript = include_str!("../../files/discrete.js");
-    let modal = include_str!("../../files/discrete-modal.html");
+    let (items, bar) = make_labels(weights, &set_name);
+    let javascript = include_str!("../../files/plates.js");
+    let modal = include_str!("../../files/plates-modal.html");
 
     let widgets: Vec<Box<dyn Widget>> = vec![
-        Box::new(Prolog::with_edit_menu(
-            "Edit Discrete Weight",
-            buttons,
-            javascript,
-        )),
+        Box::new(Prolog::with_edit_menu("Edit Plates", buttons, javascript)),
         Box::new(
             TextInput::new(
                 "Name",
                 &set_name,
-                "The name of the weight set, e.g. \"Dumbbells\".",
+                "The name of the weight set, e.g. \"Deadlift\".",
             )
             .with_required(),
         ),
-        Box::new(List::with_names("weights", items, "The weights in the weight set.").without_js()),
+        Box::new(FloatInput::new(
+            "Bar",
+            bar,
+            "Optional fixed weight, usually for a barbell.",
+        )),
+        Box::new(List::with_names("weights", items, "The plates in the weight set.").without_js()),
         Box::new(Html::new(modal)),
         Box::new(StdButtons::new(&cancel_url)),
     ];
@@ -65,15 +71,17 @@ pub fn get_edit_discrete_set(state: SharedState, workout: &str, exercise: &str) 
     build_editor(&post_url, widgets)
 }
 
-pub fn post_set_discrete_set(
+pub fn post_set_plate_set(
     state: SharedState,
     workout: &str,
     exercise: &str,
     set_name: &str,
-    weights: Vec<f32>,
+    plates: Vec<(f32, i32)>,
+    bar: Option<f32>,
 ) -> Result<Uri, anyhow::Error> {
     let path = format!("/exercise/{workout}/{exercise}");
     let exercise = ExerciseName(exercise.to_owned());
+    let plates = plates.iter().map(|(w, c)| Plate::new(*w, *c)).collect();
 
     {
         let old_name = {
@@ -84,7 +92,7 @@ pub fn post_set_discrete_set(
             d.weightset.clone().map_or("".to_string(), |s| s)
         };
         {
-            let weights = WeightSet::Discrete(weights);
+            let weights = WeightSet::DualPlates(plates, bar);
             let wghts = &mut state.write().unwrap().user.weights;
             wghts.try_change_set(&old_name, set_name, weights)?;
         }
