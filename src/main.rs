@@ -70,8 +70,9 @@ async fn main() {
         .route("/workout/:name", get(get_workout))
         .route("/exercise/:workout/:exercise", get(get_exercise))
         .route("/add-exercise/:workout", get(get_add_exercise))
+        .route("/edit-workout-name/:workout", get(get_edit_workout_name))
         .route("/edit-exercises/:workout", get(get_edit_exercises))
-        .route("/edit-name/:workout/:exercise", get(get_edit_name))
+        .route("/edit-name/:workout/:exercise", get(get_edit_exercise_name))
         .route(
             "/edit-formal-name/:workout/:exercise",
             get(get_edit_formal_name),
@@ -116,10 +117,14 @@ async fn main() {
             "/exercise/:workout/:exercise/next-var-set",
             post(post_next_var_set),
         )
+        .route("/set-workout-name/:workout", post(post_set_workout_name))
         .route("/reset/exercise/:workout/:exercise", post(reset_exercise))
         .route("/append-exercise/:workout", post(post_append_exercise))
         .route("/set-exercises/:workout", post(post_set_exercises))
-        .route("/set-name/:workout/:exercise", post(post_set_name))
+        .route(
+            "/set-exercise-name/:workout/:exercise",
+            post(post_set_exercise_name),
+        )
         .route(
             "/set-formal-name/:workout/:exercise",
             post(post_set_formal_name),
@@ -275,14 +280,30 @@ async fn get_edit_exercises(
     ))
 }
 
-async fn get_edit_name(
+async fn get_edit_workout_name(
+    Path(workout): Path<String>,
+    Extension(_state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let post_url = format!("/set-workout-name/{}", workout);
+    let cancel_url = format!("/workout/{}", workout);
+    let help = "Must be unique within the program.";
+    let contents = pages::get_edit_name(&workout, help, &post_url, &cancel_url);
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+async fn get_edit_exercise_name(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(_state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
-    let post_url = format!("/set-name/{}/{}", workout, exercise);
+    let post_url = format!("/set-exercise-name/{}/{}", workout, exercise);
     let cancel_url = format!("/exercise/{}/{}", workout, exercise);
     let value = exercise.to_owned();
-    let help = "Must be unique within the workout";
+    let help = "Must be unique within the workout.";
     let contents = pages::get_edit_name(&value, help, &post_url, &cancel_url);
     Ok((
         [
@@ -674,12 +695,29 @@ struct SetName {
     name: String,
 }
 
-async fn post_set_name(
+async fn post_set_workout_name(
+    Path(workout): Path<String>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetName>,
+) -> Result<impl IntoResponse, AppError> {
+    let new_url = pages::post_set_workout_name(state, &workout, &payload.name)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+async fn post_set_exercise_name(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetName>,
 ) -> Result<impl IntoResponse, AppError> {
-    let new_url = pages::post_set_name(state, &workout, &exercise, &payload.name)?;
+    let new_url = pages::post_set_exercise_name(state, &workout, &exercise, &payload.name)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

@@ -72,13 +72,13 @@ impl Workout {
         }
     }
 
-    pub fn try_change_name(
+    pub fn try_change_exercise_name(
         &mut self,
         old_name: &ExerciseName,
         new_name: &str,
     ) -> Result<(), ValidationError> {
-        self.validate_change_name(old_name, new_name)?;
-        self.do_change_name(old_name, new_name);
+        self.validate_change_exercise_name(old_name, new_name)?;
+        self.do_change_exercise_name(old_name, new_name);
         Ok(())
     }
 
@@ -304,7 +304,7 @@ impl Workout {
         candidates[0]
     }
 
-    fn validate_change_name(
+    fn validate_change_exercise_name(
         &self,
         old_name: &ExerciseName,
         new_name: &str,
@@ -319,7 +319,7 @@ impl Workout {
         Ok(())
     }
 
-    fn do_change_name(&mut self, old_name: &ExerciseName, new_name: &str) {
+    fn do_change_exercise_name(&mut self, old_name: &ExerciseName, new_name: &str) {
         let exercise = self.find_mut(old_name).unwrap();
         let new_name = ExerciseName(new_name.to_owned());
         match exercise {

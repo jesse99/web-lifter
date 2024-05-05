@@ -115,6 +115,16 @@ impl Program {
         self.blocks_start = Some(week_start - Duration::days(delta));
     }
 
+    pub fn try_change_workout_name(
+        &mut self,
+        old_name: &str,
+        new_name: &str,
+    ) -> Result<(), ValidationError> {
+        self.validate_change_workout_name(old_name, new_name)?;
+        self.do_change_workout_name(old_name, new_name);
+        Ok(())
+    }
+
     pub fn fixup(&mut self) {
         // fn set_weight(program: &mut Program, workout: &str, exercise: &str, weight: f32) {
         //     use crate::exercise::ExerciseName;
@@ -261,6 +271,35 @@ impl Program {
 
     fn do_add_workout(&mut self, workout: Workout) {
         self.workouts.push(workout);
+    }
+
+    fn validate_change_workout_name(
+        &self,
+        old_name: &str,
+        new_name: &str,
+    ) -> Result<(), ValidationError> {
+        if self.find(old_name).is_none() {
+            return Err(ValidationError::new("Didn't find old workout."));
+        }
+
+        if new_name.trim().is_empty() {
+            return Err(ValidationError::new("The workout name cannot be empty."));
+        } else if self.workouts.iter().find(|w| w.name == new_name).is_some() {
+            return Err(ValidationError::new("The workout name must be unique."));
+        }
+
+        Ok(())
+    }
+
+    fn do_change_workout_name(&mut self, old_name: &str, new_name: &str) {
+        let workout = self.find_mut(old_name).unwrap();
+        workout.name = new_name.to_string();
+
+        for block in self.blocks.iter_mut() {
+            if let Some(i) = block.workouts.iter().position(|w| w == old_name) {
+                block.workouts[i] = new_name.to_string();
+            }
+        }
     }
 }
 

@@ -13,7 +13,22 @@ pub fn get_edit_name(value: &str, help: &str, post_url: &str, cancel_url: &str) 
     build_editor(&post_url, widgets)
 }
 
-pub fn post_set_name(
+pub fn post_set_workout_name(
+    state: SharedState,
+    old_name: &str,
+    new_name: &str,
+) -> Result<Uri, anyhow::Error> {
+    let path = format!("/workout/{new_name}");
+
+    if old_name != new_name {
+        let program = &mut state.write().unwrap().user.program;
+        program.try_change_workout_name(&old_name, new_name)?;
+    }
+
+    super::post_epilog(state, &path)
+}
+
+pub fn post_set_exercise_name(
     state: SharedState,
     workout: &str,
     old_name: &str,
@@ -26,7 +41,7 @@ pub fn post_set_name(
         {
             let program = &mut state.write().unwrap().user.program;
             let workout = program.find_mut(&workout).unwrap();
-            workout.try_change_name(&old_name, new_name)?;
+            workout.try_change_exercise_name(&old_name, new_name)?;
         }
     }
 
