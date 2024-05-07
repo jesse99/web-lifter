@@ -543,7 +543,6 @@ impl Radio {
 impl Widget for Radio {
     fn build(&self, builder: &mut EditorBuilder) {
         // radios
-        let mut list = HtmlTag::new("div").with_class("input-group");
         for item in self.items.iter() {
             let mut entry = HtmlTag::new("div").with_class("form-check");
             let mut input = HtmlTag::new("input")
@@ -551,8 +550,7 @@ impl Widget for Radio {
                 .with_class("form-check-input")
                 .with_attribute("type", "radio")
                 .with_attribute("name", &self.name)
-                .with_attribute("value", &item.1)
-                .with_attribute("aria-describedby", &format!("{}-help", self.name));
+                .with_attribute("value", &item.1);
             if item.1 == self.checked {
                 input.add_attribute("checked", "");
             }
@@ -563,9 +561,8 @@ impl Widget for Radio {
                 .with_attribute("for", &format!("{}-btn", item.1))
                 .with_body(&item.0);
             entry.add_child(label);
-            list.add_child(entry);
+            builder.form.add_child(entry);
         }
-        builder.form.add_child(list);
 
         // help
         let div = HtmlTag::new("div")
