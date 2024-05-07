@@ -784,7 +784,7 @@ vec![("Link", "https://www.youtube.com/watch?v=1ATixR61uWw")],
         vec![
             (
                 "Guide",
-                "https://www.bodybuilding.com/exercises/front-box-jump",
+                "https://www.verywellfit.com/how-to-do-box-jumps-4588131",
             ),
             (
                 "More",
@@ -803,7 +803,7 @@ vec![
         "Push your knees out so that they stay over your feet.",
         "Go down until your butt touches the box and then go back up.",
         "Keep your back straight."],
-vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/box-squat")],
+vec![("Link", "https://www.westside-barbell.com/blogs/the-blog/how-to-execute-a-proper-box-squat")],
 );
 
     add(t, 

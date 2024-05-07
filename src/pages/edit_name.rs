@@ -13,6 +13,15 @@ pub fn get_edit_name(value: &str, help: &str, post_url: &str, cancel_url: &str) 
     build_editor(&post_url, widgets)
 }
 
+pub fn post_set_add_workout(state: SharedState, name: &str) -> Result<Uri, anyhow::Error> {
+    {
+        let program = &mut state.write().unwrap().user.program;
+        program.try_add_workout(name)?;
+    }
+
+    super::post_epilog(state, "/")
+}
+
 pub fn post_set_workout_name(
     state: SharedState,
     old_name: &str,

@@ -1,4 +1,7 @@
-use crate::{pages::ValidationError, workout::Workout};
+use crate::{
+    pages::ValidationError,
+    workout::{Schedule, Workout},
+};
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};
 use serde::{Deserialize, Serialize};
 
@@ -115,6 +118,19 @@ impl Program {
         self.blocks_start = Some(week_start - Duration::days(delta));
     }
 
+    pub fn try_add_workout(&mut self, name: &str) -> Result<(), ValidationError> {
+        self.validate_add_workout(name)?;
+
+        let workout = Workout::new(name.to_string(), Schedule::AnyDay);
+        self.do_add_workout(workout);
+        Ok(())
+    }
+
+    pub fn add_workout(&mut self, workout: Workout) {
+        assert!(self.validate_add_workout(&workout.name).is_ok());
+        self.do_add_workout(workout);
+    }
+
     pub fn try_change_workout_name(
         &mut self,
         old_name: &str,
@@ -184,17 +200,6 @@ impl Program {
         // set_var_sets_target(self, "Medium OHP", "Medium Chin-ups", 16);
     }
 
-    // pub fn try_add_workout(&mut self, workout: Workout) -> Result<(), ValidationError> {
-    //     self.validate_add_workout(&workout)?;
-    //     self.do_add_workout(workout);
-    //     Ok(())
-    // }
-
-    pub fn add_workout(&mut self, workout: Workout) {
-        assert!(self.validate_add_workout(&workout).is_ok());
-        self.do_add_workout(workout);
-    }
-
     pub fn blocks(&self) -> impl Iterator<Item = &Block> + '_ {
         self.blocks.iter()
     }
@@ -256,13 +261,8 @@ impl Program {
         BlockSchedule { spans }
     }
 
-    fn validate_add_workout(&self, workout: &Workout) -> Result<(), ValidationError> {
-        if self
-            .workouts
-            .iter()
-            .find(|&w| w.name == workout.name)
-            .is_some()
-        {
+    fn validate_add_workout(&self, name: &str) -> Result<(), ValidationError> {
+        if self.workouts.iter().find(|&w| w.name == name).is_some() {
             // Other checks would be done when creating workouts.
             return Err(ValidationError::new("The workout name must be unique."));
         }

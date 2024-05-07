@@ -67,6 +67,7 @@ async fn main() {
         // get ---------------------------------------------------------------------------
         .route("/", get(get_program))
         .route("/show-overview", get(get_overview))
+        .route("/add-workout", get(get_edit_add_workout))
         .route("/workout/:name", get(get_workout))
         .route("/exercise/:workout/:exercise", get(get_exercise))
         .route("/add-exercise/:workout", get(get_add_exercise))
@@ -112,6 +113,7 @@ async fn main() {
         )
         .route("/edit-current-set/:workout/:exercise", get(get_current_set))
         // post --------------------------------------------------------------------------
+        .route("/set-add-workout", post(post_set_add_workout))
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
         .route(
             "/exercise/:workout/:exercise/next-var-set",
@@ -271,6 +273,22 @@ async fn get_edit_exercises(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_exercises(state, &workout);
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_add_workout(
+    Extension(_state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let post_url = format!("/set-add-workout");
+    let cancel_url = "/";
+    let help = "Must be unique within the program.";
+    let contents = pages::get_edit_name("", help, &post_url, &cancel_url);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -693,6 +711,22 @@ async fn post_set_exercises(
 #[derive(Debug, Deserialize)]
 struct SetName {
     name: String,
+}
+
+async fn post_set_add_workout(
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetName>,
+) -> Result<impl IntoResponse, AppError> {
+    let new_url = pages::post_set_add_workout(state, &payload.name)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
 }
 
 async fn post_set_workout_name(
