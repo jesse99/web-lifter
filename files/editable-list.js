@@ -98,15 +98,15 @@ function on_move_up() {
 }
 
 function update_value() {
-    let exercises = "";
+    let names = "";
     let disabled = "";
     const list = document.getElementById('list');
     for (var child of list.children) {
-        if (exercises) {
-            exercises += "\t";
+        if (names) {
+            names += "\t";
             disabled += "\t";
         }
-        exercises += child.innerText;
+        names += child.innerText;
         if (child.classList.contains("text-black-50")) {
             disabled += "true";
         } else {
@@ -114,7 +114,7 @@ function update_value() {
         }
     }
     let input = document.getElementById('list-button');
-    input.value = exercises;
+    input.value = names;
 
     input = document.getElementById('disabled-btn');
     input.value = disabled;

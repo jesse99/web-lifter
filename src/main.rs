@@ -45,8 +45,8 @@ async fn main() {
             get(|s| get_js(s, include_str!("../files/exercise.js"))),
         )
         .route(
-            "/scripts/exercises.js",
-            get(|s| get_js(s, include_str!("../files/exercises.js"))),
+            "/scripts/editable-list.js",
+            get(|s| get_js(s, include_str!("../files/editable-list.js"))),
         )
         .route(
             "/scripts/formal_name.js",
@@ -68,6 +68,7 @@ async fn main() {
         .route("/", get(get_program))
         .route("/show-overview", get(get_overview))
         .route("/add-workout", get(get_edit_add_workout))
+        .route("/edit-workouts", get(get_edit_edit_workouts))
         .route("/workout/:name", get(get_workout))
         .route("/exercise/:workout/:exercise", get(get_exercise))
         .route("/add-exercise/:workout", get(get_add_exercise))
@@ -113,6 +114,7 @@ async fn main() {
         )
         .route("/edit-current-set/:workout/:exercise", get(get_current_set))
         // post --------------------------------------------------------------------------
+        .route("/set-workouts", post(post_set_workouts))
         .route("/set-add-workout", post(post_set_add_workout))
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
         .route(
@@ -273,6 +275,19 @@ async fn get_edit_exercises(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_exercises(state, &workout);
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_edit_workouts(
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_workouts(state);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -680,17 +695,39 @@ async fn post_append_exercise(
 }
 
 #[derive(Debug, Deserialize)]
-struct SetExercises {
-    exercises: String, // "Exercise 1\tExercise 2"
-    disabled: String,  // "true\tfalse"
+struct EditableList {
+    names: String,    // "Name 1\tName 2"
+    disabled: String, // "true\tfalse"
+}
+
+async fn post_set_workouts(
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<EditableList>,
+) -> Result<impl IntoResponse, AppError> {
+    let workouts: Vec<_> = payload.names.split("\t").collect();
+    let disabled = payload
+        .disabled
+        .split("\t")
+        .map(|s| s.parse())
+        .collect::<Result<Vec<_>, _>>()?;
+    let new_url = pages::post_set_workouts(state, workouts, disabled)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
 }
 
 async fn post_set_exercises(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,
-    Form(payload): Form<SetExercises>,
+    Form(payload): Form<EditableList>,
 ) -> Result<impl IntoResponse, AppError> {
-    let exercises: Vec<_> = payload.exercises.split("\t").collect();
+    let exercises: Vec<_> = payload.names.split("\t").collect();
     let disabled = payload
         .disabled
         .split("\t")

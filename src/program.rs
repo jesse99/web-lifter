@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::{
     pages::ValidationError,
     workout::{Schedule, Workout},
@@ -116,6 +118,16 @@ impl Program {
         // Backup by the week number.
         let delta = 7 * (week - 1) as i64;
         self.blocks_start = Some(week_start - Duration::days(delta));
+    }
+
+    pub fn try_set_workouts(
+        &mut self,
+        workouts: Vec<&str>,
+        disabled: Vec<bool>,
+    ) -> Result<(), ValidationError> {
+        self.validate_set_workouts(&workouts)?;
+        self.do_set_workouts(workouts, disabled);
+        Ok(())
     }
 
     pub fn try_add_workout(&mut self, name: &str) -> Result<(), ValidationError> {
@@ -300,6 +312,38 @@ impl Program {
                 block.workouts[i] = new_name.to_string();
             }
         }
+    }
+
+    fn validate_set_workouts(&self, workouts: &Vec<&str>) -> Result<(), ValidationError> {
+        let mut names = HashSet::new();
+        for name in workouts {
+            if name.trim().is_empty() {
+                return Err(ValidationError::new("The workout name cannot be empty."));
+            } else {
+                let added = names.insert(name.to_owned());
+                if !added {
+                    return Err(ValidationError::new("'{name}' appears more than once."));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn do_set_workouts(&mut self, workouts: Vec<&str>, disabled: Vec<bool>) {
+        let mut new_workouts = Vec::with_capacity(workouts.len());
+        for (i, &name) in workouts.iter().enumerate() {
+            let mut workout =
+                if let Some(index) = self.workouts.iter().position(|w| w.name == *name) {
+                    self.workouts.remove(index)
+                } else {
+                    Workout::new(name.to_string(), Schedule::AnyDay)
+                };
+            if i < disabled.len() {
+                workout.enabled = !disabled[i];
+            }
+            new_workouts.push(workout);
+        }
+        self.workouts = new_workouts;
     }
 }
 
