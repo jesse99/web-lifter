@@ -38,6 +38,7 @@ impl ProgramData {
     fn new(program: &Program, error: String) -> ProgramData {
         let workouts = program
             .workouts()
+            .filter(|w| w.enabled)
             .map(|w| WorkoutData::new(program, w))
             .collect();
         ProgramData {

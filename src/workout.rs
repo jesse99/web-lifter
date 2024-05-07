@@ -58,6 +58,7 @@ pub enum Status {
 pub struct Workout {
     pub name: String,
     pub schedule: Schedule,
+    pub enabled: bool,
     exercises: Vec<Exercise>,
     completed: HashMap<ExerciseName, DateTime<Local>>, // when the user last did an exercise, for this workout
 }
@@ -67,6 +68,7 @@ impl Workout {
         Workout {
             name,
             schedule,
+            enabled: true,
             exercises: Vec::new(),
             completed: HashMap::new(),
         }
