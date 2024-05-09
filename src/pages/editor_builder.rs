@@ -107,6 +107,93 @@ pub fn build_editor(post_url: &str, widgets: Vec<Box<dyn Widget>>) -> String {
 }
 
 // =======================================================================================
+/// List of checkbox buttons.
+pub struct Checkbox {
+    name: String,
+    items: Vec<(String, String, bool)>,
+    help: String,
+    javascript: String,
+}
+
+impl Checkbox {
+    /// Construct checkboxes with a vector of (label, name, checked) entries.
+    pub fn new(name: &str, items: Vec<(String, String, bool)>, help: &str) -> Checkbox {
+        let items = items.into_iter().map(|(l, v, c)| (l, v, c)).collect();
+        Checkbox {
+            name: name.to_owned(),
+            items,
+            help: help.to_owned(),
+            javascript: include_str!("../../files/checkboxes.js").to_owned(),
+        }
+    }
+
+    // pub fn with_custom_js(self, javascript: &str) -> Checkbox {
+    //     Checkbox {
+    //         javascript: javascript.to_owned(),
+    //         ..self
+    //     }
+    // }
+
+    // pub fn without_js(self) -> Checkbox {
+    //     Checkbox {
+    //         javascript: "".to_owned(),
+    //         ..self
+    //     }
+    // }
+}
+
+impl Widget for Checkbox {
+    fn build(&self, builder: &mut EditorBuilder) {
+        // checkboxes
+        for item in self.items.iter() {
+            let mut entry = HtmlTag::new("div").with_class("form-check");
+            let mut input = HtmlTag::new("input")
+                .with_id(&format!("{}-btn", item.1))
+                .with_class("form-check-input")
+                .with_attribute("type", "checkbox")
+                // .with_attribute("name", &self.name)
+                .with_attribute("onclick", "on_click()")
+                .with_attribute("value", &item.1);
+            if item.2 {
+                input.add_attribute("checked", "");
+            }
+            entry.add_child(input);
+
+            let label = HtmlTag::new("label")
+                .with_class("form-check-label")
+                .with_attribute("for", &format!("{}-btn", item.1))
+                .with_body(&item.0);
+            entry.add_child(label);
+            builder.form.add_child(entry);
+        }
+
+        // help
+        let div = HtmlTag::new("div")
+            .with_id(&format!("{}-help", self.name))
+            .with_class("form-text fst-italic fs-6 mb-3")
+            .with_body(&self.help);
+        builder.form.add_child(div);
+
+        // hidden button (used with post to send the selected item name)
+        let button = HtmlTag::new("input")
+            .with_id("check-values")
+            .with_attribute("type", "text")
+            .with_attribute("name", &self.name)
+            .with_attribute("value", "")
+            .with_attribute("hidden", "");
+        builder.form.add_child(button);
+
+        // javascript
+        if !self.javascript.is_empty() {
+            let js = HtmlTag::new("script")
+                .with_attribute("type", "text/javascript")
+                .with_body(&self.javascript);
+            builder.prolog.push(js);
+        }
+    }
+}
+
+// =======================================================================================
 /// Button that shows a dropdown list when clicked.
 pub struct Dropdown {
     label: String,
@@ -520,7 +607,7 @@ pub struct Radio {
 }
 
 impl Radio {
-    /// Construct radios with a vector of (label, value) entries.
+    /// Construct radios with a vector of (label, name) entries.
     pub fn new(name: &str, items: Vec<(String, String)>, help: &str) -> Radio {
         let items = items.into_iter().map(|(l, v)| (l, v)).collect();
         Radio {

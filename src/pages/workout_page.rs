@@ -4,7 +4,7 @@ use crate::{
     pages::SharedState,
     program::Program,
     weights::Weights,
-    workout::Workout,
+    workout::{Schedule, Workout},
 };
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
@@ -34,6 +34,7 @@ struct WorkoutData {
     exercises: Vec<ExerciseData>,
     total_duration: String,
     error: String,
+    disable_any_day: String, // "disabled" or ""
 }
 
 impl WorkoutData {
@@ -65,11 +66,16 @@ impl WorkoutData {
             } else {
                 "-".to_owned()
             };
+            let disable_any_day = match workout.schedule {
+                Schedule::AnyDay => "disabled".to_string(),
+                _ => "".to_string(),
+            };
             Ok(WorkoutData {
                 workout: name.to_owned(),
                 exercises: exercises,
                 total_duration,
                 error,
+                disable_any_day,
             })
         } else {
             anyhow::bail!("Failed to find a workout named '{name}'");

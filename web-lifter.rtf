@@ -1,6 +1,6 @@
 {\rtf1\ansi\ansicpg1252\cocoartf2709
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fswiss\fcharset0 Helvetica;\f2\fswiss\fcharset0 Helvetica-Oblique;
-\f3\froman\fcharset0 Times-Roman;}
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fswiss\fcharset0 Helvetica;\f2\froman\fcharset0 Times-Roman;
+}
 {\colortbl;\red255\green255\blue255;\red60\green60\blue59;\red117\green66\blue151;\red130\green130\blue130;
 \red203\green0\blue77;\red60\green60\blue59;\red203\green0\blue77;\red9\green76\blue116;\red117\green66\blue151;
 \red9\green76\blue116;\red2\green2\blue2;\red25\green28\blue31;\red130\green130\blue130;\red0\green0\blue0;
@@ -131,13 +131,11 @@ localhost:3000/ \
 \f1\fs48 \cf11 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
 \pard\pardeftab720\partightenfactor0
 
-\f0\fs32 \cf2 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf5 \strokec5 \
+\f0\fs40 \cf7 \expnd0\expndtw0\kerning0
+\
 \pard\pardeftab720\partightenfactor0
 
-\f1\fs48 \cf11 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \'95\'a0Update box squat note\
+\f1\fs48 \cf11 \kerning1\expnd0\expndtw0 \'95\'a0Update box squat note\
 \'95 Try adding a couple exercises from scatch\
 	- make sure they can all be executed\
 \'95\'a0Test delete exercise\
@@ -146,14 +144,7 @@ localhost:3000/ \
 \'95 Use a helper with render_template\
 	- verify that there are no \'93\{\{stuff\}\}\'94 or \'93\{\{\{stuff\}\}\}\'94 strings left un-expanded\
 	- use an attribute so that the scan code is debug only\
-\pard\pardeftab720\partightenfactor0
-\cf11 \'95\'a0Finish up workout editing:\
-	- schedule    
-\f2\i may need dynamic widgets (can show and hide)\
-	                    would be nice to avoid that, better to have overview with help
-\f1\i0 \
-\pard\pardeftab720\partightenfactor0
-\cf11 \'95 Support program editing\
+\'95 Support program editing\
 	- edit name\
 	- edit blocks\
 	- options\
@@ -194,42 +185,42 @@ localhost:3000/ \
 	- extract to a function and use ? operator (if the lets all want the same type)\
 
 \fs52 		
-\f3\fs30\fsmilli15333 \cf16 \expnd0\expndtw0\kerning0
+\f2\fs30\fsmilli15333 \cf16 \expnd0\expndtw0\kerning0
 fn get_result() -> Option<u64> \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf16 \'a0 let i = func1()?;
+\f2\fs30\fsmilli15333 \cf16 \'a0 let i = func1()?;
 \f1\fs33\fsmilli16667 \cf0 \
 \pard\pardeftab720\partightenfactor0
 \cf0 		
-\f3\fs30\fsmilli15333 \cf16 \'a0 let j = func2(i)?;
+\f2\fs30\fsmilli15333 \cf16 \'a0 let j = func2(i)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf16 \'a0 let k = func3(j)?;
+\f2\fs30\fsmilli15333 \cf16 \'a0 let k = func3(j)?;
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf16 \'a0 func3(k)
+\f2\fs30\fsmilli15333 \cf16 \'a0 func3(k)
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf16 \}
+\f2\fs30\fsmilli15333 \cf16 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf16 \'a0
+\f2\fs30\fsmilli15333 \cf16 \'a0
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf16 fn main() \{
+\f2\fs30\fsmilli15333 \cf16 fn main() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf16 \'a0 if let Some(result) = get_result() \{
+\f2\fs30\fsmilli15333 \cf16 \'a0 if let Some(result) = get_result() \{
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf16 \'a0\'a0\'a0 // do something
+\f2\fs30\fsmilli15333 \cf16 \'a0\'a0\'a0 // do something
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf16 \'a0 \}
+\f2\fs30\fsmilli15333 \cf16 \'a0 \}
 \f1\fs33\fsmilli16667 \cf0 \
 		
-\f3\fs30\fsmilli15333 \cf16 \}\
+\f2\fs30\fsmilli15333 \cf16 \}\
 \pard\pardeftab720\partightenfactor0
 
 \f1\fs48 \cf11 \kerning1\expnd0\expndtw0 \'95\'a0Set label flaked out for a second after finishing last set\

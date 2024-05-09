@@ -70,6 +70,9 @@ async fn main() {
         .route("/add-workout", get(get_edit_add_workout))
         .route("/edit-workouts", get(get_edit_edit_workouts))
         .route("/workout/:name", get(get_workout))
+        .route("/schedule-daily/:workout", get(get_schedule_daily))
+        .route("/edit-schedule-nth/:workout", get(get_schedule_nth))
+        .route("/edit-schedule-weekday/:workout", get(get_schedule_weekday))
         .route("/exercise/:workout/:exercise", get(get_exercise))
         .route("/add-exercise/:workout", get(get_add_exercise))
         .route("/edit-workout-name/:workout", get(get_edit_workout_name))
@@ -122,6 +125,11 @@ async fn main() {
             post(post_next_var_set),
         )
         .route("/set-workout-name/:workout", post(post_set_workout_name))
+        .route("/set-schedule-nth/:workout", post(post_set_schedule_nth))
+        .route(
+            "/set-schedule-weekdays/:workout",
+            post(post_set_schedule_weekdays),
+        )
         .route("/reset/exercise/:workout/:exercise", post(reset_exercise))
         .route("/append-exercise/:workout", post(post_append_exercise))
         .route("/set-exercises/:workout", post(post_set_exercises))
@@ -233,6 +241,50 @@ async fn get_workout(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_workout_page(state, &name)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_schedule_daily(
+    Path(workout): Path<String>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let new_url = pages::get_schedule_daily(state, &workout);
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+async fn get_schedule_nth(
+    Path(workout): Path<String>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_schedule_nth(state, &workout);
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_schedule_weekday(
+    Path(workout): Path<String>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_schedule_weekdays(state, &workout);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -772,6 +824,60 @@ async fn post_set_workout_name(
     Form(payload): Form<SetName>,
 ) -> Result<impl IntoResponse, AppError> {
     let new_url = pages::post_set_workout_name(state, &workout, &payload.name)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetNth {
+    n: String,
+}
+
+async fn post_set_schedule_nth(
+    Path(workout): Path<String>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetNth>,
+) -> Result<impl IntoResponse, AppError> {
+    let n: i32 = payload
+        .n
+        .parse()
+        .context(format!("expected int but found '{}'", payload.n))?;
+    let new_url = pages::post_schedule_nth(state, &workout, n)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetDays {
+    days: String, // "sun mon tues"
+}
+
+async fn post_set_schedule_weekdays(
+    Path(workout): Path<String>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetDays>,
+) -> Result<impl IntoResponse, AppError> {
+    let days = payload
+        .days
+        .trim()
+        .split(" ")
+        .map(|s| s.to_string())
+        .collect();
+    let new_url = pages::post_set_schedule_weekdays(state, &workout, days)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

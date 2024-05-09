@@ -41,7 +41,12 @@
                         <li><a class="dropdown-item" href="/add-exercise/{{workout}}">Add Exercise</a></li>
                         <li><a class="dropdown-item" href="/edit-exercises/{{workout}}">Edit Exercises</a></li>
                         <li><a class="dropdown-item" href="/edit-workout-name/{{workout}}">Edit Name</a></li>
-                        <li><a class="dropdown-item disabled" href="#">Edit Schedule</a></li>
+                        <li><a class="dropdown-item {{disable_any_day}}" href="/schedule-daily/{{workout}}">Schedule Any
+                                Day</a></li>
+                        <li><a class="dropdown-item" href="/edit-schedule-nth/{{workout}}">Schedule Every Nth Day</a>
+                        </li>
+                        <li><a class="dropdown-item" href="/edit-schedule-weekday/{{workout}}">Schedule Week Days</a>
+                        </li>
                     </ul>
                 </div>
             </div>

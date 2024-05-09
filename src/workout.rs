@@ -110,6 +110,12 @@ impl Workout {
         self.do_add_exercise(exercise);
     }
 
+    pub fn try_set_schedule(&mut self, schedule: Schedule) -> Result<(), ValidationError> {
+        self.validate_set_schedule(&schedule)?;
+        self.do_set_schedule(schedule);
+        Ok(())
+    }
+
     pub fn exercises(&self) -> impl Iterator<Item = &Exercise> + '_ {
         self.exercises.iter()
     }
@@ -343,6 +349,29 @@ impl Workout {
 
     fn do_add_exercise(&mut self, exercise: Exercise) {
         self.exercises.push(exercise);
+    }
+
+    fn validate_set_schedule(&self, schedule: &Schedule) -> Result<(), ValidationError> {
+        match schedule {
+            Schedule::AnyDay => (),
+            Schedule::Every(n) => {
+                if *n <= 0 {
+                    return Err(ValidationError::new("N should be greater than zero."));
+                }
+            }
+            Schedule::Days(days) => {
+                if days.is_empty() {
+                    return Err(ValidationError::new(
+                        "At least one day should be scheduled.",
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn do_set_schedule(&mut self, schedule: Schedule) {
+        self.schedule = schedule;
     }
 
     fn validate_set_exercises(&self, exercises: &Vec<&str>) -> Result<(), ValidationError> {
