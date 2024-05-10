@@ -1,5 +1,3 @@
-use axum::http::Uri;
-
 use super::SharedState;
 use crate::pages::editor_builder::*;
 use crate::weights::{Plate, WeightSet};
@@ -7,6 +5,7 @@ use crate::{
     exercise::ExerciseName,
     weights::{self, Weights},
 };
+use axum::http::Uri;
 
 pub fn get_edit_plate_set(state: SharedState, workout: &str, exercise: &str) -> String {
     fn make_labels(weights: &Weights, set_name: &str) -> (Vec<String>, Option<f32>) {

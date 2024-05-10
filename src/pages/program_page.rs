@@ -32,6 +32,7 @@ struct ProgramData {
     name: String,
     workouts: Vec<WorkoutData>,
     error: String,
+    week_disabled: String,
 }
 
 impl ProgramData {
@@ -41,10 +42,16 @@ impl ProgramData {
             .filter(|w| w.enabled)
             .map(|w| WorkoutData::new(program, w))
             .collect();
+        let week_disabled = if program.blocks().count() == 0 {
+            "disabled".to_string()
+        } else {
+            "".to_string()
+        };
         ProgramData {
             name: program.name.clone(),
             workouts,
             error,
+            week_disabled,
         }
     }
 }

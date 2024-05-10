@@ -1,11 +1,10 @@
-use std::collections::HashSet;
-
 use crate::{
     pages::ValidationError,
     workout::{Schedule, Workout},
 };
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 /// Optional block periodization: blocks are scheduled for a number of weeks and then the
 /// next block starts up.

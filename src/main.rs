@@ -68,6 +68,7 @@ async fn main() {
         .route("/", get(get_program))
         .route("/show-overview", get(get_overview))
         .route("/add-workout", get(get_edit_add_workout))
+        .route("/edit-week", get(get_edit_set_week))
         .route("/edit-program-name", get(get_edit_program_name))
         .route("/edit-workouts", get(get_edit_edit_workouts))
         .route("/workout/:name", get(get_workout))
@@ -119,6 +120,7 @@ async fn main() {
         .route("/edit-current-set/:workout/:exercise", get(get_current_set))
         // post --------------------------------------------------------------------------
         .route("/set-program-name", post(post_set_program_name))
+        .route("/set-week", post(post_set_week))
         .route("/set-workouts", post(post_set_workouts))
         .route("/set-add-workout", post(post_set_add_workout))
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
@@ -359,6 +361,19 @@ async fn get_edit_edit_workouts(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_workouts(state);
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_set_week(
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_set_week(state);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -860,6 +875,31 @@ async fn post_set_workout_name(
     Form(payload): Form<SetName>,
 ) -> Result<impl IntoResponse, AppError> {
     let new_url = pages::post_set_workout_name(state, &workout, &payload.name)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetWeek {
+    week: String,
+}
+
+async fn post_set_week(
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetWeek>,
+) -> Result<impl IntoResponse, AppError> {
+    let week: i32 = payload
+        .week
+        .parse()
+        .context(format!("expected int but found '{}'", payload.week))?;
+    let new_url = pages::post_set_week(state, week)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
