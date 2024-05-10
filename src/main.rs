@@ -68,6 +68,7 @@ async fn main() {
         .route("/", get(get_program))
         .route("/show-overview", get(get_overview))
         .route("/add-workout", get(get_edit_add_workout))
+        .route("/edit-program-name", get(get_edit_program_name))
         .route("/edit-workouts", get(get_edit_edit_workouts))
         .route("/workout/:name", get(get_workout))
         .route("/schedule-daily/:workout", get(get_schedule_daily))
@@ -117,6 +118,7 @@ async fn main() {
         )
         .route("/edit-current-set/:workout/:exercise", get(get_current_set))
         // post --------------------------------------------------------------------------
+        .route("/set-program-name", post(post_set_program_name))
         .route("/set-workouts", post(post_set_workouts))
         .route("/set-add-workout", post(post_set_add_workout))
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
@@ -214,6 +216,23 @@ async fn get_program(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_program_page(state)?;
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_program_name(
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let post_url = "/set-program-name";
+    let cancel_url = "/";
+    let help = "Must be unique within the programs.";
+    let program = &state.read().unwrap().user.program;
+    let contents = pages::get_edit_name(&program.name, help, &post_url, &cancel_url);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -381,6 +400,7 @@ async fn get_edit_workout_name(
         axum::response::Html(contents),
     ))
 }
+
 async fn get_edit_exercise_name(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(_state): Extension<SharedState>,
@@ -807,6 +827,22 @@ async fn post_set_add_workout(
     Form(payload): Form<SetName>,
 ) -> Result<impl IntoResponse, AppError> {
     let new_url = pages::post_set_add_workout(state, &payload.name)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+async fn post_set_program_name(
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetName>,
+) -> Result<impl IntoResponse, AppError> {
+    let new_url = pages::post_set_program_name(state, &payload.name)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

@@ -22,6 +22,19 @@ pub fn post_set_add_workout(state: SharedState, name: &str) -> Result<Uri, anyho
     super::post_epilog(state, "/")
 }
 
+pub fn post_set_program_name(state: SharedState, new_name: &str) -> Result<Uri, anyhow::Error> {
+    let path = "/";
+
+    {
+        let program = &mut state.write().unwrap().user.program;
+        if program.name != new_name {
+            program.name = new_name.to_string(); // TODO need some validation once we support multiple programs
+        }
+    }
+
+    super::post_epilog(state, &path)
+}
+
 pub fn post_set_workout_name(
     state: SharedState,
     old_name: &str,
