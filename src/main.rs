@@ -68,6 +68,7 @@ async fn main() {
         .route("/", get(get_program))
         .route("/show-overview", get(get_overview))
         .route("/add-workout", get(get_edit_add_workout))
+        .route("/edit-blocks", get(get_blocks))
         .route("/edit-week", get(get_edit_set_week))
         .route("/edit-program-name", get(get_edit_program_name))
         .route("/edit-workouts", get(get_edit_edit_workouts))
@@ -121,6 +122,7 @@ async fn main() {
         // post --------------------------------------------------------------------------
         .route("/set-program-name", post(post_set_program_name))
         .route("/set-week", post(post_set_week))
+        .route("/set-blocks", post(post_set_blocks))
         .route("/set-workouts", post(post_set_workouts))
         .route("/set-add-workout", post(post_set_add_workout))
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
@@ -361,6 +363,19 @@ async fn get_edit_edit_workouts(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_edit_workouts(state);
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_blocks(
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_blocks(state);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -782,6 +797,28 @@ async fn post_append_exercise(
 }
 
 #[derive(Debug, Deserialize)]
+struct EditBlocks {
+    blocks: String, // "Block 1¦Block 2"
+}
+
+async fn post_set_blocks(
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<EditBlocks>,
+) -> Result<impl IntoResponse, AppError> {
+    let blocks: Vec<_> = payload.blocks.split("¦").map(|s| s.to_string()).collect();
+    let new_url = pages::post_set_blocks(state, blocks)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
 struct EditableList {
     names: String,    // "Name 1\tName 2"
     disabled: String, // "true\tfalse"
@@ -794,7 +831,7 @@ async fn post_set_workouts(
     let workouts: Vec<_> = payload.names.split("\t").collect();
     let disabled = payload
         .disabled
-        .split("\t")
+        .split("\t") // TODO probably should use '¦'
         .map(|s| s.parse())
         .collect::<Result<Vec<_>, _>>()?;
     let new_url = pages::post_set_workouts(state, workouts, disabled)?;
@@ -817,7 +854,7 @@ async fn post_set_exercises(
     let exercises: Vec<_> = payload.names.split("\t").collect();
     let disabled = payload
         .disabled
-        .split("\t")
+        .split("\t") // TODO probably should use '¦'
         .map(|s| s.parse())
         .collect::<Result<Vec<_>, _>>()?;
     let new_url = pages::post_set_exercises(state, &workout, exercises, disabled)?;

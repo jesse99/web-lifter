@@ -4,11 +4,11 @@ use crate::{
 };
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 /// Optional block periodization: blocks are scheduled for a number of weeks and then the
 /// next block starts up.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Block {
     pub name: String,          // e.g. "Heavy" or "Light"
     pub workouts: Vec<String>, // e.g. "Heavy Bench" and "Heavy OHP", can be empty if the user doesn't want to do any workouts for the block
@@ -149,6 +149,12 @@ impl Program {
     ) -> Result<(), ValidationError> {
         self.validate_change_workout_name(old_name, new_name)?;
         self.do_change_workout_name(old_name, new_name);
+        Ok(())
+    }
+
+    pub fn try_set_blocks(&mut self, blocks: Vec<String>) -> Result<(), ValidationError> {
+        self.validate_set_blocks(&blocks)?;
+        self.do_set_blocks(blocks);
         Ok(())
     }
 
@@ -311,6 +317,44 @@ impl Program {
                 block.workouts[i] = new_name.to_string();
             }
         }
+    }
+
+    fn validate_set_blocks(&self, blocks: &Vec<String>) -> Result<(), ValidationError> {
+        let mut names = HashSet::new();
+        for name in blocks.iter() {
+            if name.trim().is_empty() {
+                return Err(ValidationError::new("Block names cannot be empty."));
+            }
+
+            let added = names.insert(name.clone());
+            if !added {
+                return Err(ValidationError::new(&format!(
+                    "'{name}' appears more than once."
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    fn do_set_blocks(&mut self, blocks: Vec<String>) {
+        let mut old_blocks = HashMap::new();
+        while !self.blocks.is_empty() {
+            let block = self.blocks.pop().unwrap();
+            old_blocks.insert(block.name.clone(), block);
+        }
+
+        // Note that this will implicitly delete blocks that are no longer named.
+        let mut new_blocks = Vec::new();
+        for name in blocks.iter() {
+            let block = if let Some(block) = old_blocks.remove(name) {
+                block
+            } else {
+                Block::new(name.clone(), vec![], 1)
+            };
+            new_blocks.push(block);
+        }
+
+        self.blocks = new_blocks;
     }
 
     fn validate_set_workouts(&self, workouts: &Vec<&str>) -> Result<(), ValidationError> {
