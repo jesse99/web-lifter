@@ -158,6 +158,18 @@ impl Program {
         Ok(())
     }
 
+    pub fn try_set_block(
+        &mut self,
+        old_name: &str,
+        new_name: &str,
+        num_weeks: i32,
+        workouts: Vec<String>,
+    ) -> Result<(), ValidationError> {
+        self.validate_set_block(old_name, new_name, num_weeks, &workouts)?;
+        self.do_set_block(old_name, new_name, num_weeks, workouts);
+        Ok(())
+    }
+
     pub fn fixup(&mut self) {
         // fn set_weight(program: &mut Program, workout: &str, exercise: &str, weight: f32) {
         //     use crate::exercise::ExerciseName;
@@ -317,6 +329,61 @@ impl Program {
                 block.workouts[i] = new_name.to_string();
             }
         }
+    }
+
+    fn validate_set_block(
+        &self,
+        old_name: &str,
+        new_name: &str,
+        num_weeks: i32,
+        workouts: &Vec<String>,
+    ) -> Result<(), ValidationError> {
+        if self.blocks.iter().find(|b| b.name == old_name).is_some() {
+            if new_name.trim().is_empty() {
+                return Err(ValidationError::new("The block name cannot be empty."));
+            } else if old_name != new_name
+                && self.blocks.iter().find(|b| b.name == new_name).is_some()
+            {
+                return Err(ValidationError::new("The block name must be unique."));
+            }
+            if num_weeks < 1 {
+                return Err(ValidationError::new(
+                    "Number of weeks must be greater than zero.",
+                ));
+            }
+            let mut names = HashSet::new();
+            for name in workouts {
+                let added = names.insert(name.clone());
+                if !added {
+                    return Err(ValidationError::new(&format!(
+                        "'{name}' was listed more than once."
+                    )));
+                }
+
+                if self.workouts.iter().find(|w| w.name == *name).is_none() {
+                    return Err(ValidationError::new(&format!("'{name}' isn't a workout.")));
+                }
+            }
+        } else {
+            return Err(ValidationError::new("Didn't find old block."));
+        }
+
+        Ok(())
+    }
+
+    fn do_set_block(
+        &mut self,
+        old_name: &str,
+        new_name: &str,
+        num_weeks: i32,
+        workouts: Vec<String>,
+    ) {
+        let block = self.blocks.iter_mut().find(|b| b.name == old_name).unwrap();
+        if block.name != new_name {
+            block.name = new_name.to_string();
+        }
+        block.num_weeks = num_weeks;
+        block.workouts = workouts;
     }
 
     fn validate_set_blocks(&self, blocks: &Vec<String>) -> Result<(), ValidationError> {

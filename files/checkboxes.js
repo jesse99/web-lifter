@@ -18,7 +18,10 @@ function update_value() {
     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
     for (var checkbox of checkboxes) {
         if (checkbox.checked) {
-            input.value += checkbox.value + " ";
+            if (input.value) {
+                input.value += "¦";
+            }
+            input.value += checkbox.value;
         }
     }
 }

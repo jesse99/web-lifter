@@ -69,6 +69,7 @@ async fn main() {
         .route("/show-overview", get(get_overview))
         .route("/add-workout", get(get_edit_add_workout))
         .route("/edit-blocks", get(get_blocks))
+        .route("/edit-block/:name", get(get_edit_block))
         .route("/edit-week", get(get_edit_set_week))
         .route("/edit-program-name", get(get_edit_program_name))
         .route("/edit-workouts", get(get_edit_edit_workouts))
@@ -123,6 +124,7 @@ async fn main() {
         .route("/set-program-name", post(post_set_program_name))
         .route("/set-week", post(post_set_week))
         .route("/set-blocks", post(post_set_blocks))
+        .route("/set-block/:name", post(post_set_block))
         .route("/set-workouts", post(post_set_workouts))
         .route("/set-add-workout", post(post_set_add_workout))
         .route("/exercise/:workout/:exercise/next-set", post(post_next_set))
@@ -376,6 +378,20 @@ async fn get_blocks(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contents = pages::get_blocks(state);
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_block(
+    Path(block_name): Path<String>,
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, AppError> {
+    let contents = pages::get_edit_block(state, &block_name);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -819,6 +835,41 @@ async fn post_set_blocks(
 }
 
 #[derive(Debug, Deserialize)]
+struct EditBlock {
+    name: String,
+    num_weeks: String,
+    workouts: String,
+}
+
+async fn post_set_block(
+    Path(old_name): Path<String>,
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<EditBlock>,
+) -> Result<impl IntoResponse, AppError> {
+    let num_weeks: i32 = payload.num_weeks.parse().context(format!(
+        "expected int for num_weeks but found '{}'",
+        payload.num_weeks
+    ))?;
+    let workouts = payload
+        .workouts
+        .trim()
+        .split("¦")
+        .map(|s| s.to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+    let new_url = pages::post_set_block(state, &old_name, &payload.name, num_weeks, workouts)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
 struct EditableList {
     names: String,    // "Name 1\tName 2"
     disabled: String, // "true\tfalse"
@@ -987,7 +1038,7 @@ async fn post_set_schedule_weekdays(
     let days = payload
         .days
         .trim()
-        .split(" ")
+        .split("¦")
         .map(|s| s.to_string())
         .collect();
     let new_url = pages::post_set_schedule_weekdays(state, &workout, days)?;

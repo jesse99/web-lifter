@@ -38,6 +38,14 @@
                         <li><a class="dropdown-item" href="/edit-program-name">Edit Name</a></li>
                         <li><a class="dropdown-item" href="/edit-workouts">Edit Workouts</a></li>
                         <li><a class="dropdown-item {{week_disabled}}" href="/edit-week">Set Current Week</a></li>
+                        {{#if blocks}}
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        {{#each blocks}}
+                        <li><a class="dropdown-item" href="/edit-block/{{this}}">Edit {{{this}}} Block</a></li>
+                        {{/each}}
+                        {{/if}}
                         <li>
                             <hr class="dropdown-divider">
                         </li>

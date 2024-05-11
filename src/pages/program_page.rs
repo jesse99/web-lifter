@@ -30,6 +30,7 @@ pub fn get_program_page(state: SharedState) -> Result<String, anyhow::Error> {
 #[derive(Serialize, Deserialize)]
 struct ProgramData {
     name: String,
+    blocks: Vec<String>,
     workouts: Vec<WorkoutData>,
     error: String,
     week_disabled: String,
@@ -37,6 +38,7 @@ struct ProgramData {
 
 impl ProgramData {
     fn new(program: &Program, error: String) -> ProgramData {
+        let blocks = program.blocks().map(|b| b.name.clone()).collect();
         let workouts = program
             .workouts()
             .filter(|w| w.enabled)
@@ -49,6 +51,7 @@ impl ProgramData {
         };
         ProgramData {
             name: program.name.clone(),
+            blocks,
             workouts,
             error,
             week_disabled,
