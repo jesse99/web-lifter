@@ -1,6 +1,7 @@
 use super::SharedState;
 use crate::exercise::{ExerciseName, FixedReps, SetIndex};
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use axum::http::Uri;
 
 pub fn get_edit_fixed_reps(state: SharedState, workout: &str, exercise: &str) -> String {
@@ -68,7 +69,7 @@ pub fn post_set_fixed_reps(
     exercise: &str,
     warmups: Vec<FixedReps>,
     worksets: Vec<FixedReps>,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let path = format!("/exercise/{workout}/{exercise}");
     let exercise = ExerciseName(exercise.to_owned());
 

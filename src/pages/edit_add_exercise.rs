@@ -1,5 +1,6 @@
 use crate::exercise::Exercise;
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use crate::pages::SharedState;
 use axum::http::Uri;
 
@@ -39,7 +40,7 @@ pub fn post_append_exercise(
     state: SharedState,
     workout_name: &str,
     exercise: Exercise,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     {
         let program = &mut state.write().unwrap().user.program;
         let workout = program.find_mut(&workout_name).unwrap();

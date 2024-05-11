@@ -9,7 +9,6 @@ mod program;
 mod weights;
 mod workout;
 
-use anyhow::Context;
 use axum::{
     extract::{Extension, Path, Query},
     http::{header, HeaderMap, StatusCode},
@@ -18,7 +17,7 @@ use axum::{
     Form, Router,
 };
 use handlebars::Handlebars;
-use pages::{AppError, SharedState};
+use pages::{Error, SharedState, Unwrapper};
 use serde::Deserialize;
 use std::sync::RwLock;
 use tower::ServiceBuilder;
@@ -218,9 +217,7 @@ async fn get_js(Extension(_state): Extension<SharedState>, contents: &str) -> im
     )
 }
 
-async fn get_program(
-    Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+async fn get_program(Extension(state): Extension<SharedState>) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_program_page(state)?;
     Ok((
         [
@@ -233,7 +230,7 @@ async fn get_program(
 
 async fn get_edit_program_name(
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let post_url = "/set-program-name";
     let cancel_url = "/";
     let help = "Must be unique within the programs.";
@@ -250,7 +247,7 @@ async fn get_edit_program_name(
 
 async fn get_overview(
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_overview_page(state)?;
     Ok((
         [
@@ -264,7 +261,7 @@ async fn get_overview(
 async fn get_workout(
     Path(name): Path<String>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_workout_page(state, &name)?;
     Ok((
         [
@@ -278,7 +275,7 @@ async fn get_workout(
 async fn get_schedule_daily(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::get_schedule_daily(state, &workout);
 
     let mut headers = HeaderMap::new();
@@ -294,7 +291,7 @@ async fn get_schedule_daily(
 async fn get_schedule_nth(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_schedule_nth(state, &workout);
     Ok((
         [
@@ -308,7 +305,7 @@ async fn get_schedule_nth(
 async fn get_schedule_weekday(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_schedule_weekdays(state, &workout);
     Ok((
         [
@@ -322,7 +319,7 @@ async fn get_schedule_weekday(
 async fn get_exercise(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_exercise_page(state, &workout, &exercise)?;
     Ok((
         [
@@ -336,7 +333,7 @@ async fn get_exercise(
 async fn get_add_exercise(
     Path(workout): Path<String>,
     Extension(_state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_add_exercise(&workout);
     Ok((
         [
@@ -350,7 +347,7 @@ async fn get_add_exercise(
 async fn get_edit_exercises(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_exercises(state, &workout);
     Ok((
         [
@@ -363,7 +360,7 @@ async fn get_edit_exercises(
 
 async fn get_edit_edit_workouts(
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_workouts(state);
     Ok((
         [
@@ -374,9 +371,7 @@ async fn get_edit_edit_workouts(
     ))
 }
 
-async fn get_blocks(
-    Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+async fn get_blocks(Extension(state): Extension<SharedState>) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_blocks(state);
     Ok((
         [
@@ -390,7 +385,7 @@ async fn get_blocks(
 async fn get_edit_block(
     Path(block_name): Path<String>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_block(state, &block_name);
     Ok((
         [
@@ -403,7 +398,7 @@ async fn get_edit_block(
 
 async fn get_edit_set_week(
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_set_week(state);
     Ok((
         [
@@ -416,7 +411,7 @@ async fn get_edit_set_week(
 
 async fn get_edit_add_workout(
     Extension(_state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let post_url = format!("/set-add-workout");
     let cancel_url = "/";
     let help = "Must be unique within the program.";
@@ -433,7 +428,7 @@ async fn get_edit_add_workout(
 async fn get_edit_workout_name(
     Path(workout): Path<String>,
     Extension(_state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let post_url = format!("/set-workout-name/{}", workout);
     let cancel_url = format!("/workout/{}", workout);
     let help = "Must be unique within the program.";
@@ -450,7 +445,7 @@ async fn get_edit_workout_name(
 async fn get_edit_exercise_name(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(_state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let post_url = format!("/set-exercise-name/{}/{}", workout, exercise);
     let cancel_url = format!("/exercise/{}/{}", workout, exercise);
     let value = exercise.to_owned();
@@ -468,7 +463,7 @@ async fn get_edit_exercise_name(
 async fn get_edit_formal_name(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_formal_name(state, &workout, &exercise);
     Ok((
         [
@@ -482,7 +477,7 @@ async fn get_edit_formal_name(
 async fn get_edit_weight(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_weight(state, &workout, &exercise);
     Ok((
         [
@@ -496,7 +491,7 @@ async fn get_edit_weight(
 async fn get_edit_durations(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_durations(state, &workout, &exercise);
     Ok((
         [
@@ -510,7 +505,7 @@ async fn get_edit_durations(
 async fn get_edit_fixed_reps(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_fixed_reps(state, &workout, &exercise);
     Ok((
         [
@@ -524,7 +519,7 @@ async fn get_edit_fixed_reps(
 async fn get_edit_var_reps(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_var_reps(state, &workout, &exercise);
     Ok((
         [
@@ -538,7 +533,7 @@ async fn get_edit_var_reps(
 async fn get_edit_var_sets(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_var_sets(state, &workout, &exercise);
     Ok((
         [
@@ -552,7 +547,7 @@ async fn get_edit_var_sets(
 async fn get_edit_note(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_note(state, &workout, &exercise);
     Ok((
         [
@@ -566,7 +561,7 @@ async fn get_edit_note(
 async fn get_current_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_current_set(state, &workout, &exercise);
     Ok((
         [
@@ -580,7 +575,7 @@ async fn get_current_set(
 async fn get_edit_rest(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_rest(state, &workout, &exercise);
     Ok((
         [
@@ -594,10 +589,10 @@ async fn get_edit_rest(
 async fn get_edit_durs_record(
     Path((workout, exercise, id)): Path<(String, String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let id: u64 = id
         .parse()
-        .context(format!("expected int for id but found '{id}'"))?;
+        .unwrap_or_err(&format!("expected int for id but found '{id}'"))?;
     let contents = pages::get_edit_durs_record(state, &workout, &exercise, id)?;
     Ok((
         [
@@ -611,10 +606,10 @@ async fn get_edit_durs_record(
 async fn get_edit_reps_record(
     Path((workout, exercise, id)): Path<(String, String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let id: u64 = id
         .parse()
-        .context(format!("expected int for id but found '{id}'"))?;
+        .unwrap_or_err(&format!("expected int for id but found '{id}'"))?;
     let contents = pages::get_edit_reps_record(state, &workout, &exercise, id)?;
     Ok((
         [
@@ -628,7 +623,7 @@ async fn get_edit_reps_record(
 async fn get_edit_discrete_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_discrete_set(state, &workout, &exercise);
     Ok((
         [
@@ -642,7 +637,7 @@ async fn get_edit_discrete_set(
 async fn get_edit_plate_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_plate_set(state, &workout, &exercise);
     Ok((
         [
@@ -656,7 +651,7 @@ async fn get_edit_plate_set(
 async fn get_edit_any_weight(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_any_weight(state, &workout, &exercise);
     Ok((
         [
@@ -680,7 +675,7 @@ struct VarRepsOptions {
 async fn post_next_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::post_next_exercise(state, &workout, &exercise, None)?;
 
     let mut headers = HeaderMap::new();
@@ -697,7 +692,7 @@ async fn post_next_var_set(
     Path((workout, exercise)): Path<(String, String)>,
     options: Query<VarRepsOptions>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::post_next_exercise(state, &workout, &exercise, Some(options.0))?;
 
     let mut headers = HeaderMap::new();
@@ -713,7 +708,7 @@ async fn post_next_var_set(
 async fn reset_exercise(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::post_reset_exercise(state, &workout, &exercise)?;
 
     let mut headers = HeaderMap::new();
@@ -751,7 +746,7 @@ async fn post_append_exercise(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<AppendExercise>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     fn default_durations(name: &str) -> Exercise {
         let e = DurationsExercise::new(vec![30; 3]);
         let name = ExerciseName(name.to_owned());
@@ -798,7 +793,7 @@ async fn post_append_exercise(
         "fixed" => default_fixed(&payload.name),
         "var-reps" => default_var_reps(&payload.name),
         "var-sets" => default_var_sets(&payload.name),
-        _ => return Err(AppError::msg("bad exercise type")),
+        _ => return validation_err!("bad exercise type"),
     };
     let new_url = pages::post_append_exercise(state, &workout, exercise)?;
 
@@ -820,7 +815,7 @@ struct EditBlocks {
 async fn post_set_blocks(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<EditBlocks>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let blocks: Vec<_> = payload.blocks.split("¦").map(|s| s.to_string()).collect();
     let new_url = pages::post_set_blocks(state, blocks)?;
 
@@ -845,8 +840,8 @@ async fn post_set_block(
     Path(old_name): Path<String>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<EditBlock>,
-) -> Result<impl IntoResponse, AppError> {
-    let num_weeks: i32 = payload.num_weeks.parse().context(format!(
+) -> Result<impl IntoResponse, Error> {
+    let num_weeks: i32 = payload.num_weeks.parse().unwrap_or_err(&format!(
         "expected int for num_weeks but found '{}'",
         payload.num_weeks
     ))?;
@@ -878,13 +873,14 @@ struct EditableList {
 async fn post_set_workouts(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<EditableList>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let workouts: Vec<_> = payload.names.split("\t").collect();
     let disabled = payload
         .disabled
         .split("\t") // TODO probably should use '¦'
         .map(|s| s.parse())
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap_or_err("bad disabled list")?;
     let new_url = pages::post_set_workouts(state, workouts, disabled)?;
 
     let mut headers = HeaderMap::new();
@@ -901,13 +897,14 @@ async fn post_set_exercises(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<EditableList>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let exercises: Vec<_> = payload.names.split("\t").collect();
     let disabled = payload
         .disabled
         .split("\t") // TODO probably should use '¦'
         .map(|s| s.parse())
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap_or_err("bad disabled list")?;
     let new_url = pages::post_set_exercises(state, &workout, exercises, disabled)?;
 
     let mut headers = HeaderMap::new();
@@ -928,7 +925,7 @@ struct SetName {
 async fn post_set_add_workout(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetName>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::post_set_add_workout(state, &payload.name)?;
 
     let mut headers = HeaderMap::new();
@@ -944,7 +941,7 @@ async fn post_set_add_workout(
 async fn post_set_program_name(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetName>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::post_set_program_name(state, &payload.name)?;
 
     let mut headers = HeaderMap::new();
@@ -961,7 +958,7 @@ async fn post_set_workout_name(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetName>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::post_set_workout_name(state, &workout, &payload.name)?;
 
     let mut headers = HeaderMap::new();
@@ -982,11 +979,11 @@ struct SetWeek {
 async fn post_set_week(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetWeek>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let week: i32 = payload
         .week
         .parse()
-        .context(format!("expected int but found '{}'", payload.week))?;
+        .unwrap_or_err(&format!("expected int but found '{}'", payload.week))?;
     let new_url = pages::post_set_week(state, week)?;
 
     let mut headers = HeaderMap::new();
@@ -1008,11 +1005,11 @@ async fn post_set_schedule_nth(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetNth>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let n: i32 = payload
         .n
         .parse()
-        .context(format!("expected int but found '{}'", payload.n))?;
+        .unwrap_or_err(&format!("expected int but found '{}'", payload.n))?;
     let new_url = pages::post_schedule_nth(state, &workout, n)?;
 
     let mut headers = HeaderMap::new();
@@ -1034,7 +1031,7 @@ async fn post_set_schedule_weekdays(
     Path(workout): Path<String>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetDays>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let days = payload
         .days
         .trim()
@@ -1057,7 +1054,7 @@ async fn post_set_exercise_name(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetName>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::post_set_exercise_name(state, &workout, &exercise, &payload.name)?;
 
     let mut headers = HeaderMap::new();
@@ -1074,7 +1071,7 @@ async fn post_set_formal_name(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetName>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::post_set_formal_name(state, &workout, &exercise, &payload.name)?;
 
     let mut headers = HeaderMap::new();
@@ -1096,13 +1093,15 @@ async fn post_set_weight(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetWeight>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let parts: Vec<_> = payload.weight.split(" ").collect();
-    let s = parts.get(0).context("empty payload")?.to_string();
+    let s = parts.get(0).unwrap_or_err("empty payload")?.to_string();
     let w = if s == "None" {
         None
     } else {
-        let x: f32 = s.parse().context(format!("expected f32 but found '{s}'"))?;
+        let x: f32 = s
+            .parse()
+            .unwrap_or_err(&format!("expected f32 but found '{s}'"))?;
         Some(x)
     };
     let new_url = pages::post_set_weight(state, &workout, &exercise, w)?;
@@ -1127,12 +1126,13 @@ async fn post_set_discrete_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetDiscreteSet>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let weights = payload
         .weights
         .split("¦")
         .map(|s| s.parse::<f32>())
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap_or_err("bad weights list")?;
     let new_url = pages::post_set_discrete_set(state, &workout, &exercise, &payload.name, weights)?;
 
     let mut headers = HeaderMap::new();
@@ -1156,21 +1156,19 @@ async fn post_set_plates_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetPlateSet>,
-) -> Result<impl IntoResponse, AppError> {
-    fn parse_plate(value: &str) -> Result<(f32, i32), anyhow::Error> {
+) -> Result<impl IntoResponse, Error> {
+    fn parse_plate(value: &str) -> Result<(f32, i32), Error> {
         let parts: Vec<_> = value.split("x").collect();
         if parts.len() == 2 {
             let weight: f32 = parts[0]
                 .parse()
-                .context(format!("expected float for weight but found '{value}'"))?;
+                .unwrap_or_err(&format!("expected float for weight but found '{value}'"))?;
             let count: i32 = parts[1]
                 .parse()
-                .context(format!("expected int for count but found '{value}'"))?;
+                .unwrap_or_err(&format!("expected int for count but found '{value}'"))?;
             return Ok((weight, count));
         } else {
-            return Err(anyhow::Error::msg(format!(
-                "Expected weightxcount but found '{value}'"
-            )));
+            return validation_err!("Expected weightxcount but found '{value}'");
         }
     }
 
@@ -1182,7 +1180,7 @@ async fn post_set_plates_set(
     let bar = if payload.bar.is_empty() {
         None
     } else {
-        Some(payload.bar.parse::<f32>()?)
+        Some(payload.bar.parse::<f32>().unwrap_or_err("bad bar")?)
     };
     let new_url =
         pages::post_set_plate_set(state, &workout, &exercise, &payload.name, plates, bar)?;
@@ -1204,10 +1202,12 @@ async fn post_set_any_weight(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetWeight>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let parts: Vec<_> = payload.weight.split(" ").collect();
-    let s = parts.get(0).context("empty payload")?.to_string();
-    let w: f32 = s.parse().context(format!("expected f32 but found '{s}'"))?;
+    let s = parts.get(0).unwrap_or_err("empty payload")?.to_string();
+    let w: f32 = s
+        .parse()
+        .unwrap_or_err(&format!("expected f32 but found '{s}'"))?;
     let w = if w.abs() < 0.001 { None } else { Some(w) };
     let new_url = pages::post_set_weight(state, &workout, &exercise, w)?;
 
@@ -1231,7 +1231,7 @@ async fn post_set_current_set(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetCurrentSet>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::post_set_current_set(state, &workout, &exercise, payload.sets)?;
 
     let mut headers = HeaderMap::new();
@@ -1253,7 +1253,7 @@ async fn post_set_note(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetNote>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::post_set_note(state, &workout, &exercise, payload.note)?;
 
     let mut headers = HeaderMap::new();
@@ -1269,7 +1269,7 @@ async fn post_set_note(
 async fn post_revert_note(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let new_url = pages::post_revert_note(state, &workout, &exercise)?;
 
     let mut headers = HeaderMap::new();
@@ -1293,7 +1293,7 @@ async fn post_set_durations(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetDurations>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let durations = payload
         .times
         .split_whitespace()
@@ -1323,7 +1323,7 @@ async fn post_set_fixed_reps(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetFixedReps>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let warmups = payload
         .warmups
         .split_whitespace()
@@ -1346,27 +1346,25 @@ async fn post_set_fixed_reps(
     Ok((StatusCode::SEE_OTHER, headers))
 }
 
-fn parse_fixed_rep(name: &str, value: &str) -> Result<FixedReps, anyhow::Error> {
+fn parse_fixed_rep(name: &str, value: &str) -> Result<FixedReps, Error> {
     let parts: Vec<_> = value.split("/").collect();
     if parts.len() == 0 {
-        return Err(anyhow::Error::msg(format!("{name} cannot be empty")));
+        return validation_err!("{name} cannot be empty");
     } else if parts.len() == 1 {
         let reps: i32 = parts[0]
             .parse()
-            .context(format!("expected int for {name} reps but found '{value}'"))?;
+            .unwrap_or_err(&format!("expected int for {name} reps but found '{value}'"))?;
         return Ok(FixedReps::new(reps, 100));
     } else if parts.len() == 2 {
         let reps: i32 = parts[0]
             .parse()
-            .context(format!("expected int for {name} reps but found '{value}'"))?;
-        let percent: i32 = parts[1].parse().context(format!(
+            .unwrap_or_err(&format!("expected int for {name} reps but found '{value}'"))?;
+        let percent: i32 = parts[1].parse().unwrap_or_err(&format!(
             "expected int for {name} percent but found '{value}'"
         ))?;
         return Ok(FixedReps::new(reps, percent));
     } else {
-        return Err(anyhow::Error::msg(format!(
-            "Expected rep or rep/percent for {name} but found '{value}'"
-        )));
+        return validation_err!("Expected rep or rep/percent for {name} but found '{value}'");
     }
 }
 
@@ -1380,46 +1378,46 @@ async fn post_set_var_reps(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetVarReps>,
-) -> Result<impl IntoResponse, AppError> {
-    fn parse_rep(name: &str, value: &str, percent: i32) -> Result<VariableReps, anyhow::Error> {
+) -> Result<impl IntoResponse, Error> {
+    fn parse_rep(name: &str, value: &str, percent: i32) -> Result<VariableReps, Error> {
         let parts: Vec<_> = value.split("-").collect();
         if parts.len() == 0 {
-            return Err(anyhow::Error::msg(format!("{name} cannot be empty")));
+            return validation_err!("{name} cannot be empty");
         } else if parts.len() == 1 {
             let reps: i32 = parts[0]
                 .parse()
-                .context(format!("expected int for {name} reps but found '{value}'"))?;
+                .unwrap_or_err(&format!("expected int for {name} reps but found '{value}'"))?;
             return Ok(VariableReps::new(reps, reps, percent));
         } else if parts.len() == 2 {
-            let min: i32 = parts[0].parse().context(format!(
+            let min: i32 = parts[0].parse().unwrap_or_err(&format!(
                 "expected int for {name} min reps but found '{value}'"
             ))?;
-            let max: i32 = parts[1].parse().context(format!(
+            let max: i32 = parts[1].parse().unwrap_or_err(&format!(
                 "expected int for {name} max reps but found '{value}'"
             ))?;
             return Ok(VariableReps::new(min, max, percent));
         } else {
-            return Err(anyhow::Error::msg(format!(
+            return validation_err!(
                 "Expected rep or min_rep-max_rep for {name} but found '{value}'"
-            )));
+            );
         }
     }
 
-    fn parse_var_rep(name: &str, value: &str) -> Result<VariableReps, anyhow::Error> {
+    fn parse_var_rep(name: &str, value: &str) -> Result<VariableReps, Error> {
         let parts: Vec<_> = value.split("/").collect();
         if parts.len() == 0 {
-            return Err(anyhow::Error::msg(format!("{name} cannot be empty")));
+            return validation_err!("{name} cannot be empty");
         } else if parts.len() == 1 {
             return parse_rep(name, parts[0], 100);
         } else if parts.len() == 2 {
-            let percent: i32 = parts[1].parse().context(format!(
+            let percent: i32 = parts[1].parse().unwrap_or_err(&format!(
                 "expected int for {name} percent but found '{value}'"
             ))?;
             return parse_rep(name, parts[0], percent);
         } else {
-            return Err(anyhow::Error::msg(format!(
+            return validation_err!(
                 "Expected rep or min_rep-max_rep or rep/percent or min_rep-max_rep/percent for {name} but found '{value}'"
-            )));
+            );
         }
     }
 
@@ -1454,8 +1452,8 @@ async fn post_set_var_sets(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetVarSets>,
-) -> Result<impl IntoResponse, AppError> {
-    let target: i32 = payload.target.parse().context(format!(
+) -> Result<impl IntoResponse, Error> {
+    let target: i32 = payload.target.parse().unwrap_or_err(&format!(
         "expected integer for target but found '{}'",
         payload.target
     ))?;
@@ -1482,7 +1480,7 @@ async fn post_set_rest(
     Path((workout, exercise)): Path<(String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetRest>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let rest = parse_time("rest", &payload.rest, &payload.units)?;
     let last_rest = parse_time("last_rest", &payload.last_rest, &payload.units)?;
     let new_url = pages::post_set_rest(state, &workout, &exercise, rest, last_rest)?;
@@ -1509,7 +1507,7 @@ async fn post_set_durs_record(
     Path((workout, exercise, id)): Path<(String, String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetDurationsRecord>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let durations = payload
         .times
         .split_whitespace()
@@ -1520,10 +1518,11 @@ async fn post_set_durs_record(
         .weights
         .split_whitespace()
         .map(|s| s.parse::<f32>())
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap_or_err("bad weights")?;
     let id = id
         .parse()
-        .context(format!("expected integer for id but found '{id}'"))?;
+        .unwrap_or_err(&format!("expected integer for id but found '{id}'"))?;
     let new_url = pages::post_set_durs_record(
         state,
         &workout,
@@ -1555,20 +1554,22 @@ async fn post_set_reps_record(
     Path((workout, exercise, id)): Path<(String, String, String)>,
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetRepsRecord>,
-) -> Result<impl IntoResponse, AppError> {
+) -> Result<impl IntoResponse, Error> {
     let reps = payload
         .reps
         .split_whitespace()
         .map(|s| s.parse::<i32>())
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap_or_err("bad reps")?;
     let weights = payload
         .weights
         .split_whitespace()
         .map(|s| s.parse::<f32>())
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap_or_err("bad weights")?;
     let id = id
         .parse()
-        .context(format!("expected integer for id but found '{id}'"))?;
+        .unwrap_or_err(&format!("expected integer for id but found '{id}'"))?;
     let new_url = pages::post_set_reps_record(
         state,
         &workout,
@@ -1589,11 +1590,11 @@ async fn post_set_reps_record(
     Ok((StatusCode::SEE_OTHER, headers))
 }
 
-fn parse_time(name: &str, value: &str, units: &str) -> Result<Option<i32>, AppError> {
+fn parse_time(name: &str, value: &str, units: &str) -> Result<Option<i32>, Error> {
     if !value.is_empty() {
         let mut x: f32 = value
             .parse()
-            .context(format!("expected f32 for {name} but found '{value}'"))?;
+            .unwrap_or_err(&format!("expected f32 for {name} but found '{value}'"))?;
         if units == "mins" {
             x *= 60.0;
         }

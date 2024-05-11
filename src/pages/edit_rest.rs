@@ -1,7 +1,7 @@
-use axum::http::Uri;
-
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use crate::{exercise::ExerciseName, pages::SharedState};
+use axum::http::Uri;
 
 pub fn get_edit_rest(state: SharedState, workout: &str, exercise: &str) -> String {
     let post_url = format!("/set-rest/{workout}/{exercise}");
@@ -42,7 +42,7 @@ pub fn post_set_rest(
     exercise_name: &str,
     rest: Option<i32>,
     last_rest: Option<i32>,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let exercise_name = ExerciseName(exercise_name.to_owned());
 
     {

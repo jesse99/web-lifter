@@ -1,4 +1,5 @@
-use crate::{exercise::SetIndex, pages::ValidationError};
+use crate::validation_err;
+use crate::{exercise::SetIndex, pages::Error};
 use serde::{Deserialize, Serialize};
 
 /// Used for stuff like 3x60s planks. Target is used to signal the user to increase
@@ -41,7 +42,7 @@ impl DurationsExercise {
         }
     }
 
-    pub fn try_set_durations(&mut self, durations: Vec<i32>) -> Result<(), ValidationError> {
+    pub fn try_set_durations(&mut self, durations: Vec<i32>) -> Result<(), Error> {
         self.validate_durations(&durations)?;
         self.do_set_durations(durations);
         Ok(())
@@ -52,7 +53,7 @@ impl DurationsExercise {
     //     self.do_set_durations(durations);
     // }
 
-    pub fn try_set_target(&mut self, target: Option<i32>) -> Result<(), ValidationError> {
+    pub fn try_set_target(&mut self, target: Option<i32>) -> Result<(), Error> {
         self.validate_target(target)?;
         self.do_set_target(target);
         Ok(())
@@ -63,16 +64,16 @@ impl DurationsExercise {
     //     self.do_set_target(target);
     // }
 
-    fn validate_durations(&self, durations: &Vec<i32>) -> Result<(), ValidationError> {
+    fn validate_durations(&self, durations: &Vec<i32>) -> Result<(), Error> {
         if durations.is_empty() {
-            return Err(ValidationError::new("durations cannot be empty"));
+            return validation_err!("durations cannot be empty");
         }
         for duration in durations {
             if *duration < 0 {
-                return Err(ValidationError::new("duration cannot be negative"));
+                return validation_err!("duration cannot be negative");
             }
             if *duration == 0 {
-                return Err(ValidationError::new("duration cannot be zero"));
+                return validation_err!("duration cannot be zero");
             }
         }
         Ok(())
@@ -82,13 +83,13 @@ impl DurationsExercise {
         self.secs = durations;
     }
 
-    fn validate_target(&self, target: Option<i32>) -> Result<(), ValidationError> {
+    fn validate_target(&self, target: Option<i32>) -> Result<(), Error> {
         if let Some(target) = target {
             if target < 0 {
-                return Err(ValidationError::new("target cannot be negative"));
+                return validation_err!("target cannot be negative");
             }
             if target == 0 {
-                return Err(ValidationError::new("target cannot be zero"));
+                return validation_err!("target cannot be zero");
             }
         }
         Ok(())

@@ -1,5 +1,6 @@
 use super::SharedState;
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use crate::{
     exercise::ExerciseName,
     weights::{self, WeightSet},
@@ -64,7 +65,7 @@ pub fn post_set_current_set(
     workout: &str,
     exercise: &str,
     sets: String,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let path = format!("/exercise/{workout}/{exercise}");
     let exercise = ExerciseName(exercise.to_owned());
 

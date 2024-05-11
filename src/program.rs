@@ -1,5 +1,6 @@
+use crate::validation_err;
 use crate::{
-    pages::ValidationError,
+    pages::Error,
     workout::{Schedule, Workout},
 };
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};
@@ -123,13 +124,13 @@ impl Program {
         &mut self,
         workouts: Vec<&str>,
         disabled: Vec<bool>,
-    ) -> Result<(), ValidationError> {
+    ) -> Result<(), Error> {
         self.validate_set_workouts(&workouts)?;
         self.do_set_workouts(workouts, disabled);
         Ok(())
     }
 
-    pub fn try_add_workout(&mut self, name: &str) -> Result<(), ValidationError> {
+    pub fn try_add_workout(&mut self, name: &str) -> Result<(), Error> {
         self.validate_add_workout(name)?;
 
         let workout = Workout::new(name.to_string(), Schedule::AnyDay);
@@ -142,17 +143,13 @@ impl Program {
         self.do_add_workout(workout);
     }
 
-    pub fn try_change_workout_name(
-        &mut self,
-        old_name: &str,
-        new_name: &str,
-    ) -> Result<(), ValidationError> {
+    pub fn try_change_workout_name(&mut self, old_name: &str, new_name: &str) -> Result<(), Error> {
         self.validate_change_workout_name(old_name, new_name)?;
         self.do_change_workout_name(old_name, new_name);
         Ok(())
     }
 
-    pub fn try_set_blocks(&mut self, blocks: Vec<String>) -> Result<(), ValidationError> {
+    pub fn try_set_blocks(&mut self, blocks: Vec<String>) -> Result<(), Error> {
         self.validate_set_blocks(&blocks)?;
         self.do_set_blocks(blocks);
         Ok(())
@@ -164,7 +161,7 @@ impl Program {
         new_name: &str,
         num_weeks: i32,
         workouts: Vec<String>,
-    ) -> Result<(), ValidationError> {
+    ) -> Result<(), Error> {
         self.validate_set_block(old_name, new_name, num_weeks, &workouts)?;
         self.do_set_block(old_name, new_name, num_weeks, workouts);
         Ok(())
@@ -290,10 +287,10 @@ impl Program {
         BlockSchedule { spans }
     }
 
-    fn validate_add_workout(&self, name: &str) -> Result<(), ValidationError> {
+    fn validate_add_workout(&self, name: &str) -> Result<(), Error> {
         if self.workouts.iter().find(|&w| w.name == name).is_some() {
             // Other checks would be done when creating workouts.
-            return Err(ValidationError::new("The workout name must be unique."));
+            return validation_err!("The workout name must be unique.");
         }
         Ok(())
     }
@@ -302,19 +299,15 @@ impl Program {
         self.workouts.push(workout);
     }
 
-    fn validate_change_workout_name(
-        &self,
-        old_name: &str,
-        new_name: &str,
-    ) -> Result<(), ValidationError> {
+    fn validate_change_workout_name(&self, old_name: &str, new_name: &str) -> Result<(), Error> {
         if self.find(old_name).is_none() {
-            return Err(ValidationError::new("Didn't find old workout."));
+            return validation_err!("Didn't find old workout.");
         }
 
         if new_name.trim().is_empty() {
-            return Err(ValidationError::new("The workout name cannot be empty."));
+            return validation_err!("The workout name cannot be empty.");
         } else if self.workouts.iter().find(|w| w.name == new_name).is_some() {
-            return Err(ValidationError::new("The workout name must be unique."));
+            return validation_err!("The workout name must be unique.");
         }
 
         Ok(())
@@ -337,35 +330,31 @@ impl Program {
         new_name: &str,
         num_weeks: i32,
         workouts: &Vec<String>,
-    ) -> Result<(), ValidationError> {
+    ) -> Result<(), Error> {
         if self.blocks.iter().find(|b| b.name == old_name).is_some() {
             if new_name.trim().is_empty() {
-                return Err(ValidationError::new("The block name cannot be empty."));
+                return validation_err!("The block name cannot be empty.");
             } else if old_name != new_name
                 && self.blocks.iter().find(|b| b.name == new_name).is_some()
             {
-                return Err(ValidationError::new("The block name must be unique."));
+                return validation_err!("The block name must be unique.");
             }
             if num_weeks < 1 {
-                return Err(ValidationError::new(
-                    "Number of weeks must be greater than zero.",
-                ));
+                return validation_err!("Number of weeks must be greater than zero.",);
             }
             let mut names = HashSet::new();
             for name in workouts {
                 let added = names.insert(name.clone());
                 if !added {
-                    return Err(ValidationError::new(&format!(
-                        "'{name}' was listed more than once."
-                    )));
+                    return validation_err!("'{name}' was listed more than once.");
                 }
 
                 if self.workouts.iter().find(|w| w.name == *name).is_none() {
-                    return Err(ValidationError::new(&format!("'{name}' isn't a workout.")));
+                    return validation_err!("'{name}' isn't a workout.");
                 }
             }
         } else {
-            return Err(ValidationError::new("Didn't find old block."));
+            return validation_err!("Didn't find old block.");
         }
 
         Ok(())
@@ -386,18 +375,16 @@ impl Program {
         block.workouts = workouts;
     }
 
-    fn validate_set_blocks(&self, blocks: &Vec<String>) -> Result<(), ValidationError> {
+    fn validate_set_blocks(&self, blocks: &Vec<String>) -> Result<(), Error> {
         let mut names = HashSet::new();
         for name in blocks.iter() {
             if name.trim().is_empty() {
-                return Err(ValidationError::new("Block names cannot be empty."));
+                return validation_err!("Block names cannot be empty.");
             }
 
             let added = names.insert(name.clone());
             if !added {
-                return Err(ValidationError::new(&format!(
-                    "'{name}' appears more than once."
-                )));
+                return validation_err!("'{name}' appears more than once.");
             }
         }
         Ok(())
@@ -424,15 +411,15 @@ impl Program {
         self.blocks = new_blocks;
     }
 
-    fn validate_set_workouts(&self, workouts: &Vec<&str>) -> Result<(), ValidationError> {
+    fn validate_set_workouts(&self, workouts: &Vec<&str>) -> Result<(), Error> {
         let mut names = HashSet::new();
         for name in workouts {
             if name.trim().is_empty() {
-                return Err(ValidationError::new("The workout name cannot be empty."));
+                return validation_err!("The workout name cannot be empty.");
             } else {
                 let added = names.insert(name.to_owned());
                 if !added {
-                    return Err(ValidationError::new("'{name}' appears more than once."));
+                    return validation_err!("'{name}' appears more than once.");
                 }
             }
         }

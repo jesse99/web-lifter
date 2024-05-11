@@ -1,5 +1,6 @@
 use crate::exercise::{FixedReps, VariableReps};
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use crate::{exercise::ExerciseName, pages::SharedState};
 use axum::http::Uri;
 
@@ -58,7 +59,7 @@ pub fn post_set_var_reps(
     exercise_name: &str,
     warmups: Vec<FixedReps>,
     worksets: Vec<VariableReps>,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let exercise_name = ExerciseName(exercise_name.to_owned());
 
     {

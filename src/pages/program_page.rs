@@ -1,12 +1,12 @@
+use crate::pages::Error;
 use crate::{
     pages::SharedState,
     program::Program,
     workout::{Status, Workout},
 };
-use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-pub fn get_program_page(state: SharedState) -> Result<String, anyhow::Error> {
+pub fn get_program_page(state: SharedState) -> Result<String, Error> {
     let error = {
         let user = &mut state.write().unwrap().user;
         let e = user.errors.join(", ");
@@ -22,9 +22,8 @@ pub fn get_program_page(state: SharedState) -> Result<String, anyhow::Error> {
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
     let template = include_str!("../../files/program.html");
     let data = ProgramData::new(program, error);
-    Ok(handlebars
-        .render_template(template, &data)
-        .context("failed to render template")?)
+    let contents = handlebars.render_template(template, &data)?;
+    Ok(contents)
 }
 
 #[derive(Serialize, Deserialize)]

@@ -1,7 +1,8 @@
 // Quite similar to VariableReps but the reps are always fixed so the UI doesn't have
 // a reps dropdown when performing the exerise. (And the implementation is a bit simpler
 // since we don't bother with expected reps).
-use crate::{exercise::SetIndex, pages::ValidationError};
+use crate::validation_err;
+use crate::{exercise::SetIndex, pages::Error};
 use serde::{Deserialize, Serialize};
 
 /// Reps to use for a set along with a percentage of weight.
@@ -60,7 +61,7 @@ impl FixedRepsExercise {
         }
     }
 
-    pub fn try_set_warmups(&mut self, warmups: Vec<FixedReps>) -> Result<(), ValidationError> {
+    pub fn try_set_warmups(&mut self, warmups: Vec<FixedReps>) -> Result<(), Error> {
         self.validate_warmups(&warmups)?;
         self.do_set_warmups(warmups);
         Ok(())
@@ -71,7 +72,7 @@ impl FixedRepsExercise {
     //     self.do_set_warmups(warmups);
     // }
 
-    pub fn try_set_worksets(&mut self, worksets: Vec<FixedReps>) -> Result<(), ValidationError> {
+    pub fn try_set_worksets(&mut self, worksets: Vec<FixedReps>) -> Result<(), Error> {
         self.validate_worksets(&worksets)?;
         self.do_set_worksets(worksets);
         Ok(())
@@ -82,47 +83,45 @@ impl FixedRepsExercise {
     //     self.do_set_worksets(worksets);
     // }
 
-    fn validate_warmups(&self, warmups: &Vec<FixedReps>) -> Result<(), ValidationError> {
+    fn validate_warmups(&self, warmups: &Vec<FixedReps>) -> Result<(), Error> {
         for set in warmups {
             if set.reps < 0 {
-                return Err(ValidationError::new("warmup reps cannot be negative"));
+                return validation_err!("warmup reps cannot be negative");
             }
             if set.reps == 0 {
-                return Err(ValidationError::new("warmup reps cannot be zero"));
+                return validation_err!("warmup reps cannot be zero");
             }
             if set.percent < 0 {
                 // 0 percent is OK (for warmups)
-                return Err(ValidationError::new("warmup percent cannot be negative"));
+                return validation_err!("warmup percent cannot be negative");
             }
             if set.percent >= 100 {
-                return Err(ValidationError::new(
-                    "warmup percent should be less than 100%",
-                ));
+                return validation_err!("warmup percent should be less than 100%",);
             }
         }
         Ok(())
     }
 
-    fn validate_worksets(&self, worksets: &Vec<FixedReps>) -> Result<(), ValidationError> {
+    fn validate_worksets(&self, worksets: &Vec<FixedReps>) -> Result<(), Error> {
         if worksets.is_empty() {
-            return Err(ValidationError::new("worksets cannot be empty"));
+            return validation_err!("worksets cannot be empty");
         }
         for set in worksets {
             if set.reps < 0 {
-                return Err(ValidationError::new("workset reps cannot be negative"));
+                return validation_err!("workset reps cannot be negative");
             }
             if set.reps == 0 {
-                return Err(ValidationError::new("workset reps cannot be zero"));
+                return validation_err!("workset reps cannot be zero");
             }
             if set.percent < 0 {
-                return Err(ValidationError::new("workset percent cannot be negative"));
+                return validation_err!("workset percent cannot be negative");
             }
             if set.percent == 0 {
-                return Err(ValidationError::new("workset percent should not be zero"));
+                return validation_err!("workset percent should not be zero");
             }
             if set.percent < 0 {
                 // over 100% is OK (tho not common)
-                return Err(ValidationError::new("workset percent cannot be negative"));
+                return validation_err!("workset percent cannot be negative");
             }
         }
         Ok(())

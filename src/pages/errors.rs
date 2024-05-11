@@ -1,95 +1,78 @@
 use axum::{
-    http::StatusCode,
+    http::{uri::InvalidUri, StatusCode},
     response::{IntoResponse, Response},
 };
-use core::fmt;
+use handlebars::RenderError;
+use std::fmt::Display;
 
-pub struct AppError(anyhow::Error);
+pub enum Error {
+    /// User tried to input something erroneous. Note that front end validation should
+    /// catch many of these but custom tools or bad actors can easily bypass that.
+    ValidationError(String),
 
-impl AppError {
-    pub fn msg(msg: &str) -> AppError {
-        AppError(anyhow::Error::msg(msg.to_owned()))
-    }
+    /// User action failed to complete because of something that should have been
+    /// impossible.
+    InternalError(String),
+    // /// Used for things like disk full.
+    // RuntimeError(String), // if we need to switch on the actual err we can add a ner variant for that or box the original error
 }
 
-// Tell axum how to convert `AppError` into a response.
-impl IntoResponse for AppError {
-    fn into_response(self) -> Response {
-        match self.0.downcast_ref::<ValidationError>() {
-            Some(err) => err.to_response(),
-            None => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Internal error: {}", self.0),
-            )
-                .into_response(),
+#[macro_export]
+macro_rules! validation_err {
+    ($($t:tt)*) => {Err(Error::ValidationError(format!($($t)*)))}
+}
+
+#[macro_export]
+macro_rules! internal_err {
+    ($($t:tt)*) => {Err(Error::InternalError(format!($($t)*)))}
+}
+
+pub trait Unwrapper<T> {
+    /// Unwrap or return an error.
+    fn unwrap_or_err(self, message: &str) -> Result<T, Error>;
+}
+
+impl<T> Unwrapper<T> for Option<T> {
+    fn unwrap_or_err(self, message: &str) -> Result<T, Error> {
+        match self {
+            Some(ok) => Ok(ok),
+            None => Err(Error::InternalError(message.to_string())),
         }
     }
 }
 
-// This enables using `?` on functions that return `Result<_, anyhow::Error>` to turn them
-// into `Result<_, AppError>`. That way you don't need to do that manually.
-impl<E> From<E> for AppError
+impl<T, E> Unwrapper<T> for Result<T, E>
 where
-    E: Into<anyhow::Error>,
+    E: Display,
 {
-    fn from(err: E) -> Self {
-        Self(err.into())
-    }
-}
-// ---------------------------------------------------------------------------------------
-
-/// Used for errors that are not due to the user. These could be caused by bugs or system
-/// errors like out of disk space or networking issues.
-#[derive(Debug)]
-pub struct InternalError {
-    mesg: String,
-}
-
-// impl InternalError {
-//     pub fn new(message: &str) -> InternalError {
-//         InternalError {
-//             mesg: message.to_owned(),
-//         }
-//     }
-// }
-
-impl fmt::Display for InternalError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.mesg)
-    }
-}
-
-impl std::error::Error for InternalError {}
-// ---------------------------------------------------------------------------------------
-
-/// Used when the user tries to do something illegal, e.g. use a negative weight.
-#[derive(Debug)]
-pub struct ValidationError {
-    mesg: String,
-}
-
-impl ValidationError {
-    pub fn new(message: &str) -> ValidationError {
-        ValidationError {
-            mesg: message.to_owned(),
+    fn unwrap_or_err(self, message: &str) -> Result<T, Error> {
+        match self {
+            Ok(ok) => Ok(ok),
+            Err(e) => Err(Error::InternalError(format!("{e}: {message}"))),
         }
     }
 }
 
-impl fmt::Display for ValidationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.mesg)
+/// Convert our Error into an Axum response.
+impl IntoResponse for Error {
+    fn into_response(self) -> Response {
+        let err = match self {
+            Error::ValidationError(s) => format!("Validation Error: {s}"),
+            Error::InternalError(s) => format!("Internal Error: {s}"),
+            // Error::RuntimeError(s) => format!("Runtime Error: {s}"),
+        };
+        (StatusCode::INTERNAL_SERVER_ERROR, err).into_response()
     }
 }
 
-impl std::error::Error for ValidationError {}
+impl From<RenderError> for Error {
+    fn from(item: RenderError) -> Self {
+        Error::InternalError(item.to_string())
+    }
+}
 
-impl ValidationError {
-    fn to_response(&self) -> Response {
-        (
-            StatusCode::BAD_REQUEST,
-            format!("Validation error: {}", self.mesg),
-        )
-            .into_response()
+impl From<InvalidUri> for Error {
+    fn from(item: InvalidUri) -> Self {
+        Error::InternalError(item.to_string())
     }
 }

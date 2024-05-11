@@ -1,7 +1,6 @@
-use super::ValidationError;
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use crate::pages::SharedState;
-use crate::workout::Schedule;
 use axum::http::Uri;
 
 pub fn get_edit_block(state: SharedState, block_name: &str) -> String {
@@ -61,7 +60,7 @@ pub fn post_set_block(
     new_name: &str,
     num_weeks: i32,
     workouts: Vec<String>,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     {
         let program = &mut state.write().unwrap().user.program;
         program.try_set_block(old_name, new_name, num_weeks, workouts)?;

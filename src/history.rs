@@ -1,4 +1,6 @@
 use crate::exercise::ExerciseName;
+use crate::internal_err;
+use crate::pages::Error;
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -131,19 +133,15 @@ impl History {
         self.records.get(name).unwrap_or(&self.empty).iter()
     }
 
-    pub fn find_record(&self, exercise: &ExerciseName, id: u64) -> Result<&Record, anyhow::Error> {
+    pub fn find_record(&self, exercise: &ExerciseName, id: u64) -> Result<&Record, Error> {
         if let Some(records) = self.records.get(exercise) {
             if let Some(r) = records.iter().rev().find(|r| r.id == id) {
                 Ok(r)
             } else {
-                Err(anyhow::Error::msg(
-                    "Couldn't find record for exercise {exercise} and id {id}",
-                ))
+                internal_err!("Couldn't find record for exercise {exercise} and id {id}",)
             }
         } else {
-            Err(anyhow::Error::msg(
-                "Couldn't find records for exercise {exercise}",
-            ))
+            internal_err!("Couldn't find records for exercise {exercise}",)
         }
     }
 
@@ -151,19 +149,15 @@ impl History {
         &mut self,
         exercise: &ExerciseName,
         id: u64,
-    ) -> Result<&mut Record, anyhow::Error> {
+    ) -> Result<&mut Record, Error> {
         if let Some(records) = self.records.get_mut(exercise) {
             if let Some(r) = records.iter_mut().rev().find(|r| r.id == id) {
                 Ok(r)
             } else {
-                Err(anyhow::Error::msg(
-                    "Couldn't find record for exercise {exercise} and id {id}",
-                ))
+                internal_err!("Couldn't find record for exercise {exercise} and id {id}",)
             }
         } else {
-            Err(anyhow::Error::msg(
-                "Couldn't find records for exercise {exercise}",
-            ))
+            internal_err!("Couldn't find records for exercise {exercise}",)
         }
     }
 

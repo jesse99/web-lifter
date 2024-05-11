@@ -1,10 +1,11 @@
+use super::Error;
 use crate::pages::editor_builder::*;
+// use crate::pages::Error;
 use crate::pages::SharedState;
+use crate::validation_err;
 use crate::workout::Schedule;
 use axum::http::Uri;
 use chrono::Weekday;
-
-use super::ValidationError;
 
 // This is a bit yucky: it's a GET that acts like a POST...
 // TODO could fix this by adding some custom javascript to te button
@@ -81,7 +82,7 @@ pub fn get_edit_schedule_weekdays(state: SharedState, workout: &str) -> String {
     build_editor(&post_url, widgets)
 }
 
-pub fn post_schedule_nth(state: SharedState, workout: &str, n: i32) -> Result<Uri, anyhow::Error> {
+pub fn post_schedule_nth(state: SharedState, workout: &str, n: i32) -> Result<Uri, Error> {
     {
         let program = &mut state.write().unwrap().user.program;
         let workout = program.find_mut(&workout).unwrap();
@@ -96,7 +97,7 @@ pub fn post_set_schedule_weekdays(
     state: SharedState,
     workout: &str,
     days: Vec<String>,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     {
         let days = days
             .into_iter()
@@ -108,9 +109,7 @@ pub fn post_set_schedule_weekdays(
                 "thurs" => Ok(Weekday::Thu),
                 "fri" => Ok(Weekday::Fri),
                 "sat" => Ok(Weekday::Sat),
-                _ => Err(ValidationError::new(&format!(
-                    "Expected a weekday name, e.g. 'sun' but found '{d}'."
-                ))),
+                _ => validation_err!("Expected a weekday name, e.g. 'sun' but found '{d}'."),
             })
             .collect::<Result<Vec<_>, _>>()?;
         let program = &mut state.write().unwrap().user.program;

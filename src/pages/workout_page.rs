@@ -1,3 +1,5 @@
+use crate::internal_err;
+use crate::pages::Error;
 use crate::{
     exercise::{Exercise, SetIndex},
     history::History,
@@ -6,10 +8,9 @@ use crate::{
     weights::Weights,
     workout::{Schedule, Workout},
 };
-use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, anyhow::Error> {
+pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, Error> {
     let error = {
         let user = &mut state.write().unwrap().user;
         let e = user.errors.join(", ");
@@ -23,9 +24,8 @@ pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, any
 
     let template = include_str!("../../files/workout.html");
     let data = WorkoutData::new(history, weights, program, workout, error)?;
-    Ok(handlebars
-        .render_template(template, &data)
-        .context("failed to render template")?)
+    let contents = handlebars.render_template(template, &data)?;
+    Ok(contents)
 }
 
 #[derive(Serialize, Deserialize)]
@@ -44,7 +44,7 @@ impl WorkoutData {
         program: &Program,
         name: &str,
         error: String,
-    ) -> Result<WorkoutData, anyhow::Error> {
+    ) -> Result<WorkoutData, Error> {
         if let Some(workout) = program.find(name) {
             let exercises: Vec<ExerciseData> = workout
                 .exercises()
@@ -78,7 +78,7 @@ impl WorkoutData {
                 disable_any_day,
             })
         } else {
-            anyhow::bail!("Failed to find a workout named '{name}'");
+            return internal_err!("Failed to find a workout named '{name}'");
         }
     }
 }

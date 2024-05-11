@@ -1,5 +1,6 @@
 use super::SharedState;
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use axum::http::Uri;
 
 pub fn get_edit_exercises(state: SharedState, workout: &str) -> String {
@@ -58,7 +59,7 @@ pub fn post_set_exercises(
     workout: &str,
     enabled: Vec<&str>,
     disabled: Vec<bool>,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let path = format!("/workout/{workout}");
     {
         let program = &mut state.write().unwrap().user.program;

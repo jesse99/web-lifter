@@ -1,4 +1,5 @@
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use crate::{exercise::ExerciseName, pages::SharedState};
 use axum::http::Uri;
 
@@ -36,7 +37,7 @@ pub fn post_set_var_sets(
     workout_name: &str,
     exercise_name: &str,
     target: i32,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let exercise_name = ExerciseName(exercise_name.to_owned());
 
     {

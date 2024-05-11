@@ -1,6 +1,7 @@
 use super::SharedState;
 use crate::exercise::{ExerciseName, SetIndex};
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use axum::http::Uri;
 
 pub fn get_edit_durations(state: SharedState, workout: &str, exercise: &str) -> String {
@@ -57,7 +58,7 @@ pub fn post_set_durations(
     exercise: &str,
     durations: Vec<i32>,
     target: Option<i32>,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let path = format!("/exercise/{workout}/{exercise}");
     let exercise = ExerciseName(exercise.to_owned());
 

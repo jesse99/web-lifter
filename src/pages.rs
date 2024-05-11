@@ -61,7 +61,7 @@ pub use overview_page::*;
 pub use program_page::*;
 pub use workout_page::*;
 
-pub fn post_epilog(state: SharedState, path: &str) -> Result<Uri, anyhow::Error> {
+pub fn post_epilog(state: SharedState, path: &str) -> Result<Uri, Error> {
     {
         let user = &mut state.write().unwrap().user;
         if let Err(e) = crate::persist::save(user) {

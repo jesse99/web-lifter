@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0"                                                      # error handling
 axum = { version = "0.7", features = ["form", "query"] }            # web backend
 chrono = { version = "0.4", features = ["serde"] }                  # date and time
 dirs = "5.0"                                                        # system paths

@@ -1,5 +1,6 @@
 use super::SharedState;
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use axum::http::Uri;
 
 pub fn get_blocks(state: SharedState) -> String {
@@ -27,7 +28,7 @@ pub fn get_blocks(state: SharedState) -> String {
     build_editor(&post_url, widgets)
 }
 
-pub fn post_set_blocks(state: SharedState, blocks: Vec<String>) -> Result<Uri, anyhow::Error> {
+pub fn post_set_blocks(state: SharedState, blocks: Vec<String>) -> Result<Uri, Error> {
     let path = "/";
 
     {

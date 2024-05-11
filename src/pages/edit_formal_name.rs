@@ -1,6 +1,7 @@
 use super::SharedState;
 use crate::exercise::ExerciseName;
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use axum::http::Uri;
 
 pub fn get_formal_name(state: SharedState, workout: &str, exercise: &str) -> String {
@@ -37,7 +38,7 @@ pub fn post_set_formal_name(
     workout: &str,
     exercise: &str,
     name: &str,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let path = format!("/exercise/{workout}/{exercise}");
     let exercise = ExerciseName(exercise.to_owned());
 

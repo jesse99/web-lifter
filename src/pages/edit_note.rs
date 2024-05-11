@@ -1,4 +1,5 @@
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use crate::{exercise::ExerciseName, pages::SharedState};
 use axum::http::Uri;
 
@@ -34,7 +35,7 @@ pub fn post_set_note(
     workout_name: &str,
     exercise_name: &str,
     note: String,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let exercise_name = ExerciseName(exercise_name.to_owned());
 
     {
@@ -58,7 +59,7 @@ pub fn post_revert_note(
     state: SharedState,
     workout_name: &str,
     exercise_name: &str,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let exercise_name = ExerciseName(exercise_name.to_owned());
 
     {

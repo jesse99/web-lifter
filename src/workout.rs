@@ -1,10 +1,11 @@
+use crate::validation_err;
 use crate::{
     days::Days,
     exercise::{
         BuildExercise, Exercise, ExerciseName, FixedReps, FormalName, VariableReps,
         VariableRepsExercise,
     },
-    pages::ValidationError,
+    pages::Error,
     program::BlockSchedule,
 };
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};
@@ -78,7 +79,7 @@ impl Workout {
         &mut self,
         old_name: &ExerciseName,
         new_name: &str,
-    ) -> Result<(), ValidationError> {
+    ) -> Result<(), Error> {
         self.validate_change_exercise_name(old_name, new_name)?;
         self.do_change_exercise_name(old_name, new_name);
         Ok(())
@@ -88,7 +89,7 @@ impl Workout {
         &mut self,
         exercises: Vec<&str>,
         disabled: Vec<bool>,
-    ) -> Result<(), ValidationError> {
+    ) -> Result<(), Error> {
         self.validate_set_exercises(&exercises)?;
         self.do_set_exercises(exercises, disabled);
         Ok(())
@@ -99,7 +100,7 @@ impl Workout {
     //     self.do_set_exercises(exercises, Vec::new());
     // }
 
-    pub fn try_add_exercise(&mut self, exercise: Exercise) -> Result<(), ValidationError> {
+    pub fn try_add_exercise(&mut self, exercise: Exercise) -> Result<(), Error> {
         self.validate_new_exercise_name(&exercise.name())?;
         self.do_add_exercise(exercise);
         Ok(())
@@ -110,7 +111,7 @@ impl Workout {
         self.do_add_exercise(exercise);
     }
 
-    pub fn try_set_schedule(&mut self, schedule: Schedule) -> Result<(), ValidationError> {
+    pub fn try_set_schedule(&mut self, schedule: Schedule) -> Result<(), Error> {
         self.validate_set_schedule(&schedule)?;
         self.do_set_schedule(schedule);
         Ok(())
@@ -316,9 +317,9 @@ impl Workout {
         &self,
         old_name: &ExerciseName,
         new_name: &str,
-    ) -> Result<(), ValidationError> {
+    ) -> Result<(), Error> {
         if self.find(old_name).is_none() {
-            return Err(ValidationError::new("Didn't find old exercise."));
+            return validation_err!("Didn't find old exercise.");
         }
 
         let new_name = ExerciseName(new_name.to_owned());
@@ -338,11 +339,11 @@ impl Workout {
         }
     }
 
-    fn validate_new_exercise_name(&self, name: &ExerciseName) -> Result<(), ValidationError> {
+    fn validate_new_exercise_name(&self, name: &ExerciseName) -> Result<(), Error> {
         if name.0.trim().is_empty() {
-            return Err(ValidationError::new("The exercise name cannot be empty."));
+            return validation_err!("The exercise name cannot be empty.");
         } else if self.exercises.iter().find(|e| e.name() == name).is_some() {
-            return Err(ValidationError::new("The exercise name must be unique."));
+            return validation_err!("The exercise name must be unique.");
         }
         Ok(())
     }
@@ -351,19 +352,17 @@ impl Workout {
         self.exercises.push(exercise);
     }
 
-    fn validate_set_schedule(&self, schedule: &Schedule) -> Result<(), ValidationError> {
+    fn validate_set_schedule(&self, schedule: &Schedule) -> Result<(), Error> {
         match schedule {
             Schedule::AnyDay => (),
             Schedule::Every(n) => {
                 if *n <= 0 {
-                    return Err(ValidationError::new("N should be greater than zero."));
+                    return validation_err!("N should be greater than zero.");
                 }
             }
             Schedule::Days(days) => {
                 if days.is_empty() {
-                    return Err(ValidationError::new(
-                        "At least one day should be scheduled.",
-                    ));
+                    return validation_err!("At least one day should be scheduled.",);
                 }
             }
         }
@@ -374,15 +373,15 @@ impl Workout {
         self.schedule = schedule;
     }
 
-    fn validate_set_exercises(&self, exercises: &Vec<&str>) -> Result<(), ValidationError> {
+    fn validate_set_exercises(&self, exercises: &Vec<&str>) -> Result<(), Error> {
         let mut names = HashSet::new();
         for name in exercises {
             if name.trim().is_empty() {
-                return Err(ValidationError::new("The exercise name cannot be empty."));
+                return validation_err!("The exercise name cannot be empty.");
             } else {
                 let added = names.insert(name.to_owned());
                 if !added {
-                    return Err(ValidationError::new("'{name}' appears more than once."));
+                    return validation_err!("'{name}' appears more than once.");
                 }
             }
         }

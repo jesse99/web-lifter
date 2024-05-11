@@ -1,26 +1,28 @@
+use crate::pages::Error;
 use crate::{
     exercise::{Exercise, ExerciseName, SetIndex},
     pages::SharedState,
     VarRepsOptions,
 };
-use anyhow::Context;
 use axum::http::Uri;
 use chrono::Local;
+
+use super::Unwrapper;
 
 pub fn post_next_exercise(
     mut state: SharedState,
     workout_name: &str,
     exercise_name: &str,
     options: Option<VarRepsOptions>,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let finished = {
         let program = &state.read().unwrap().user.program;
         let workout = program
             .find(&workout_name)
-            .context("failed to find workout")?;
+            .unwrap_or_err("failed to find workout")?;
         let exercise = workout
             .find(&ExerciseName(exercise_name.to_owned()))
-            .context("failed to find exercise")?;
+            .unwrap_or_err("failed to find exercise")?;
         match exercise {
             Exercise::Durations(d, _) => d.finished,
             Exercise::FixedReps(d, _) => d.finished,
@@ -57,7 +59,7 @@ pub fn post_reset_exercise(
     state: SharedState,
     workout_name: &str,
     exercise_name: &str,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let exercise_name = ExerciseName(exercise_name.to_owned());
 
     {

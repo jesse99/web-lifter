@@ -1,3 +1,4 @@
+use crate::pages::Error;
 use crate::{
     exercise::{
         DurationsExercise, Exercise, ExerciseData, FixedReps, FixedRepsExercise, SetIndex,
@@ -8,18 +9,16 @@ use crate::{
     weights,
     workout::Schedule,
 };
-use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-pub fn get_overview_page(state: SharedState) -> Result<String, anyhow::Error> {
+pub fn get_overview_page(state: SharedState) -> Result<String, Error> {
     let handlebars = &state.read().unwrap().handlebars;
     let program = &state.read().unwrap().user.program;
 
     let template = include_str!("../../files/overview.html");
     let data = OverviewData::new(program);
-    Ok(handlebars
-        .render_template(template, &data)
-        .context("failed to render template")?)
+    let contents = handlebars.render_template(template, &data)?;
+    Ok(contents)
 }
 
 #[derive(Serialize, Deserialize)]

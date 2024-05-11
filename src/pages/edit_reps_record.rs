@@ -1,4 +1,6 @@
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
+use crate::validation_err;
 use crate::{
     exercise::ExerciseName,
     history::CompletedSets,
@@ -12,7 +14,7 @@ pub fn get_edit_reps_record(
     workout: &str,
     exercise: &str,
     id: u64,
-) -> Result<String, anyhow::Error> {
+) -> Result<String, Error> {
     let post_url = format!("/set-reps-record/{workout}/{exercise}/{id}");
     let cancel_url = format!("/exercise/{workout}/{exercise}");
 
@@ -77,7 +79,7 @@ pub fn post_set_reps_record(
     weights: Vec<f32>,
     comment: String,
     id: u64,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let exercise_name = ExerciseName(exercise_name.to_owned());
 
     {
@@ -91,7 +93,7 @@ pub fn post_set_reps_record(
         } else if weights.is_empty() {
             reps.iter().map(|r| (*r, None)).collect()
         } else {
-            return Err(anyhow::Error::msg("Weights must be empty or match reps"));
+            return validation_err!("Weights must be empty or match reps");
         };
         record.sets = Some(CompletedSets::Reps(sets));
         if !comment.is_empty() {

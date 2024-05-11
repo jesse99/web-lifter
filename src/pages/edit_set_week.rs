@@ -1,6 +1,7 @@
 use super::SharedState;
 use crate::pages::editor_builder::*;
-use anyhow::anyhow;
+use crate::pages::Error;
+use crate::validation_err;
 use axum::http::Uri;
 use chrono::Local;
 
@@ -38,11 +39,11 @@ pub fn get_edit_set_week(state: SharedState) -> String {
     build_editor(&post_url, widgets)
 }
 
-pub fn post_set_week(state: SharedState, week: i32) -> Result<Uri, anyhow::Error> {
+pub fn post_set_week(state: SharedState, week: i32) -> Result<Uri, Error> {
     let path = "/";
 
     if week <= 0 {
-        return Err(anyhow!("'Week should be greater than zero."));
+        return validation_err!("'Week should be greater than zero.");
     }
 
     {

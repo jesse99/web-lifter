@@ -1,12 +1,12 @@
-use axum::http::Uri;
-
 use super::SharedState;
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use crate::weights::WeightSet;
 use crate::{
     exercise::ExerciseName,
     weights::{self, Weights},
 };
+use axum::http::Uri;
 
 pub fn get_edit_discrete_set(state: SharedState, workout: &str, exercise: &str) -> String {
     fn make_labels(weights: &Weights, set_name: &str) -> Vec<String> {
@@ -71,7 +71,7 @@ pub fn post_set_discrete_set(
     exercise: &str,
     set_name: &str,
     weights: Vec<f32>,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let path = format!("/exercise/{workout}/{exercise}");
     let exercise = ExerciseName(exercise.to_owned());
 

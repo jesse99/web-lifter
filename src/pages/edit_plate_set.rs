@@ -1,5 +1,6 @@
 use super::SharedState;
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use crate::weights::{Plate, WeightSet};
 use crate::{
     exercise::ExerciseName,
@@ -77,7 +78,7 @@ pub fn post_set_plate_set(
     set_name: &str,
     plates: Vec<(f32, i32)>,
     bar: Option<f32>,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let path = format!("/exercise/{workout}/{exercise}");
     let exercise = ExerciseName(exercise.to_owned());
     let plates = plates.iter().map(|(w, c)| Plate::new(*w, *c)).collect();

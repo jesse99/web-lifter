@@ -1,5 +1,7 @@
 use super::SharedState;
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
+use crate::validation_err;
 use crate::{exercise::ExerciseName, history::CompletedSets, weights};
 use axum::http::Uri;
 
@@ -8,7 +10,7 @@ pub fn get_edit_durs_record(
     workout: &str,
     exercise: &str,
     id: u64,
-) -> Result<String, anyhow::Error> {
+) -> Result<String, Error> {
     let post_url = format!("/set-durs-record/{workout}/{exercise}/{id}");
     let cancel_url = format!("/exercise/{workout}/{exercise}");
 
@@ -77,7 +79,7 @@ pub fn post_set_durs_record(
     weights: Vec<f32>,
     comment: String,
     id: u64,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let path = format!("/exercise/{workout}/{exercise}");
     let exercise = ExerciseName(exercise.to_owned());
 
@@ -93,9 +95,7 @@ pub fn post_set_durs_record(
         } else if weights.is_empty() {
             durations.iter().map(|r| (*r, None)).collect()
         } else {
-            return Err(anyhow::Error::msg(
-                "Weights must be empty or match durations",
-            ));
+            return validation_err!("Weights must be empty or match durations");
         };
         record.sets = Some(CompletedSets::Durations(sets));
         if !comment.is_empty() {

@@ -1,6 +1,7 @@
 use super::SharedState;
 use crate::exercise::ExerciseName;
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use axum::http::Uri;
 
 pub fn get_edit_name(value: &str, help: &str, post_url: &str, cancel_url: &str) -> String {
@@ -13,7 +14,7 @@ pub fn get_edit_name(value: &str, help: &str, post_url: &str, cancel_url: &str) 
     build_editor(&post_url, widgets)
 }
 
-pub fn post_set_add_workout(state: SharedState, name: &str) -> Result<Uri, anyhow::Error> {
+pub fn post_set_add_workout(state: SharedState, name: &str) -> Result<Uri, Error> {
     {
         let program = &mut state.write().unwrap().user.program;
         program.try_add_workout(name)?;
@@ -22,7 +23,7 @@ pub fn post_set_add_workout(state: SharedState, name: &str) -> Result<Uri, anyho
     super::post_epilog(state, "/")
 }
 
-pub fn post_set_program_name(state: SharedState, new_name: &str) -> Result<Uri, anyhow::Error> {
+pub fn post_set_program_name(state: SharedState, new_name: &str) -> Result<Uri, Error> {
     let path = "/";
 
     {
@@ -39,7 +40,7 @@ pub fn post_set_workout_name(
     state: SharedState,
     old_name: &str,
     new_name: &str,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let path = format!("/workout/{new_name}");
 
     if old_name != new_name {
@@ -55,7 +56,7 @@ pub fn post_set_exercise_name(
     workout: &str,
     old_name: &str,
     new_name: &str,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let path = format!("/exercise/{workout}/{new_name}");
 
     if old_name != new_name {

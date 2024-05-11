@@ -1,4 +1,5 @@
-use crate::{exercise::SetIndex, pages::ValidationError};
+use crate::validation_err;
+use crate::{exercise::SetIndex, pages::Error};
 use serde::{Deserialize, Serialize};
 
 /// Used for stuff like 20 pull-ups spread across as many sets as necessary.
@@ -43,7 +44,7 @@ impl VariableSetsExercise {
         }
     }
 
-    pub fn try_set_target(&mut self, target: i32) -> Result<(), ValidationError> {
+    pub fn try_set_target(&mut self, target: i32) -> Result<(), Error> {
         self.validate_target(target)?;
         self.do_set_target(target);
         Ok(())
@@ -54,12 +55,12 @@ impl VariableSetsExercise {
     //     self.do_set_target(target);
     // }
 
-    fn validate_target(&self, target: i32) -> Result<(), ValidationError> {
+    fn validate_target(&self, target: i32) -> Result<(), Error> {
         if target < 0 {
-            return Err(ValidationError::new("target cannot be negative"));
+            return validation_err!("target cannot be negative");
         }
         if target == 0 {
-            return Err(ValidationError::new("target cannot be zero"));
+            return validation_err!("target cannot be zero");
         }
         Ok(())
     }

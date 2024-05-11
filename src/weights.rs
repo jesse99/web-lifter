@@ -1,4 +1,5 @@
-use crate::pages::ValidationError;
+use crate::pages::Error;
+use crate::validation_err;
 use core::fmt;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Formatter};
@@ -179,7 +180,7 @@ impl Weights {
         old_name: &str,
         new_name: &str,
         weights: WeightSet,
-    ) -> Result<(), ValidationError> {
+    ) -> Result<(), Error> {
         self.validate_change_set(old_name, new_name, &weights)?;
         self.do_change_set(old_name, new_name, weights);
         Ok(())
@@ -190,70 +191,58 @@ impl Weights {
         old_name: &str,
         new_name: &str,
         weights: &WeightSet,
-    ) -> Result<(), ValidationError> {
-        fn validate_discrete(weights: &Vec<f32>) -> Result<(), ValidationError> {
+    ) -> Result<(), Error> {
+        fn validate_discrete(weights: &Vec<f32>) -> Result<(), Error> {
             if weights.is_empty() {
-                return Err(ValidationError::new("There should be at least one weight."));
+                return validation_err!("There should be at least one weight.");
             }
             for (i, weight) in weights.iter().enumerate() {
                 if *weight < 0.0 {
-                    return Err(ValidationError::new("Weights cannot be negative."));
+                    return validation_err!("Weights cannot be negative.");
                 } else if *weight == 0.0 {
-                    return Err(ValidationError::new("Weights cannot be zero."));
+                    return validation_err!("Weights cannot be zero.");
                 } else if i + 1 < weights.len() && (*weight - weights[i + 1]).abs() < 0.001 {
-                    return Err(ValidationError::new(
-                        "Weights cannot have duplicate values.",
-                    ));
+                    return validation_err!("Weights cannot have duplicate values.",);
                 } else if i + 1 < weights.len() && *weight > weights[i + 1] {
-                    return Err(ValidationError::new(
-                        "Weights should be from smaller to larger.",
-                    ));
+                    return validation_err!("Weights should be from smaller to larger.",);
                 }
             }
             Ok(())
         }
 
-        fn validate_dual(plates: &Vec<Plate>, bar: &Option<f32>) -> Result<(), ValidationError> {
+        fn validate_dual(plates: &Vec<Plate>, bar: &Option<f32>) -> Result<(), Error> {
             if plates.is_empty() {
-                return Err(ValidationError::new("There should be at least one plate."));
+                return validation_err!("There should be at least one plate.");
             }
             for (i, plate) in plates.iter().enumerate() {
                 if plate.weight < 0.0 {
-                    return Err(ValidationError::new("Plate weights cannot be negative."));
+                    return validation_err!("Plate weights cannot be negative.");
                 } else if plate.weight == 0.0 {
-                    return Err(ValidationError::new("Plate weights cannot be zero."));
+                    return validation_err!("Plate weights cannot be zero.");
                 } else if i + 1 < plates.len()
                     && (plate.weight - plates[i + 1].weight).abs() < 0.001
                 {
-                    return Err(ValidationError::new(
-                        "Plate weights cannot have duplicate values.",
-                    ));
+                    return validation_err!("Plate weights cannot have duplicate values.",);
                 } else if i + 1 < plates.len() && plate.weight > plates[i + 1].weight {
-                    return Err(ValidationError::new(
-                        "Plate weights should be from smaller to larger.",
-                    ));
+                    return validation_err!("Plate weights should be from smaller to larger.",);
                 }
             }
             if let Some(weight) = bar {
                 if *weight < 0.0 {
-                    return Err(ValidationError::new("Bar weight cannot be negative."));
+                    return validation_err!("Bar weight cannot be negative.");
                 } else if *weight == 0.0 {
-                    return Err(ValidationError::new("Bar weight cannot be zero."));
+                    return validation_err!("Bar weight cannot be zero.");
                 }
             }
             Ok(())
         }
 
         if new_name.trim().is_empty() {
-            return Err(ValidationError::new("The weight set name cannot be empty."));
+            return validation_err!("The weight set name cannot be empty.");
         } else if new_name == "None" {
-            return Err(ValidationError::new(
-                "The weight set name cannot be 'None'.",
-            ));
+            return validation_err!("The weight set name cannot be 'None'.",);
         } else if new_name != old_name && self.get(new_name).is_some() {
-            return Err(ValidationError::new(
-                "The new weight set name already exists.",
-            ));
+            return validation_err!("The new weight set name already exists.",);
         }
 
         match weights {

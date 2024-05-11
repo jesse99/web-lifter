@@ -1,9 +1,8 @@
 //! Exercises are movements for the user to perform, e.g. a barbell squat. These may be
 //! shared across programs and workouts.
-use crate::{
-    pages::ValidationError,
-    weights::{Weight, Weights},
-};
+use crate::pages::Error;
+use crate::validation_err;
+use crate::weights::{Weight, Weights};
 use chrono::{DateTime, Local};
 use core::fmt;
 use serde::{Deserialize, Serialize};
@@ -233,7 +232,7 @@ impl Exercise {
         }
     }
 
-    pub fn try_set_formal_name(&mut self, name: &str) -> Result<(), ValidationError> {
+    pub fn try_set_formal_name(&mut self, name: &str) -> Result<(), Error> {
         self.validate_formal_name(name)?;
         self.do_set_formal_name(name);
         Ok(())
@@ -244,7 +243,7 @@ impl Exercise {
     //     self.do_set_formal_name(name);
     // }
 
-    pub fn try_set_weight(&mut self, weight: Option<f32>) -> Result<(), ValidationError> {
+    pub fn try_set_weight(&mut self, weight: Option<f32>) -> Result<(), Error> {
         self.validate_weight(weight)?;
         self.do_set_weight(weight);
         Ok(())
@@ -255,7 +254,7 @@ impl Exercise {
         self.do_set_weight(weight);
     }
 
-    pub fn try_set_weight_set(&mut self, name: Option<String>) -> Result<(), ValidationError> {
+    pub fn try_set_weight_set(&mut self, name: Option<String>) -> Result<(), Error> {
         self.validate_weight_set(&name)?;
         self.do_set_weight_set(name);
         Ok(())
@@ -266,7 +265,7 @@ impl Exercise {
     //     self.do_set_weight_set(name);
     // }
 
-    pub fn try_set_rest(&mut self, rest: Option<i32>) -> Result<(), ValidationError> {
+    pub fn try_set_rest(&mut self, rest: Option<i32>) -> Result<(), Error> {
         self.validate_rest(rest)?;
         self.do_set_rest(rest);
         Ok(())
@@ -277,7 +276,7 @@ impl Exercise {
     //     self.do_set_rest(rest);
     // }
 
-    pub fn try_set_last_rest(&mut self, last_rest: Option<i32>) -> Result<(), ValidationError> {
+    pub fn try_set_last_rest(&mut self, last_rest: Option<i32>) -> Result<(), Error> {
         self.validate_last_rest(last_rest)?;
         self.do_set_last_rest(last_rest);
         Ok(())
@@ -349,7 +348,7 @@ impl Exercise {
         }
     }
 
-    fn validate_formal_name(&self, _name: &str) -> Result<(), ValidationError> {
+    fn validate_formal_name(&self, _name: &str) -> Result<(), Error> {
         // Empty is OK. Weird stuff is, more or less fine, too for custom notes.
         Ok(())
     }
@@ -364,16 +363,16 @@ impl Exercise {
         }
     }
 
-    fn validate_weight(&self, weight: Option<f32>) -> Result<(), ValidationError> {
+    fn validate_weight(&self, weight: Option<f32>) -> Result<(), Error> {
         if let Some(weight) = weight {
             if weight < 0.0 {
-                return Err(ValidationError::new("Weight cannot be negative"));
+                return validation_err!("Weight cannot be negative");
             }
             if weight.is_nan() {
-                return Err(ValidationError::new("Weight cannot be a Not A Number"));
+                return validation_err!("Weight cannot be a Not A Number");
             }
             if weight.is_infinite() {
-                return Err(ValidationError::new("Weight cannot be a infinite"));
+                return validation_err!("Weight cannot be a infinite");
             }
         }
         Ok(())
@@ -388,14 +387,12 @@ impl Exercise {
         }
     }
 
-    fn validate_weight_set(&self, name: &Option<String>) -> Result<(), ValidationError> {
+    fn validate_weight_set(&self, name: &Option<String>) -> Result<(), Error> {
         if let Some(name) = name {
             if name.trim().is_empty() {
-                return Err(ValidationError::new("The weight set name cannot be empty."));
+                return validation_err!("The weight set name cannot be empty.");
             } else if name == "None" {
-                return Err(ValidationError::new(
-                    "The weight set name cannot be 'None'.",
-                ));
+                return validation_err!("The weight set name cannot be 'None'.",);
             }
         }
         Ok(())
@@ -410,10 +407,10 @@ impl Exercise {
         }
     }
 
-    fn validate_rest(&self, rest: Option<i32>) -> Result<(), ValidationError> {
+    fn validate_rest(&self, rest: Option<i32>) -> Result<(), Error> {
         if let Some(rest) = rest {
             if rest < 0 {
-                return Err(ValidationError::new("Rest cannot be negative"));
+                return validation_err!("Rest cannot be negative");
             }
         }
         Ok(())
@@ -428,10 +425,10 @@ impl Exercise {
         }
     }
 
-    fn validate_last_rest(&self, last_rest: Option<i32>) -> Result<(), ValidationError> {
+    fn validate_last_rest(&self, last_rest: Option<i32>) -> Result<(), Error> {
         if let Some(last_rest) = last_rest {
             if last_rest < 0 {
-                return Err(ValidationError::new("Last rest cannot be negative"));
+                return validation_err!("Last rest cannot be negative");
             }
         }
         Ok(())

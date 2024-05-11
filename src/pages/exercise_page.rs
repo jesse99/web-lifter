@@ -1,13 +1,13 @@
+use crate::pages::errors::Unwrapper;
 use crate::{
     exercise::{Exercise, ExerciseData, ExerciseName, SetIndex, VariableReps},
     history::{CompletedSets, History, Record},
     notes::Notes,
-    pages::{self, SharedState},
+    pages::{self, Error, SharedState},
     program::Program,
     weights::{self, WeightSet, Weights},
     workout::Workout,
 };
-use anyhow::Context;
 use chrono::Local;
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +15,7 @@ pub fn get_exercise_page(
     state: SharedState,
     workout: &str,
     exercise: &str,
-) -> Result<String, anyhow::Error> {
+) -> Result<String, Error> {
     let exercise = ExerciseName(exercise.to_owned());
     let reset = reset_old(&state, workout, &exercise.0);
     {
@@ -36,8 +36,12 @@ pub fn get_exercise_page(
     let program = &state.read().unwrap().user.program;
 
     let template = include_str!("../../files/exercise.html");
-    let workout = program.find(&workout).context("failed to find workout")?;
-    let exercise = workout.find(&exercise).context("failed to find exercise")?;
+    let workout = program
+        .find(&workout)
+        .unwrap_or_err("failed to find workout")?;
+    let exercise = workout
+        .find(&exercise)
+        .unwrap_or_err("failed to find exercise")?;
     let untyped = UntypedData::new(history, exercise);
     let data = ExData::new(
         history,
@@ -49,9 +53,8 @@ pub fn get_exercise_page(
         exercise.data(),
         untyped,
     );
-    Ok(handlebars
-        .render_template(template, &data)
-        .context("failed to render template")?)
+    let contents = handlebars.render_template(template, &data)?;
+    Ok(contents)
 }
 
 fn reset_old(state: &SharedState, workout: &str, exercise: &str) -> bool {

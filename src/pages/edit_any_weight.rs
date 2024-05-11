@@ -1,6 +1,7 @@
 use super::SharedState;
 use crate::exercise::ExerciseName;
 use crate::pages::editor_builder::*;
+use crate::pages::Error;
 use axum::http::Uri;
 
 pub fn get_edit_any_weight(state: SharedState, workout: &str, exercise: &str) -> String {
@@ -32,7 +33,7 @@ pub fn post_set_weight(
     workout: &str,
     exercise: &str,
     weight: Option<f32>,
-) -> Result<Uri, anyhow::Error> {
+) -> Result<Uri, Error> {
     let path = format!("/exercise/{workout}/{exercise}");
     let exercise = ExerciseName(exercise.to_owned());
 
