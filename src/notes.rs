@@ -1393,7 +1393,7 @@ vec![("Link", "https://www.youtube.com/watch?v=_4EGPVJuqfA"), ("Pushups", "https
         "Move arms to sides so upper and lower arms are at ninety degree angle.",
         "Dumbbells should be just outside of chest.",
         "Raise the dumbbells so that they lightly touch one another above your chest.",
-        "After completing the set kick your legs up, place the weights on your thighs, and situp.",
+        "After completing the set kick your legs up, place the weights on your thighs, and sit up.",
         "Once you are sitting up you can place the weights on the floor."],
         vec![
             (
