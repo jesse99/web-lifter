@@ -241,8 +241,9 @@ impl Widget for Dropdown {
         let key = key.replace(" ", "-");
 
         let select_id = format!("{key}-select");
+        let help_id = format!("{key}-help");
 
-        let mut div = HtmlTag::new("div").with_class("input-group mb-4");
+        let mut div = HtmlTag::new("div").with_class("input-group");
         let span = HtmlTag::new("span")
             .with_class("input-group-text")
             .with_body(&self.label);
@@ -252,6 +253,7 @@ impl Widget for Dropdown {
             .with_id(&select_id)
             .with_class("form-select")
             .with_attribute("aria-label", &key)
+            .with_attribute("aria-describedby", &help_id)
             .with_attribute("name", &key);
         for item in self.items.iter() {
             let mut option = HtmlTag::new("option")
@@ -267,6 +269,7 @@ impl Widget for Dropdown {
 
         if !self.help.is_empty() {
             let div = HtmlTag::new("div")
+                .with_id(&help_id)
                 .with_class("form-text fst-italic fs-6")
                 .with_body(&self.help);
             builder.form.add_child(div);
