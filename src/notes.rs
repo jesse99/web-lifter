@@ -1043,7 +1043,7 @@ vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/chin-up")
         vec![
             "Lay on your side.",
             "Move your hips back about 45 degrees.",
-            "Move your knees foreward so that they form a 90 degree angle.",
+            "Move your knees forward so that they form a 90 degree angle.",
             "Push a knee into the air as far as possible pausing at the top.",
             "Keep your feet touching.",
         ],
