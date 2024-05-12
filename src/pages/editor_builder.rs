@@ -441,7 +441,7 @@ impl Widget for Html {
 #[derive(Eq, PartialEq)]
 enum Help {
     None,
-    PerItem,
+    PerItem(String),
     Hardcoded(String),
 }
 
@@ -477,8 +477,9 @@ impl List {
     }
 
     /// Construct dropdown list with a vector of (body, help) entries. The help label is
-    /// set to a help entry when that entry is selected.
-    pub fn with_help(name: &str, items: Vec<(String, String)>) -> List {
+    /// set to a help entry when that entry is selected (the help argument is used for
+    /// the initial help).
+    pub fn with_help(name: &str, items: Vec<(String, String)>, help: &str) -> List {
         let items = items
             .into_iter()
             .map(|(n, h)| (n, h, "".to_string()))
@@ -487,7 +488,7 @@ impl List {
             name: name.to_owned(),
             active: "".to_owned(),
             items,
-            help: Help::PerItem,
+            help: Help::PerItem(help.to_string()),
             javascript: include_str!("../../files/list.js").to_owned(),
         }
     }
@@ -553,7 +554,6 @@ impl Widget for List {
                 entry.add_attribute("aria-current", "true");
             }
             if !item.1.is_empty() {
-                assert!(self.help == Help::PerItem);
                 entry.add_attribute("data-help", &item.1);
             }
             if !item.2.is_empty() {
@@ -566,10 +566,11 @@ impl Widget for List {
         // help
         match &self.help {
             Help::None => (),
-            Help::PerItem => {
+            Help::PerItem(s) => {
                 let div = HtmlTag::new("div")
                     .with_id("list-help")
-                    .with_class("form-text fst-italic fs-6 mb-4");
+                    .with_class("form-text fst-italic fs-6 mb-4")
+                    .with_body(&s);
                 builder.form.add_child(div);
             }
             Help::Hardcoded(s) => {

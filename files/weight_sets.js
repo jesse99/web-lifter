@@ -17,6 +17,12 @@ function on_click(item) {
     item.classList.add('active');
     item.setAttribute('aria-current', "true");
     enable_menu();
+
+    let text = item.getAttribute("data-help");
+    if (text) {
+        let help = document.getElementById('list-help');
+        help.innerText = text;
+    }
 }
 
 function has_block(name) {

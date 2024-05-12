@@ -1,17 +1,39 @@
 use super::SharedState;
 use crate::pages::editor_builder::*;
 use crate::pages::Error;
+use crate::program::Program;
 use crate::weights::WeightSet;
 use axum::http::Uri;
 
-const HELP:&'static str = "Weight sets can be generic or specific to an exercise, e.g.  \"Dumbbbells\" or \"Deadlift\". You can edit a weight set by selecting it within an exercise.";
+const HELP:&'static str = "Weight sets can be generic or specific to an exercise, e.g. Dumbbbells or Deadlift. You can edit a weight set by selecting it within an exercise.";
 
 fn get_weights<F>(state: SharedState, prefix: &str, post_url: &str, valid: F) -> String
 where
     F: Fn(&WeightSet) -> bool,
 {
+    fn help_suffix(program: &Program, set_name: &str) -> String {
+        let mut uses = Vec::new();
+        let set_name = Some(set_name.to_string());
+        for workout in program.workouts() {
+            for exercise in workout.exercises() {
+                let d = exercise.data();
+                if d.weightset == set_name {
+                    uses.push(exercise.name().0.clone());
+                }
+            }
+        }
+
+        match uses.len() {
+            0 => format!("{HELP} Not used by any exercise."),
+            1 => format!("{HELP} Used by {}.", uses[0]),
+            2 => format!("{HELP} Used by {} and {}.", uses[0], uses[1]),
+            _ => format!("{HELP} Used by {}.", uses.join(", ")),
+        }
+    }
+
     let cancel_url = "/";
 
+    let program = &state.read().unwrap().user.program;
     let weights = &state.read().unwrap().user.weights;
     let mut items: Vec<_> = weights
         .items()
@@ -19,6 +41,10 @@ where
         .map(|(n, _)| n.clone())
         .collect();
     items.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let items = items
+        .iter()
+        .map(|n| (n.clone(), help_suffix(program, n)))
+        .collect();
     let javascript = include_str!("../../files/weight_sets.js");
 
     let buttons = vec![
@@ -32,7 +58,7 @@ where
             buttons,
             javascript,
         )),
-        Box::new(List::with_names("sets", items, HELP).without_js()),
+        Box::new(List::with_help("sets", items, HELP).without_js()),
         Box::new(StdButtons::new(&cancel_url)),
     ];
 

@@ -53,7 +53,7 @@ pub fn get_current_set(state: SharedState, workout: &str, exercise: &str) -> Str
 
     let widgets: Vec<Box<dyn Widget>> = vec![
         Box::new(Prolog::with_title("Select Weight Set")),
-        Box::new(List::with_help("sets", items).with_active(&active)),
+        Box::new(List::with_help("sets", items, "").with_active(&active)),
         Box::new(StdButtons::new(&cancel_url)),
     ];
 
