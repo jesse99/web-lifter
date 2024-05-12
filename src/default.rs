@@ -9,6 +9,22 @@ use self::{
 use crate::*;
 use chrono::{Local, Weekday};
 
+pub fn default_plates() -> WeightSet {
+    WeightSet::DualPlates(
+        vec![
+            Plate::new(5.0, 4),
+            Plate::new(10.0, 4),
+            Plate::new(25.0, 4),
+            Plate::new(45.0, 4),
+        ],
+        Some(45.0),
+    )
+}
+
+pub fn default_discrete() -> WeightSet {
+    WeightSet::Discrete((10..=100).step_by(10).map(|i| i as f32).collect())
+}
+
 pub fn make_program() -> pages::AppState {
     let blocks = vec![
         Block::new(

@@ -1,8 +1,12 @@
+use crate::default;
 use crate::pages::Error;
 use crate::validation_err;
 use core::fmt;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt::Formatter};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Formatter,
+};
 
 // TODO Might want to support bumper plates though that would get quite annoying because
 // we'd want to use them whenever possible. For example, if we had [15 bumper x8, 20 x6]
@@ -175,6 +179,26 @@ impl Weights {
         }
     }
 
+    pub fn try_set_discrete_weights(&mut self, sets: Vec<String>) -> Result<(), Error> {
+        let valid = |w: &WeightSet| match w {
+            WeightSet::Discrete(_) => true,
+            _ => false,
+        };
+        self.validate_set_weight_sets(&sets, valid)?;
+        self.do_set_weight_sets(sets, valid, default::default_discrete());
+        Ok(())
+    }
+
+    pub fn try_set_plate_weights(&mut self, sets: Vec<String>) -> Result<(), Error> {
+        let valid = |w: &WeightSet| match w {
+            WeightSet::DualPlates(_, _) => true,
+            _ => false,
+        };
+        self.validate_set_weight_sets(&sets, valid)?;
+        self.do_set_weight_sets(sets, valid, default::default_plates());
+        Ok(())
+    }
+
     pub fn try_change_set(
         &mut self,
         old_name: &str,
@@ -184,6 +208,63 @@ impl Weights {
         self.validate_change_set(old_name, new_name, &weights)?;
         self.do_change_set(old_name, new_name, weights);
         Ok(())
+    }
+
+    fn validate_set_weight_sets<F>(&self, sets: &Vec<String>, valid: F) -> Result<(), Error>
+    where
+        F: Fn(&WeightSet) -> bool,
+    {
+        let mut names = HashSet::new();
+        for name in sets.iter() {
+            if name.trim().is_empty() {
+                return validation_err!("Weight set names cannot be empty.");
+            }
+
+            let added = names.insert(name.clone());
+            if !added {
+                return validation_err!("'{name}' appears more than once.");
+            }
+
+            if let Some(old) = self.sets.get(name) {
+                if !valid(old) {
+                    return validation_err!(
+                        "'{name}' is already a weight set with a different type."
+                    );
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn do_set_weight_sets<F>(&mut self, sets: Vec<String>, valid: F, exemplar: WeightSet)
+    where
+        F: Fn(&WeightSet) -> bool,
+    {
+        let mut old_valid = HashMap::new();
+        let mut old_invalid = HashMap::new();
+        for (name, set) in self.sets.drain() {
+            if valid(&set) {
+                old_valid.insert(name, set);
+            } else {
+                old_invalid.insert(name, set);
+            }
+        }
+
+        // Note that this will implicitly delete sets that are no longer named.
+        let mut new_sets = HashMap::new();
+        for name in sets.into_iter() {
+            if let Some(set) = old_valid.remove(&name) {
+                new_sets.insert(name, set);
+            } else {
+                new_sets.insert(name, exemplar.clone());
+            }
+        }
+
+        self.sets = new_sets;
+        for (name, set) in old_invalid.drain() {
+            let old = self.sets.insert(name, set);
+            assert!(old.is_none(), "validation should have prevented this");
+        }
     }
 
     fn validate_change_set(

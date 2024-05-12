@@ -67,6 +67,8 @@ async fn main() {
         .route("/", get(get_program))
         .route("/show-overview", get(get_overview))
         .route("/add-workout", get(get_edit_add_workout))
+        .route("/edit-discrete-weights", get(get_discrete_weights))
+        .route("/edit-plate-weights", get(get_plate_weights))
         .route("/edit-blocks", get(get_blocks))
         .route("/edit-block/:name", get(get_edit_block))
         .route("/edit-week", get(get_edit_set_week))
@@ -122,6 +124,8 @@ async fn main() {
         // post --------------------------------------------------------------------------
         .route("/set-program-name", post(post_set_program_name))
         .route("/set-week", post(post_set_week))
+        .route("/set-discrete-weights", post(post_set_discrete_weights))
+        .route("/set-plate-weights", post(post_set_plate_weights))
         .route("/set-blocks", post(post_set_blocks))
         .route("/set-block/:name", post(post_set_block))
         .route("/set-workouts", post(post_set_workouts))
@@ -362,6 +366,32 @@ async fn get_edit_edit_workouts(
     Extension(state): Extension<SharedState>,
 ) -> Result<impl IntoResponse, Error> {
     let contents = pages::get_edit_workouts(state);
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_discrete_weights(
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, Error> {
+    let contents = pages::get_discrete_weights(state);
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_plate_weights(
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, Error> {
+    let contents = pages::get_plate_weights(state);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -796,6 +826,45 @@ async fn post_append_exercise(
         _ => return validation_err!("bad exercise type"),
     };
     let new_url = pages::post_append_exercise(state, &workout, exercise)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct EditWeights {
+    sets: String, // "Block 1¦Block 2"
+}
+
+async fn post_set_discrete_weights(
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<EditWeights>,
+) -> Result<impl IntoResponse, Error> {
+    let sets: Vec<_> = payload.sets.split("¦").map(|s| s.to_string()).collect();
+    let new_url = pages::post_set_discrete_weights(state, sets)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+async fn post_set_plate_weights(
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<EditWeights>,
+) -> Result<impl IntoResponse, Error> {
+    let sets: Vec<_> = payload.sets.split("¦").map(|s| s.to_string()).collect();
+    let new_url = pages::post_set_plate_weights(state, sets)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
