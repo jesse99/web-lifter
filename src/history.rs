@@ -43,17 +43,6 @@ impl History {
         }
     }
 
-    pub fn fixup(&mut self) {
-        // for (_, records) in self.records.iter_mut() {
-        //     for record in records {
-        //         if record.id == 0 {
-        //             record.id = self.next_id;
-        //             self.next_id += 1;
-        //         }
-        //     }
-        // }
-    }
-
     /// Adds a record with no sets.
     pub fn start(
         &mut self,

@@ -49,7 +49,7 @@ pub fn make_program() -> pages::AppState {
     default_program.add_workout(create_test());
 
     let user = match persist::load() {
-        Ok(u) => fixup_program(u),
+        Ok(u) => u,
         Err(e) => {
             let errors = vec![format!("load had error {}", e.kind())];
             UserState {
@@ -579,10 +579,4 @@ fn creat_weight_sets() -> Weights {
     weights.add("Kettlebell".to_owned(), set);
 
     weights
-}
-
-fn fixup_program(mut state: UserState) -> UserState {
-    state.history.fixup();
-    state.program.fixup();
-    state
 }

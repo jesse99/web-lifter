@@ -24,21 +24,28 @@
 
 \f1\fs48 \cf3 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
 \'95 Update OS\
-\'95 Add a weight set for Leg Press: 10, 25, and 45 plates\
-\'95 Use a helper with render_template\
-	- verify that there are no \'93\{\{stuff\}\}\'94 or \'93\{\{\{stuff\}\}\}\'94 strings left un-expanded\
-	- use an attribute so that the scan code is debug only\
-\'95 Get rid of fixup code\
 \'95\'a0May want a separate directory for editors\
 \'95\'a0Update box squat note\
 \'95\'a0May want to have separate directories for javascript and html/css.\
+\'95 Add support for multiple programs\
+\'95\'a0Add charting\
 \'95 Add logging\
 \'95\'a0Add support for single plates\
 	- probably want a checkbox in edit plates weight set page\
 \pard\pardeftab720\partightenfactor0
 \cf3 \'95 Also a way to export history\
 	- maybe as json or csv\
-\'95\'a0Supporting options:\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
+\cf3 \'95\'a0Support multiple users\
+	- allow guest for people who don\'92t want to register\
+	- need to register email for password recovery\
+	- will probably need to switch to https\
+	- whats the bext practice for keying via user names?\
+		` hash user name and password?\
+	- use the secrets crate?\
+	- cap number of concurrent users? think there\'92s a tower thing for this\
+\pard\pardeftab720\partightenfactor0
+\cf3 \'95\'a0Supporting options:\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf3 	- eg font scaling, save keyed with device name)\
 	- options would also be available in program and workout pages\
@@ -134,14 +141,6 @@ fn get_result() -> Option<u64> \{
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 \cf3 \'95\'a0Should be able to edit workouts\
 \'95\'a0Should be able to edit programs\
-\'95\'a0Support multiple users\
-	- allow guest for people who don\'92t want to register\
-	- need to register email for password recovery\
-	- will probably need to switch to https\
-	- whats the bext practice for keying via user names?\
-		` hash user name and password?\
-	- use the secrets crate?\
-	- cap number of concurrent users? think there\'92s a tower thing for this\
 \'95 May want an option for bootstrap\'92s dark theme\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 \cf3 \

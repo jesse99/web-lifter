@@ -167,65 +167,6 @@ impl Program {
         Ok(())
     }
 
-    pub fn fixup(&mut self) {
-        // fn set_weight(program: &mut Program, workout: &str, exercise: &str, weight: f32) {
-        //     use crate::exercise::ExerciseName;
-
-        //     if let Some(workout) = program.find_mut(workout) {
-        //         if let Some(exercise) = workout.find_mut(&ExerciseName(exercise.to_owned())) {
-        //             exercise.set_weight(Some(weight));
-        //         } else {
-        //             panic!("didn't find exercise {exercise}");
-        //         }
-        //     } else {
-        //         panic!("didn't find workout {workout}");
-        //     }
-        // }
-
-        // fn set_weightset(program: &mut Program, workout: &str, exercise: &str, name: &str) {
-        //     use crate::exercise::ExerciseName;
-
-        //     if let Some(workout) = program.find_mut(workout) {
-        //         if let Some(exercise) = workout.find_mut(&ExerciseName(exercise.to_owned())) {
-        //             exercise.set_weightset(Some(name.to_owned()));
-        //         } else {
-        //             panic!("didn't find exercise {exercise}");
-        //         }
-        //     } else {
-        //         panic!("didn't find workout {workout}");
-        //     }
-        // }
-
-        // fn set_var_sets_target(program: &mut Program, workout: &str, exercise: &str, target: i32) {
-        //     use crate::exercise::ExerciseName;
-
-        //     if let Some(workout) = program.find_mut(workout) {
-        //         if let Some(exercise) = workout.find_mut(&ExerciseName(exercise.to_owned())) {
-        //             let (_, e) = exercise.expect_var_sets_mut();
-        //             e.set_target(target);
-        //         } else {
-        //             panic!("didn't find exercise {exercise}");
-        //         }
-        //     } else {
-        //         panic!("didn't find workout {workout}");
-        //     }
-        // }
-
-        // self.set_week(Local::now(), 2);
-        // set_weightset(self, "Light", "Stack Complex 1", "Gym Dumbbells");
-        // set_weightset(self, "Light", "Stack Complex 2", "Gym Dumbbells");
-
-        // set_weight(self, "Heavy Bench", "Heavy RDL", 235.0);
-        // set_weight(self, "Heavy Bench", "Cable Abduction", 17.5);
-        // set_weight(self, "Heavy OHP", "Heavy OHP", 80.0);
-
-        // set_weight(self, "Medium Bench", "Cable Abduction", 17.5);
-        // set_weight(self, "Medium Bench", "Medium RDL", 215.0);
-        // set_weight(self, "Medium OHP", "OHP", 80.0);
-
-        // set_var_sets_target(self, "Medium OHP", "Medium Chin-ups", 16);
-    }
-
     pub fn blocks(&self) -> impl Iterator<Item = &Block> + '_ {
         self.blocks.iter()
     }
@@ -449,7 +390,7 @@ fn find_active(
     blocks: &Vec<Block>,
     now: DateTime<Local>,
 ) -> (usize, DateTime<Local>) {
-    let mut block_start = blocks_start; // TODO should we bump this forward in fixup?
+    let mut block_start = blocks_start; // TODO should we bump this forward in somewhere?
     loop {
         // loop because blocks_start might be way in the past
         assert!(blocks_start.weekday() == Weekday::Mon);
