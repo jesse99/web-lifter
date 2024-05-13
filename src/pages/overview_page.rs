@@ -1,10 +1,10 @@
+use crate::app_state::SharedState;
 use crate::pages::Error;
 use crate::{
     exercise::{
         DurationsExercise, Exercise, ExerciseData, FixedReps, FixedRepsExercise, SetIndex,
         VariableReps, VariableRepsExercise, VariableSetsExercise,
     },
-    pages::SharedState,
     program::Program,
     weights,
     workout::Schedule,

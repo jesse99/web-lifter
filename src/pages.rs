@@ -1,6 +1,6 @@
+use crate::app_state::SharedState;
 use axum::http::Uri;
 
-mod app_state;
 mod edit_add_exercise;
 mod edit_any_weight;
 mod edit_block;
@@ -32,7 +32,6 @@ mod overview_page;
 mod program_page;
 mod workout_page;
 
-pub use app_state::*;
 pub use edit_add_exercise::*;
 pub use edit_any_weight::*;
 pub use edit_block::*;

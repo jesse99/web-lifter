@@ -1,9 +1,9 @@
+use crate::app_state::SharedState;
 use crate::internal_err;
 use crate::pages::Error;
 use crate::{
     exercise::{Exercise, SetIndex},
     history::History,
-    pages::SharedState,
     program::Program,
     weights::Weights,
     workout::{Schedule, Workout},

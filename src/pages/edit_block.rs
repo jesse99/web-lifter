@@ -1,6 +1,6 @@
+use crate::app_state::SharedState;
 use crate::pages::editor_builder::*;
 use crate::pages::Error;
-use crate::pages::SharedState;
 use axum::http::Uri;
 
 pub fn get_edit_block(state: SharedState, block_name: &str) -> String {

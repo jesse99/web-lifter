@@ -6,7 +6,7 @@
 //
 // The serde_flow crate can help if backward compatibility starts to become an issue.
 // There's also serde_columnar but that isn't production ready (in early 2024).
-use crate::pages::UserState;
+use crate::app_state::UserState;
 use std::fs::File;
 use std::io::{BufWriter, Result};
 use std::path::PathBuf;

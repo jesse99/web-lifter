@@ -1,6 +1,6 @@
+use crate::app_state::SharedState;
 use crate::pages::Error;
 use crate::{
-    pages::SharedState,
     program::Program,
     workout::{Status, Workout},
 };

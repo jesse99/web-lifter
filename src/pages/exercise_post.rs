@@ -1,7 +1,7 @@
+use crate::app_state::SharedState;
 use crate::pages::Error;
 use crate::{
     exercise::{Exercise, ExerciseName, SetIndex},
-    pages::SharedState,
     VarRepsOptions,
 };
 use axum::http::Uri;

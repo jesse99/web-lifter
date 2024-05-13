@@ -1,9 +1,10 @@
+use crate::app_state::SharedState;
 use crate::pages::errors::Unwrapper;
 use crate::{
     exercise::{Exercise, ExerciseData, ExerciseName, SetIndex, VariableReps},
     history::{CompletedSets, History, Record},
     notes::Notes,
-    pages::{self, Error, SharedState},
+    pages::{self, Error},
     program::Program,
     weights::{self, WeightSet, Weights},
     workout::Workout,

@@ -1,6 +1,7 @@
+use crate::app_state::SharedState;
+use crate::exercise::ExerciseName;
 use crate::pages::editor_builder::*;
 use crate::weights;
-use crate::{exercise::ExerciseName, pages::SharedState};
 
 pub fn get_edit_weight(state: SharedState, workout: &str, exercise: &str) -> String {
     let post_url = format!("/set-weight/{workout}/{exercise}");

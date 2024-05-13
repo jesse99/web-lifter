@@ -1,4 +1,4 @@
-use super::SharedState;
+use crate::app_state::SharedState;
 use crate::pages::editor_builder::*;
 use crate::pages::Error;
 use crate::weights::WeightSet;

@@ -1,3 +1,4 @@
+mod app_state;
 mod days;
 mod default;
 mod exercise;
@@ -9,6 +10,7 @@ mod program;
 mod weights;
 mod workout;
 
+use app_state::SharedState;
 use axum::{
     extract::{Extension, Path, Query},
     http::{header, HeaderMap, StatusCode},
@@ -17,7 +19,7 @@ use axum::{
     Form, Router,
 };
 use handlebars::Handlebars;
-use pages::{Error, SharedState, Unwrapper};
+use pages::{Error, Unwrapper};
 use serde::Deserialize;
 use std::sync::RwLock;
 use tower::ServiceBuilder;

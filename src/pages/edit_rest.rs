@@ -1,6 +1,7 @@
+use crate::app_state::SharedState;
+use crate::exercise::ExerciseName;
 use crate::pages::editor_builder::*;
 use crate::pages::Error;
-use crate::{exercise::ExerciseName, pages::SharedState};
 use axum::http::Uri;
 
 pub fn get_edit_rest(state: SharedState, workout: &str, exercise: &str) -> String {

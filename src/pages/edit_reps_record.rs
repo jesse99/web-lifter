@@ -1,10 +1,10 @@
+use crate::app_state::SharedState;
 use crate::pages::editor_builder::*;
 use crate::pages::Error;
 use crate::validation_err;
 use crate::{
     exercise::ExerciseName,
     history::CompletedSets,
-    pages::SharedState,
     weights::{self},
 };
 use axum::http::Uri;

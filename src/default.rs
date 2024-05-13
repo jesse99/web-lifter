@@ -1,11 +1,11 @@
 use self::{
     history::History,
     notes::Notes,
-    pages::{AppState, UserState},
     program::{Block, Program},
     weights::{Plate, WeightSet, Weights},
     workout::{Schedule, Workout},
 };
+use crate::app_state::{AppState, UserState};
 use crate::*;
 use chrono::{Local, Weekday};
 
@@ -25,7 +25,7 @@ pub fn default_discrete() -> WeightSet {
     WeightSet::Discrete((10..=100).step_by(10).map(|i| i as f32).collect())
 }
 
-pub fn make_program() -> pages::AppState {
+pub fn make_program() -> AppState {
     let blocks = vec![
         Block::new(
             "Heavy".to_owned(),
