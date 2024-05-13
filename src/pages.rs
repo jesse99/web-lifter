@@ -4,11 +4,9 @@ use axum::http::Uri;
 
 mod editor_builder;
 mod editors;
-mod exercise_post;
 mod views;
 
 pub use editors::*;
-pub use exercise_post::*;
 pub use views::*;
 
 pub fn post_epilog(state: SharedState, path: &str) -> Result<Uri, Error> {
