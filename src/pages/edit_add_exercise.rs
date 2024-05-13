@@ -1,7 +1,7 @@
 use crate::app_state::SharedState;
+use crate::errors::Error;
 use crate::exercise::Exercise;
 use crate::pages::editor_builder::*;
-use crate::pages::Error;
 use axum::http::Uri;
 
 pub fn get_add_exercise(workout: &str) -> String {

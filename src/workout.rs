@@ -1,11 +1,11 @@
 use crate::validation_err;
 use crate::{
     days::Days,
+    errors::Error,
     exercise::{
         BuildExercise, Exercise, ExerciseName, FixedReps, FormalName, VariableReps,
         VariableRepsExercise,
     },
-    pages::Error,
     program::BlockSchedule,
 };
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};

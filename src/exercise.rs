@@ -1,6 +1,6 @@
 //! Exercises are movements for the user to perform, e.g. a barbell squat. These may be
 //! shared across programs and workouts.
-use crate::pages::Error;
+use crate::errors::Error;
 use crate::validation_err;
 use crate::weights::{Weight, Weights};
 use chrono::{DateTime, Local};

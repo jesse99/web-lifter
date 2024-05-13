@@ -1,5 +1,5 @@
 use crate::app_state::SharedState;
-use crate::pages::Error;
+use crate::errors::Error;
 use crate::{
     exercise::{
         DurationsExercise, Exercise, ExerciseData, FixedReps, FixedRepsExercise, SetIndex,

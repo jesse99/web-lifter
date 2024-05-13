@@ -1,6 +1,6 @@
+use crate::errors::Error;
 use crate::exercise::ExerciseName;
 use crate::internal_err;
-use crate::pages::Error;
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

@@ -1,13 +1,12 @@
 use crate::app_state::SharedState;
-use crate::pages::Error;
+use crate::errors::Error;
+use crate::errors::Unwrapper;
 use crate::{
     exercise::{Exercise, ExerciseName, SetIndex},
     VarRepsOptions,
 };
 use axum::http::Uri;
 use chrono::Local;
-
-use super::Unwrapper;
 
 pub fn post_next_exercise(
     mut state: SharedState,

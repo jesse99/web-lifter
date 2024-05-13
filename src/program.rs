@@ -1,6 +1,6 @@
 use crate::validation_err;
 use crate::{
-    pages::Error,
+    errors::Error,
     workout::{Schedule, Workout},
 };
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};

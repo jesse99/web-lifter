@@ -2,7 +2,7 @@
 // a reps dropdown when performing the exerise. (And the implementation is a bit simpler
 // since we don't bother with expected reps).
 use crate::validation_err;
-use crate::{exercise::SetIndex, pages::Error};
+use crate::{errors::Error, exercise::SetIndex};
 use serde::{Deserialize, Serialize};
 
 /// Reps to use for a set along with a percentage of weight.

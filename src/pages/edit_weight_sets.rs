@@ -1,6 +1,6 @@
 use crate::app_state::SharedState;
+use crate::errors::Error;
 use crate::pages::editor_builder::*;
-use crate::pages::Error;
 use crate::program::Program;
 use crate::weights::WeightSet;
 use axum::http::Uri;

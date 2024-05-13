@@ -1,5 +1,5 @@
 use crate::validation_err;
-use crate::{exercise::SetIndex, pages::Error};
+use crate::{errors::Error, exercise::SetIndex};
 use serde::{Deserialize, Serialize};
 
 /// Used for stuff like 3x60s planks. Target is used to signal the user to increase

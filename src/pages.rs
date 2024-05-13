@@ -1,4 +1,5 @@
 use crate::app_state::SharedState;
+use crate::errors::Error;
 use axum::http::Uri;
 
 mod edit_add_exercise;
@@ -25,7 +26,6 @@ mod edit_weight;
 mod edit_weight_sets;
 mod edit_workouts;
 mod editor_builder;
-mod errors;
 mod exercise_page;
 mod exercise_post;
 mod overview_page;
@@ -55,7 +55,6 @@ pub use edit_var_sets::*;
 pub use edit_weight::*;
 pub use edit_weight_sets::*;
 pub use edit_workouts::*;
-pub use errors::*;
 pub use exercise_page::*;
 pub use exercise_post::*;
 pub use overview_page::*;

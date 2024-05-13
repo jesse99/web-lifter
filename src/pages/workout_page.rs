@@ -1,6 +1,6 @@
 use crate::app_state::SharedState;
+use crate::errors::Error;
 use crate::internal_err;
-use crate::pages::Error;
 use crate::{
     exercise::{Exercise, SetIndex},
     history::History,

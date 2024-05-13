@@ -1,5 +1,5 @@
 use crate::validation_err;
-use crate::{exercise::SetIndex, pages::Error};
+use crate::{errors::Error, exercise::SetIndex};
 use serde::{Deserialize, Serialize};
 
 /// Used for stuff like 20 pull-ups spread across as many sets as necessary.

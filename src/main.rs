@@ -1,6 +1,7 @@
 mod app_state;
 mod days;
 mod default;
+mod errors;
 mod exercise;
 mod history;
 mod notes;
@@ -18,8 +19,8 @@ use axum::{
     routing::{get, post},
     Form, Router,
 };
+use errors::{Error, Unwrapper};
 use handlebars::Handlebars;
-use pages::{Error, Unwrapper};
 use serde::Deserialize;
 use std::sync::RwLock;
 use tower::ServiceBuilder;
