@@ -36,7 +36,7 @@ pub fn get_exercise_page(
     let history = &state.read().unwrap().user.history;
     let program = &state.read().unwrap().user.program;
 
-    let template = include_str!("../../files/exercise.html");
+    let template = include_str!("../../../files/exercise.html");
     let workout = program
         .find(&workout)
         .unwrap_or_err("failed to find workout")?;

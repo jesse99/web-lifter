@@ -15,7 +15,7 @@ pub fn get_overview_page(state: SharedState) -> Result<String, Error> {
     let handlebars = &state.read().unwrap().handlebars;
     let program = &state.read().unwrap().user.program;
 
-    let template = include_str!("../../files/overview.html");
+    let template = include_str!("../../../files/overview.html");
     let data = OverviewData::new(program);
     let contents = handlebars.render_template(template, &data)?;
     Ok(contents)

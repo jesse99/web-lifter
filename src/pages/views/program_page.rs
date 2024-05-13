@@ -20,7 +20,7 @@ pub fn get_program_page(state: SharedState) -> Result<String, Error> {
     let program = &state.read().unwrap().user.program;
 
     // Note that MDN recommends against using aria tables, see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/table_role
-    let template = include_str!("../../files/program.html");
+    let template = include_str!("../../../files/program.html");
     let data = ProgramData::new(program, error);
     let contents = handlebars.render_template(template, &data)?;
     Ok(contents)

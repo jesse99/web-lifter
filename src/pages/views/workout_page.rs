@@ -22,7 +22,7 @@ pub fn get_workout_page(state: SharedState, workout: &str) -> Result<String, Err
     let program = &state.read().unwrap().user.program;
     let history = &state.read().unwrap().user.history;
 
-    let template = include_str!("../../files/workout.html");
+    let template = include_str!("../../../files/workout.html");
     let data = WorkoutData::new(history, weights, program, workout, error)?;
     let contents = handlebars.render_template(template, &data)?;
     Ok(contents)
