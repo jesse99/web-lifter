@@ -80,5 +80,5 @@ pub fn post_set_current_set(
         }
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

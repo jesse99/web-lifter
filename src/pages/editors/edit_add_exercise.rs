@@ -48,5 +48,5 @@ pub fn post_append_exercise(
     }
 
     let path = format!("/workout/{workout_name}");
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

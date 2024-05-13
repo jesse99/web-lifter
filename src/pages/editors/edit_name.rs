@@ -20,7 +20,7 @@ pub fn post_set_add_workout(state: SharedState, name: &str) -> Result<Uri, Error
         program.try_add_workout(name)?;
     }
 
-    super::post_epilog(state, "/")
+    crate::pages::post_epilog(state, "/")
 }
 
 pub fn post_set_program_name(state: SharedState, new_name: &str) -> Result<Uri, Error> {
@@ -33,7 +33,7 @@ pub fn post_set_program_name(state: SharedState, new_name: &str) -> Result<Uri, 
         }
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }
 
 pub fn post_set_workout_name(
@@ -48,7 +48,7 @@ pub fn post_set_workout_name(
         program.try_change_workout_name(&old_name, new_name)?;
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }
 
 pub fn post_set_exercise_name(
@@ -68,5 +68,5 @@ pub fn post_set_exercise_name(
         }
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

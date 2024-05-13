@@ -90,7 +90,7 @@ pub fn post_schedule_nth(state: SharedState, workout: &str, n: i32) -> Result<Ur
     }
 
     let path = format!("/workout/{workout}");
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }
 
 pub fn post_set_schedule_weekdays(
@@ -118,5 +118,5 @@ pub fn post_set_schedule_weekdays(
     }
 
     let path = format!("/workout/{workout}");
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

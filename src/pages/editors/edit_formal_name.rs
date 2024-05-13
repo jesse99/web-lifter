@@ -17,7 +17,7 @@ pub fn get_formal_name(state: SharedState, workout: &str, exercise: &str) -> Str
     let name = d.formal_name.0.to_owned();
     let mut items: Vec<_> = notes.names().iter().map(|n| n.0.clone()).collect();
     items.push("…".to_owned());
-    let javascript = include_str!("../../files/formal_name.js");
+    let javascript = include_str!("../../../files/formal_name.js");
 
     let widgets: Vec<Box<dyn Widget>> = vec![
         Box::new(Prolog::with_title("Edit Formal Name")),
@@ -49,5 +49,5 @@ pub fn post_set_formal_name(
         exercise.try_set_formal_name(name)?;
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

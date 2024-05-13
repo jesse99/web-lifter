@@ -22,7 +22,7 @@ pub fn get_edit_durations(state: SharedState, workout: &str, exercise: &str) -> 
 
     let target = e.target().map(|t| t as f32 / 60.0);
     let items = [("Secs", "secs"), ("Mins", "mins"), ("Hours", "hours")];
-    let javascript = include_str!("../../files/durations.js");
+    let javascript = include_str!("../../../files/durations.js");
 
     let widgets: Vec<Box<dyn Widget>> = vec![
         Box::new(Prolog::with_title("Edit Durations")),
@@ -71,5 +71,5 @@ pub fn post_set_durations(
         e.try_set_target(target)?;
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

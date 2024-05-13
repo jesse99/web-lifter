@@ -38,7 +38,7 @@ pub fn get_edit_durs_record(
         "".to_owned()
     };
     let items = [("Secs", "secs"), ("Mins", "mins"), ("Hours", "hours")];
-    let javascript = include_str!("../../files/durations.js");
+    let javascript = include_str!("../../../files/durations.js");
 
     let widgets: Vec<Box<dyn Widget>> = vec![
         Box::new(Prolog::with_title("Edit Durations Record")),

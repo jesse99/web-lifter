@@ -86,5 +86,5 @@ pub fn post_set_fixed_reps(
         }
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

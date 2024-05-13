@@ -77,5 +77,5 @@ pub fn post_set_var_reps(
     }
 
     let path = format!("/exercise/{workout_name}/{exercise_name}");
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

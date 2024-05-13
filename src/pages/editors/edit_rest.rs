@@ -16,7 +16,7 @@ pub fn get_edit_rest(state: SharedState, workout: &str, exercise: &str) -> Strin
     let last_rest = d.last_rest.map(|r| r as f32 / 60.0);
 
     let items = [("Secs", "secs"), ("Mins", "mins"), ("Hours", "hours")];
-    let javascript = include_str!("../../files/rest.js");
+    let javascript = include_str!("../../../files/rest.js");
 
     let widgets: Vec<Box<dyn Widget>> = vec![
         Box::new(Prolog::with_title("Edit Rest")),
@@ -55,5 +55,5 @@ pub fn post_set_rest(
     }
 
     let path = format!("/exercise/{workout_name}/{exercise_name}");
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

@@ -9,7 +9,7 @@ pub fn get_blocks(state: SharedState) -> String {
 
     let program = &state.read().unwrap().user.program;
     let items: Vec<_> = program.blocks().map(|b| b.name.clone()).collect();
-    let javascript = include_str!("../../files/blocks.js");
+    let javascript = include_str!("../../../files/blocks.js");
 
     let buttons = vec![
         EditButton::new("add-btn", "on_add()", "Add"),
@@ -36,5 +36,5 @@ pub fn post_set_blocks(state: SharedState, blocks: Vec<String>) -> Result<Uri, E
         program.try_set_blocks(blocks)?;
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

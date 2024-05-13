@@ -67,5 +67,5 @@ pub fn post_set_block(
     }
 
     let path = "/";
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

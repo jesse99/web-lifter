@@ -51,5 +51,5 @@ pub fn post_set_week(state: SharedState, week: i32) -> Result<Uri, Error> {
         program.set_week(Local::now(), week);
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

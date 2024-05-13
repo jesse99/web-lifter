@@ -44,5 +44,5 @@ pub fn post_set_weight(
         exercise.try_set_weight(weight)?;
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

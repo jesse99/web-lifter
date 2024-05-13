@@ -53,7 +53,7 @@ pub fn post_set_note(
     }
 
     let path = format!("/exercise/{workout_name}/{exercise_name}");
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }
 
 pub fn post_revert_note(
@@ -77,5 +77,5 @@ pub fn post_revert_note(
     }
 
     let path = format!("/exercise/{workout_name}/{exercise_name}");
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

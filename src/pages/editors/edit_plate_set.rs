@@ -45,8 +45,8 @@ pub fn get_edit_plate_set(state: SharedState, workout: &str, exercise: &str) -> 
     ];
     let set_name = data.weightset.clone().unwrap(); // only land in this function if there is a weightset
     let (items, bar) = make_labels(weights, &set_name);
-    let javascript = include_str!("../../files/plates.js");
-    let modal = include_str!("../../files/plates-modal.html");
+    let javascript = include_str!("../../../files/plates.js");
+    let modal = include_str!("../../../files/plates-modal.html");
 
     let widgets: Vec<Box<dyn Widget>> = vec![
         Box::new(Prolog::with_edit_menu("Edit Plates", buttons, javascript)),
@@ -105,5 +105,5 @@ pub fn post_set_plate_set(
         }
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }

@@ -45,7 +45,7 @@ where
         .iter()
         .map(|n| (n.clone(), help_suffix(program, n)))
         .collect();
-    let javascript = include_str!("../../files/weight_sets.js");
+    let javascript = include_str!("../../../files/weight_sets.js");
 
     let buttons = vec![
         EditButton::new("add-discrete-btn", &format!("on_add('{prefix}')"), "Add"),
@@ -89,7 +89,7 @@ pub fn post_set_discrete_weights(state: SharedState, sets: Vec<String>) -> Resul
         weights.try_set_discrete_weights(sets)?;
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }
 
 pub fn post_set_plate_weights(state: SharedState, sets: Vec<String>) -> Result<Uri, Error> {
@@ -100,5 +100,5 @@ pub fn post_set_plate_weights(state: SharedState, sets: Vec<String>) -> Result<U
         weights.try_set_plate_weights(sets)?;
     }
 
-    super::post_epilog(state, &path)
+    crate::pages::post_epilog(state, &path)
 }
