@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::app_state::SharedState;
 use crate::errors::{Error, Unwrapper};
 use crate::{
@@ -548,57 +550,49 @@ fn reps_to_vec(reps: VariableReps) -> Vec<RepItem> {
 
 // Note that here records goes from newest to oldest.
 fn get_delta(records: &Vec<&Record>, i: usize) -> i32 {
-    if i + 1 < records.len() {
+    let order = if i + 1 < records.len() {
         let older = records[i + 1];
         let newer = records[i];
-        let values = match newer.sets {
+        match newer.sets {
             Some(CompletedSets::Durations(ref new_sets)) => match older.sets {
-                Some(CompletedSets::Durations(ref old_sets)) => {
-                    let new_durations = aggregate_durations(new_sets);
-                    let old_durations = aggregate_durations(old_sets);
-                    Some((new_durations, old_durations))
-                }
-                Some(CompletedSets::Reps(_)) => None,
-                None => None, // in theory we can get a mismatch if the user keeps an exercise name but changes the exercise type
+                Some(CompletedSets::Durations(ref old_sets)) => order_sets(new_sets, old_sets),
+                Some(CompletedSets::Reps(_)) => Ordering::Equal,
+                None => Ordering::Equal, // in theory we can get a mismatch if the user keeps an exercise name but changes the exercise type
             },
             Some(CompletedSets::Reps(ref new_sets)) => match older.sets {
-                Some(CompletedSets::Durations(_)) => None,
-                Some(CompletedSets::Reps(ref old_sets)) => {
-                    let new_reps = aggregate_reps(new_sets);
-                    let old_reps = aggregate_reps(old_sets);
-                    Some((new_reps, old_reps))
-                }
-                None => None,
+                Some(CompletedSets::Durations(_)) => Ordering::Equal,
+                Some(CompletedSets::Reps(ref old_sets)) => order_sets(new_sets, old_sets),
+                None => Ordering::Equal,
             },
-            None => None,
-        };
-        if let Some((new_value, old_value)) = values {
-            if new_value > old_value {
-                return 1;
-            } else if new_value < old_value {
-                return -1;
-            }
+            None => Ordering::Equal,
         }
+    } else {
+        Ordering::Equal
+    };
+    match order {
+        Ordering::Less => return -1,
+        Ordering::Equal => return 0,
+        Ordering::Greater => return 1,
     }
-    0
 }
 
-fn aggregate_durations(sets: &Vec<(i32, Option<f32>)>) -> f32 {
-    sets.iter().fold(0.0, |sum, x| match x {
-        (duration, Some(weight)) => sum + (*duration as f32) * weight,
-        (duration, None) => sum + (*duration as f32),
-    })
-}
-
-fn aggregate_reps(sets: &Vec<(i32, Option<f32>)>) -> f32 {
-    sets.iter().fold(0.0, |sum, x| match x {
-        (reps, Some(weight)) => sum + (*reps as f32) * weight,
-        (reps, None) => sum + (*reps as f32),
-    })
+fn order_sets(lhs: &Vec<(i32, Option<f32>)>, rhs: &Vec<(i32, Option<f32>)>) -> Ordering {
+    let lhs_weight = lhs.iter().fold(0.0, |sum, x| sum + x.1.unwrap_or(0.0));
+    let rhs_weight = rhs.iter().fold(0.0, |sum, x| sum + x.1.unwrap_or(0.0));
+    if lhs_weight > rhs_weight {
+        Ordering::Greater
+    } else if lhs_weight < rhs_weight {
+        Ordering::Less
+    } else {
+        let lhs = lhs.iter().fold(0, |sum, x| sum + x.0);
+        let rhs = rhs.iter().fold(0, |sum, x| sum + x.0);
+        lhs.cmp(&rhs)
+    }
 }
 
 fn record_to_record(delta: i32, record: &Record, in_progress: bool) -> ExerciseDataRecord {
-    let indicator = if in_progress && record.completed.is_none() {
+    let in_progress = in_progress && record.completed.is_none();
+    let indicator = if in_progress {
         "-  ".to_owned()
     } else if delta > 0 {
         "▲ ".to_owned() // BLACK UP-POINTING TRIANGLE
