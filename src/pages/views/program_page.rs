@@ -1,9 +1,6 @@
 use crate::app_state::SharedState;
 use crate::errors::Error;
-use crate::{
-    program::Program,
-    workout::{Status, Workout},
-};
+use crate::{program::Program, workout::Workout};
 use chrono::{Datelike, Duration, Local};
 use serde::{Deserialize, Serialize};
 
@@ -44,7 +41,7 @@ impl ProgramData {
             let scheduled = program.find_workouts(date);
             if !scheduled.is_empty() {
                 for w in scheduled.iter() {
-                    workouts.push(WorkoutData::new(program, w, delta));
+                    workouts.push(WorkoutData::new(w, delta));
                 }
             }
         }
@@ -73,12 +70,10 @@ struct WorkoutData {
 
 // /workout/{{this.name}}
 impl WorkoutData {
-    fn new(program: &Program, workout: &Workout, delta: i64) -> WorkoutData {
-        let bschedule = program.block_schedule();
-        let status = workout.status(bschedule);
+    fn new(workout: &Workout, delta: i64) -> WorkoutData {
         WorkoutData {
             name: workout.name.clone(),
-            status_class: status.to_class().to_owned(), // XXX get rid of all this?
+            status_class: delta_to_status(delta),
             status_label: delta_to_label(delta),
         }
     }
@@ -95,17 +90,12 @@ fn delta_to_label(delta: i64) -> String {
     }
 }
 
-impl Status {
-    fn to_class(&self) -> &str {
-        match self {
-            Status::Completed => "completed",
-            Status::Due(0) => "due_today",
-            Status::Due(1) => "tomorrow",
-            Status::Due(_) => "due_later",
-            Status::DueAnyTime => "any_time",
-            Status::Empty => "empty",
-            Status::Overdue(_) => "overdue",
-            Status::PartiallyCompleted => "partial",
-        }
+fn delta_to_status(delta: i64) -> String {
+    if delta == 0 {
+        "due_today".to_owned()
+    } else if delta == 1 {
+        "tomorrow".to_owned()
+    } else {
+        "due_later".to_owned()
     }
 }

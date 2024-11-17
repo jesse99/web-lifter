@@ -27,51 +27,6 @@ impl Block {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct BlockSpan {
-    workouts: Vec<String>,
-    begin: DateTime<Local>, // week start, i.e. Monday
-    end: DateTime<Local>,
-}
-
-/// Used by [`Workout`] to create the next scheduled label in the program page.
-#[derive(Debug, Clone)]
-pub struct BlockSchedule {
-    pub spans: Vec<BlockSpan>, // active workout (will typically start in the past), next workout, next next, ends with next scheduled active workout
-}
-
-impl BlockSchedule {
-    /// Returns true if the workout may be executed in the current block. Note that this
-    /// does not mean that the next scheduled date for the workout will still be in the
-    /// active block.
-    pub fn is_active(&self, workout: &str) -> bool {
-        self.spans
-            .first()
-            .map(|s| s.workouts.iter().any(|w| w == workout))
-            .unwrap_or(false)
-    }
-
-    /// Returns true if the date is within the span of the active block.
-    pub fn in_active(&self, date: DateTime<Local>) -> bool {
-        self.spans
-            .first()
-            .map(|s| s.begin <= date && date < s.end)
-            .unwrap_or(false)
-    }
-
-    /// Returns the next Monday at which the workout will become active. Note that if the
-    /// workout is currently active this will be a future date.
-    pub fn next_block_start(&self, workout: &str) -> Option<DateTime<Local>> {
-        for span in self.spans.iter().skip(1) {
-            if span.workouts.iter().any(|w| w == workout) {
-                assert!(span.begin.weekday() == Weekday::Mon);
-                return Some(span.begin);
-            }
-        }
-        None
-    }
-}
-
 /// Set of [`Workout`]`s to perform.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Program {
@@ -251,42 +206,6 @@ impl Program {
 
     pub fn find_mut(&mut self, workout: &str) -> Option<&mut Workout> {
         self.workouts.iter_mut().find(|w| w.name == workout)
-    }
-
-    pub fn block_schedule(&self) -> BlockSchedule {
-        self.block_schedule_from(Local::now())
-    }
-
-    fn block_schedule_from(&self, now: DateTime<Local>) -> BlockSchedule {
-        if self.blocks_start.is_none() || self.blocks.is_empty() {
-            return BlockSchedule { spans: vec![] };
-        }
-
-        // Add the active block and all the successor blocks.
-        let (start, mut block_start) = find_active(self.blocks_start.unwrap(), &self.blocks, now);
-        let mut spans = Vec::new();
-        for i in start..self.blocks.len() {
-            let block_end = block_start + Duration::weeks(self.blocks[i].num_weeks as i64);
-            spans.push(BlockSpan {
-                workouts: self.blocks[i].workouts.clone(),
-                begin: block_start,
-                end: block_end,
-            });
-            block_start = block_end;
-        }
-
-        // Add the predecessor blocks and the active block (again).
-        for i in 0..=start {
-            let block_end = block_start + Duration::weeks(self.blocks[i].num_weeks as i64);
-            spans.push(BlockSpan {
-                workouts: self.blocks[i].workouts.clone(),
-                begin: block_start,
-                end: block_end,
-            });
-            block_start = block_end;
-        }
-
-        BlockSchedule { spans }
     }
 
     fn validate_add_workout(&self, name: &str) -> Result<(), Error> {
