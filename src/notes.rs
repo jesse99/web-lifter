@@ -2255,7 +2255,7 @@ vec![
         "2. Hold knee out, 10-30s per side.",
         "3. Sky reaches, 10-30 reps per side: hold an ankle with one hand and extend the other elbow as high as possible and raise arm skyward.",
         "4. Static pause, 10-30s per side: sky reach with a pause at the top.",
-        "5. Budha Prayers, 10-30 reps: wedge knees apart with elbows and place hands together, Raise and lower hands, Optionally go fist to fist.",
+        "5. Buddha Prayers, 10-30 reps: wedge knees apart with elbows and place hands together, Raise and lower hands, Optionally go fist to fist.",
         "6. Squat Bows, 10-30 reps: place hands on top of each other with thumbs up. Lean forward until your head touches your hand. Optionally keep thumbs down.",
         "7. Paused Bow, 10-30s."],
 vec![("Video", "https://www.youtube.com/watch?v=lbozu0DPcYI"), ("Cues", "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase2")],

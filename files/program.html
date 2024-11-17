@@ -69,7 +69,9 @@
         <tbody>
             {{#each workouts}}
             <tr>
-                <th scope="row"><a href="/workout/{{this.name}}">{{this.name}}</a></th>
+                <td scope="row">
+                    <a href="/workout/{{this.name}}">{{this.name}}</a>
+                </td>
                 <td>
                     <span class="{{this.status_class}}">{{this.status_label}}</span>
                 </td>

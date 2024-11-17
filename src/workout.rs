@@ -268,7 +268,7 @@ impl Workout {
         }
     }
 
-    fn days_since_last_completed(&self) -> Option<Days> {
+    pub fn days_since_last_completed(&self) -> Option<Days> {
         self.completed.values().max().map(|d| Days::new(*d))
     }
 

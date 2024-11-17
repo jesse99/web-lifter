@@ -1,3 +1,4 @@
+use crate::days::Days;
 use crate::validation_err;
 use crate::{
     errors::Error,
@@ -180,8 +181,68 @@ impl Program {
         }
     }
 
+    pub fn date_to_block(&self, date: DateTime<Local>) -> Option<&Block> {
+        if let Some(blocks_start) = self.blocks_start {
+            let (i, _) = find_active(blocks_start, &self.blocks, date);
+            Some(&self.blocks[i])
+        } else {
+            None
+        }
+    }
+
+    pub fn in_block(&self, workout: &Workout) -> bool {
+        for block in &self.blocks {
+            if block.workouts.contains(&workout.name) {
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn workouts(&self) -> impl Iterator<Item = &Workout> + '_ {
         self.workouts.iter()
+    }
+
+    /// Return all workouts that should be performed on the specified date.
+    pub fn find_workouts(&self, date: DateTime<Local>) -> Vec<&Workout> {
+        fn valid(workout: &Workout, block: Option<&Block>) -> bool {
+            match block {
+                Some(b) => b.workouts.contains(&workout.name),
+                None => true,
+            }
+        }
+
+        let mut workouts = Vec::new();
+        let today = Days::new(Local::now());
+        let then = Days::new(date);
+        let block = self.date_to_block(date);
+        for workout in self.workouts.iter() {
+            if workout.enabled && (!self.in_block(workout) || valid(workout, block)) {
+                match &workout.schedule {
+                    Schedule::AnyDay if then == today => {
+                        workouts.push(workout); // any day workouts go at the end
+                    }
+                    Schedule::AnyDay => {} // too spammy to list any day workouts for all days
+                    Schedule::Every(1) if then == today => {
+                        workouts.push(workout); // like any day
+                    }
+                    Schedule::Every(1) => {}
+                    Schedule::Every(n) => match workout.days_since_last_completed() {
+                        Some(days) if days.value % n == 0 => {
+                            workouts.insert(0, workout);
+                        }
+                        Some(_) => {}
+                        None => workouts.insert(0, workout),
+                    },
+                    Schedule::Days(days) => {
+                        if days.contains(&date.weekday()) {
+                            workouts.insert(0, workout)
+                        }
+                    }
+                }
+            }
+        }
+        workouts
     }
 
     pub fn find(&self, workout: &str) -> Option<&Workout> {

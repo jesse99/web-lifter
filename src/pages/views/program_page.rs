@@ -4,6 +4,7 @@ use crate::{
     program::Program,
     workout::{Status, Workout},
 };
+use chrono::{Datelike, Duration, Local};
 use serde::{Deserialize, Serialize};
 
 pub fn get_program_page(state: SharedState) -> Result<String, Error> {
@@ -37,12 +38,17 @@ struct ProgramData {
 
 impl ProgramData {
     fn new(program: &Program, error: String) -> ProgramData {
+        let mut workouts = Vec::new();
+        for delta in 0..(16 + 1) {
+            let date = Local::now() + Duration::days(delta);
+            let scheduled = program.find_workouts(date);
+            if !scheduled.is_empty() {
+                for w in scheduled.iter() {
+                    workouts.push(WorkoutData::new(program, w, delta));
+                }
+            }
+        }
         let blocks = program.blocks().map(|b| b.name.clone()).collect();
-        let workouts = program
-            .workouts()
-            .filter(|w| w.enabled)
-            .map(|w| WorkoutData::new(program, w))
-            .collect();
         let week_disabled = if program.blocks().count() == 0 {
             "disabled".to_string()
         } else {
@@ -65,33 +71,31 @@ struct WorkoutData {
     status_class: String,
 }
 
+// /workout/{{this.name}}
 impl WorkoutData {
-    fn new(program: &Program, workout: &Workout) -> WorkoutData {
+    fn new(program: &Program, workout: &Workout, delta: i64) -> WorkoutData {
         let bschedule = program.block_schedule();
         let status = workout.status(bschedule);
         WorkoutData {
             name: workout.name.clone(),
-            status_class: status.to_class().to_owned(),
-            status_label: status.to_label(),
+            status_class: status.to_class().to_owned(), // XXX get rid of all this?
+            status_label: delta_to_label(delta),
         }
     }
 }
 
-impl Status {
-    fn to_label(&self) -> String {
-        match self {
-            Status::Completed => "completed".to_owned(),
-            Status::Due(0) => "today".to_owned(),
-            Status::Due(1) => "tomorrow".to_owned(),
-            Status::Due(n) => format!("in {n} days"),
-            Status::DueAnyTime => "any day".to_owned(),
-            Status::Empty => "no workouts".to_owned(),
-            Status::Overdue(1) => "overdue by 1 day".to_owned(),
-            Status::Overdue(n) => format!("overdue by {n} days"),
-            Status::PartiallyCompleted => "partially completed".to_owned(),
-        }
+fn delta_to_label(delta: i64) -> String {
+    if delta == 0 {
+        "today".to_owned()
+    } else if delta < 7 {
+        let date = Local::now() + Duration::days(delta);
+        date.weekday().to_string()
+    } else {
+        format!("in {delta} days")
     }
+}
 
+impl Status {
     fn to_class(&self) -> &str {
         match self {
             Status::Completed => "completed",
