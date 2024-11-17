@@ -991,14 +991,11 @@ vec![("Video", "https://www.youtube.com/watch?v=pJcobQf324o"), ("Cues", "https:/
     add(t, 
         "Chin Tucks",
         vec![
-            "Lie on your back with knees bent.",
-            "Tuck your chin for a second or two and repeat.",
-            "Can use two fingers on your chin to lessen difficulty.",
-            "Can increase difficulty by raising your head before tucking.",
-            "Do 15 reps.",
-            "Ideally do these 2-3x a day.",
+            "Place two fingers at the bottom of your chin.",
+            "Tuck your chin down and retract you head backwards.",
+            "Hold for 3-5 seconds.",
         ],
-        vec![("Link", "https://www.youtube.com/watch?v=wQylqaCl8Zo")],
+        vec![("Link", "https://backintelligence.com/how-to-fix-forward-head-posture/")],
     );
 
     add(t, "Chin-up",
@@ -2775,12 +2772,20 @@ vec![
 vec![("Video", "https://www.youtube.com/watch?v=flT4TIMYvzI"), ("Gallery", "https://imgur.com/gallery/iEsaS"), ("Notes", "https://www.bodybuilding.com/fun/limber-11-the-only-lower-body-warm-up-youll-ever-need.html")],
 );
 
-    add(t, "Negative Handstand Pushup",
+add(t, "Negative Handstand Pushup",
 vec![
         "Get into a wall handstand about a foot from the wall. Hands should be shoulder width or a little wider.",
         "Slowly lower yourself (take up to 10s).",
         "Once your forehead touches the floor roll out."],
 vec![("Video", "https://www.youtube.com/watch?v=Lj2KZwbr_jo"), ("Progression", "https://www.reddit.com/r/bodyweightfitness/wiki/move/phase3/hspu")],
+);
+
+    add(t, "Neck Flexion",
+vec![
+        "Tuck your chin down using two fingers.",
+        "Place your other hand on the back of your head and pull down.",
+        "Hold for 20-30s once you feel a stretch on the back of your neck."],
+vec![("Link", "https://backintelligence.com/how-to-fix-forward-head-posture/")],
 );
 
     add(t, 
@@ -2805,6 +2810,16 @@ vec![
         "Immediately reverse direction and use your knees and hips to accelerate the kettlebell.",
         "As the kettlebell reaches your shoulders punch upwards and lock it out overhead."],
 vec![("Link", "https://www.bodybuilding.com/exercises/one-arm-kettlebell-snatch"), ("Technique", "https://www.girlsgonestrong.com/blog/strength-training/how-to-do-a-kettlebell-snatch/")],
+);
+
+    add(t, "One-Arm Pec Stretch",
+vec![
+        "Stand close to a wall and stretch one arm out behind you.",
+        "Palm should be on the wall.",
+        "Pull in your stomach but don't arch back.",
+        "Lean forward and slightly away from your extended arm.",
+        "Tweak the angle if don't feel a stretch in your chest."],
+vec![("Link", "https://backintelligence.com/how-to-fix-forward-head-posture/")],
 );
 
     add(t, "One-Handed Hang",
@@ -4568,6 +4583,16 @@ vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/triceps-p
             "https://www.bodybuilding.com/exercises/detail/view/name/underhand-cable-pulldowns",
         )],
     );
+
+    add(t, "Upper Trapezius Stretch",
+vec![
+        "Start either standing or sitting.",
+        "Place one hand on the opposite side of your head.",
+        "Place your other hand behind your back.",
+        "Use your hand to bring your head down towards your shoulder.",
+        ],
+vec![("Link", "https://backintelligence.com/how-to-fix-forward-head-posture/")],
+);
 
     add(t, "Upright Row",
 vec![
