@@ -47,6 +47,12 @@ impl Workout {
         }
     }
 
+    pub fn fixup(&mut self) {
+        for e in &mut self.exercises {
+            e.fixup();
+        }
+    }
+
     pub fn try_change_exercise_name(
         &mut self,
         old_name: &ExerciseName,

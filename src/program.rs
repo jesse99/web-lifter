@@ -47,6 +47,12 @@ impl Program {
         }
     }
 
+    pub fn fixup(&mut self) {
+        for workout in &mut self.workouts {
+            workout.fixup();
+        }
+    }
+
     // TODO: workouts cannot be in multiple blocks
     pub fn with_blocks(
         name: String,

@@ -48,7 +48,7 @@ pub fn make_program() -> AppState {
     default_program.add_workout(create_light());
     default_program.add_workout(create_test());
 
-    let user = match persist::load() {
+    let mut user = match persist::load() {
         Ok(u) => u,
         Err(e) => {
             let errors = vec![format!("load had error {}", e.kind())];
@@ -61,6 +61,8 @@ pub fn make_program() -> AppState {
             }
         }
     };
+
+    user.program.fixup();
 
     AppState {
         handlebars: Handlebars::new(),

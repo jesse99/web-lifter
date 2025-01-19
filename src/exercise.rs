@@ -70,6 +70,15 @@ pub enum Exercise {
 }
 
 impl Exercise {
+    pub fn fixup(&mut self) {
+        // match self {
+        //     Exercise::Durations(d, _) => d.name = ExerciseName(d.name.0.trim().to_owned()),
+        //     Exercise::FixedReps(d, _) => d.name = ExerciseName(d.name.0.trim().to_owned()),
+        //     Exercise::VariableReps(d, _) => d.name = ExerciseName(d.name.0.trim().to_owned()),
+        //     Exercise::VariableSets(d, _) => d.name = ExerciseName(d.name.0.trim().to_owned()),
+        // }
+    }
+
     pub fn name(&self) -> &ExerciseName {
         match self {
             Exercise::Durations(d, _) => &d.name,
