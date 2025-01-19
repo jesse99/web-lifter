@@ -821,11 +821,12 @@ async fn post_append_exercise(
             .finalize()
     }
 
+    let name = payload.name.trim();
     let exercise = match payload.types.as_ref() {
-        "durations" => default_durations(&payload.name),
-        "fixed" => default_fixed(&payload.name),
-        "var-reps" => default_var_reps(&payload.name),
-        "var-sets" => default_var_sets(&payload.name),
+        "durations" => default_durations(name),
+        "fixed" => default_fixed(name),
+        "var-reps" => default_var_reps(name),
+        "var-sets" => default_var_sets(name),
         _ => return validation_err!("bad exercise type"),
     };
     let new_url = pages::post_append_exercise(state, &workout, exercise)?;
@@ -924,7 +925,8 @@ async fn post_set_block(
         .map(|s| s.to_string())
         .filter(|s| !s.is_empty())
         .collect();
-    let new_url = pages::post_set_block(state, &old_name, &payload.name, num_weeks, workouts)?;
+    let new_name = payload.name.trim();
+    let new_url = pages::post_set_block(state, &old_name, new_name, num_weeks, workouts)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -998,7 +1000,8 @@ async fn post_set_add_workout(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetName>,
 ) -> Result<impl IntoResponse, Error> {
-    let new_url = pages::post_set_add_workout(state, &payload.name)?;
+    let name = payload.name.trim();
+    let new_url = pages::post_set_add_workout(state, name)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -1014,7 +1017,8 @@ async fn post_set_program_name(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetName>,
 ) -> Result<impl IntoResponse, Error> {
-    let new_url = pages::post_set_program_name(state, &payload.name)?;
+    let new_name = payload.name.trim();
+    let new_url = pages::post_set_program_name(state, new_name)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -1031,7 +1035,8 @@ async fn post_set_workout_name(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetName>,
 ) -> Result<impl IntoResponse, Error> {
-    let new_url = pages::post_set_workout_name(state, &workout, &payload.name)?;
+    let new_name = payload.name.trim();
+    let new_url = pages::post_set_workout_name(state, &workout, new_name)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -1127,7 +1132,8 @@ async fn post_set_exercise_name(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetName>,
 ) -> Result<impl IntoResponse, Error> {
-    let new_url = pages::post_set_exercise_name(state, &workout, &exercise, &payload.name)?;
+    let new_name = payload.name.trim();
+    let new_url = pages::post_set_exercise_name(state, &workout, &exercise, new_name)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -1144,7 +1150,8 @@ async fn post_set_formal_name(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetName>,
 ) -> Result<impl IntoResponse, Error> {
-    let new_url = pages::post_set_formal_name(state, &workout, &exercise, &payload.name)?;
+    let name = payload.name.trim();
+    let new_url = pages::post_set_formal_name(state, &workout, &exercise, name)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -1199,13 +1206,14 @@ async fn post_set_discrete_set(
     Extension(state): Extension<SharedState>,
     Form(payload): Form<SetDiscreteSet>,
 ) -> Result<impl IntoResponse, Error> {
+    let set_name = payload.name.trim();
     let weights = payload
         .weights
         .split("¦")
         .map(|s| s.parse::<f32>())
         .collect::<Result<Vec<_>, _>>()
         .unwrap_or_err("bad weights list")?;
-    let new_url = pages::post_set_discrete_set(state, &workout, &exercise, &payload.name, weights)?;
+    let new_url = pages::post_set_discrete_set(state, &workout, &exercise, set_name, weights)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -1254,8 +1262,8 @@ async fn post_set_plates_set(
     } else {
         Some(payload.bar.parse::<f32>().unwrap_or_err("bad bar")?)
     };
-    let new_url =
-        pages::post_set_plate_set(state, &workout, &exercise, &payload.name, plates, bar)?;
+    let set_name = payload.name.trim();
+    let new_url = pages::post_set_plate_set(state, &workout, &exercise, set_name, plates, bar)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(
