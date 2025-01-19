@@ -36,7 +36,7 @@ struct ProgramData {
 impl ProgramData {
     fn new(program: &Program, error: String) -> ProgramData {
         let mut workouts = Vec::new();
-        for delta in 0..(16 + 1) {
+        for delta in 0..(20 + 1) {
             let date = Local::now() + Duration::days(delta);
             let scheduled = program.find_workouts(date);
             if !scheduled.is_empty() {
