@@ -16,6 +16,7 @@ pub struct UserState {
 /// Global state passed into axum handlers.
 pub struct AppState {
     pub handlebars: Handlebars<'static>, // templating engine
+    pub name: String,
     pub user: UserState,
 }
 

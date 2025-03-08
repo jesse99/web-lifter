@@ -11,31 +11,31 @@ use std::fs::File;
 use std::io::{BufWriter, Result};
 use std::path::PathBuf;
 
-pub fn save(state: &UserState) -> Result<()> {
-    let path = get_data_path()?;
+pub fn save(name: &str, state: &UserState) -> Result<()> {
+    let path = get_data_path(name)?;
     let file = File::create(path)?;
     let file = BufWriter::new(file);
     serde_json::to_writer(file, state)?;
     Ok(())
 }
 
-pub fn load() -> Result<UserState> {
-    let path = get_data_path()?;
+pub fn load(name: &str) -> Result<UserState> {
+    let path = get_data_path(name)?;
     let file = File::open(path)?;
     let state = serde_json::from_reader(file)?;
     Ok(state)
 }
 
 // On my machine this is /Users/jessejones/Library/Application\ Support/web-lifter/mine
-fn get_data_path() -> Result<PathBuf> {
+fn get_data_path(name: &str) -> Result<PathBuf> {
     if let Some(mut path) = dirs::data_dir() {
         path.push("web-lifter");
         if !path.exists() {
             std::fs::create_dir(path.clone())?
         }
 
-        // In the future we can map my name/password to "mine".
-        path.push("mine");
+        //TODO  In the future we can map my name/password to "mine".
+        path.push(name);
         Ok(path)
     } else {
         Err(std::io::Error::other("Couldn't find data_dir"))

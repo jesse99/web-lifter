@@ -25,7 +25,7 @@ pub fn default_discrete() -> WeightSet {
     WeightSet::Discrete((10..=100).step_by(10).map(|i| i as f32).collect())
 }
 
-pub fn make_program() -> AppState {
+pub fn make_my_program() -> AppState {
     let blocks = vec![
         Block::new(
             "Heavy".to_owned(),
@@ -39,8 +39,8 @@ pub fn make_program() -> AppState {
         ),
         Block::new("Light".to_owned(), vec!["Light".to_owned()], 1),
     ];
-    let name = "My".to_owned();
-    let mut default_program = Program::with_blocks(name, blocks, Local::now(), 2);
+    let pname = "My".to_owned();
+    let mut default_program = Program::with_blocks(pname, blocks, Local::now(), 2);
     default_program.add_workout(create_heavy_bench());
     default_program.add_workout(create_heavy_ohp());
     default_program.add_workout(create_medium_bench());
@@ -48,7 +48,7 @@ pub fn make_program() -> AppState {
     default_program.add_workout(create_light());
     default_program.add_workout(create_test());
 
-    let mut user = match persist::load() {
+    let mut user = match persist::load("mine") {
         Ok(u) => u,
         Err(e) => {
             let errors = vec![format!("load had error {}", e.kind())];
@@ -66,6 +66,34 @@ pub fn make_program() -> AppState {
 
     AppState {
         handlebars: Handlebars::new(),
+        name: "mine".to_string(),
+        user,
+    }
+}
+
+pub fn make_her_program() -> AppState {
+    let pname = "My".to_owned();
+    let default_program = Program::new(pname);
+
+    let mut user = match persist::load("victoria") {
+        Ok(u) => u,
+        Err(e) => {
+            let errors = vec![format!("load had error {}", e.kind())];
+            UserState {
+                notes: Notes::new(),
+                history: create_history(),
+                weights: creat_weight_sets(),
+                program: default_program,
+                errors,
+            }
+        }
+    };
+
+    user.program.fixup();
+
+    AppState {
+        handlebars: Handlebars::new(),
+        name: "victoria".to_string(),
         user,
     }
 }

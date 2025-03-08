@@ -33,10 +33,24 @@ use crate::exercise::{
 
 #[tokio::main]
 async fn main() {
-    let state = default::make_program();
-
+    // TODO This is currently setup to use port forwarding so that, from the public
+    // Internet, clients can hit my router IP which will then forward to my Mac. But we'll
+    // need to do something different when/if we deploy for real. At a minimum switch to
+    // using port 80 (or 443).
     tracing_subscriber::fmt::init();
-    let app = Router::new()
+
+    let t0 = tokio::task::spawn(async move { serve(3000).await });
+    let t1 = tokio::task::spawn(async move { serve(3001).await });
+    let _ = tokio::join!(t0, t1);
+}
+
+async fn serve(port: u16) {
+    let state = if port == 3001 {
+        default::make_her_program()
+    } else {
+        default::make_my_program()
+    };
+    let router = Router::new()
         // data --------------------------------------------------------------------------
         .route(
             "/scripts/discrete.js",
@@ -200,12 +214,9 @@ async fn main() {
                 .into_inner(),
         );
 
-    // TODO This is currently setup to use port forwarding so that, from the public
-    // Internet, clients can hit my router IP which will then forward to my Mac. But we'll
-    // need to do something different when/if we deploy for real. At a minimum switch to
-    // using port 80 (or 443).
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let addr = &format!("0.0.0.0:{port}");
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, router).await.unwrap();
 }
 
 async fn get_css(Extension(_state): Extension<SharedState>, contents: &str) -> impl IntoResponse {
