@@ -1395,7 +1395,11 @@ vec![("Link", "https://www.youtube.com/watch?v=_4EGPVJuqfA"), ("Pushups", "https
         vec![
             (
                 "Link",
-                "https://www.bodybuilding.com/exercises/detail/view/name/dumbbell-bench-press",
+                "https://fitbod.me/exercises/dumbbell-bench-press",
+            ),
+            (
+                "Video",
+                "https://www.youtube.com/watch?v=VmB1G1K7v94",
             ),
             ("Positioning", "https://www.youtube.com/watch?v=1XDxtAOAIrQ"),
         ],
@@ -1936,7 +1940,11 @@ vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/glute-ham
         ],
         vec![(
             "Link",
-            "https://www.bodybuilding.com/exercises/detail/view/name/goblet-squat",
+            "https://www.verywellfit.com/how-to-goblet-squat-4589695",
+        ),
+        (
+            "Video",
+            "https://www.youtube.com/watch?v=MeIiIdhvXT4",
         )],
     );
 
@@ -2546,7 +2554,11 @@ vec![("Pictures", "https://bit.ly/2MEkeBB"), ("L-sits", "https://www.reddit.com/
         ],
         vec![(
             "Link",
-            "https://www.bodybuilding.com/exercises/detail/view/name/wide-grip-lat-pulldown",
+            "https://www.verywellfit.com/how-to-do-the-lat-pulldown-3498309",
+        ),
+        (
+            "Video",
+            "https://www.youtube.com/watch?v=AOpi-p0cJkc",
         )],
     );
 
@@ -2673,7 +2685,7 @@ vec![("Link", "https://www.healthline.com/health/fitness-exercise/bicep-tendonit
         ],
         vec![(
             "Link",
-            "https://www.bodybuilding.com/exercises/detail/view/name/lying-leg-curls",
+            "https://www.verywellfit.com/how-to-properly-execute-the-leg-curl-exercise-3498304",
         )],
     );
 
@@ -3739,7 +3751,7 @@ vec![("Link", "https://www.fourmilab.ch/hackdiet/e4/")],
         ],
         vec![(
             "Link",
-            "https://www.bodybuilding.com/exercises/detail/view/name/seated-cable-rows",
+            "https://www.verywellfit.com/how-to-do-the-cable-row-3498605",
         )],
     );
 
@@ -3785,7 +3797,11 @@ vec![("Link", "https://www.bodybuilding.com/exercises/detail/view/name/seated-ca
         ],
         vec![(
             "Link",
-            "https://www.bodybuilding.com/exercises/detail/view/name/seated-leg-curl",
+            "https://us.myprotein.com/thezone/training/hamstring-seated-leg-curl-exercise-technique-common-mistakes/",
+        ),
+        (
+            "Video",
+            "https://us.myprotein.com/thezone/training/hamstring-seated-leg-curl-exercise-technique-common-mistakes/",
         )],
     );
 
@@ -3863,7 +3879,7 @@ vec![("Video", "https://www.youtube.com/watch?v=H01oGIS1C_g")],
         ],
         vec![(
             "Link",
-            "https://www.bodybuilding.com/exercises/detail/view/name/side-lateral-raise",
+            "https://exrx.net/WeightExercises/DeltoidLateral/DBLateralRaise",
         )],
     );
 
