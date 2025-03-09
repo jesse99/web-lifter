@@ -90,6 +90,7 @@ async fn serve(port: u16) {
         .route("/edit-block/:name", get(get_edit_block))
         .route("/edit-week", get(get_edit_set_week))
         .route("/edit-program-name", get(get_edit_program_name))
+        .route("/edit-program-notes", get(get_edit_program_notes))
         .route("/edit-workouts", get(get_edit_edit_workouts))
         .route("/workout/:name", get(get_workout))
         .route("/schedule-daily/:workout", get(get_schedule_daily))
@@ -141,6 +142,7 @@ async fn serve(port: u16) {
         // post --------------------------------------------------------------------------
         .route("/set-program-name", post(post_set_program_name))
         .route("/set-week", post(post_set_week))
+        .route("/set-notes", post(post_set_notes))
         .route("/set-discrete-weights", post(post_set_discrete_weights))
         .route("/set-plate-weights", post(post_set_plate_weights))
         .route("/set-blocks", post(post_set_blocks))
@@ -254,6 +256,19 @@ async fn get_edit_program_name(
     let help = "Must be unique within the programs.";
     let program = &state.read().unwrap().user.program;
     let contents = pages::get_edit_name(&program.name, help, &post_url, &cancel_url);
+    Ok((
+        [
+            ("Cache-Control", "no-store, must-revalidate"),
+            ("Expires", "0"),
+        ],
+        axum::response::Html(contents),
+    ))
+}
+
+async fn get_edit_program_notes(
+    Extension(state): Extension<SharedState>,
+) -> Result<impl IntoResponse, Error> {
+    let contents = pages::get_edit_notes(state);
     Ok((
         [
             ("Cache-Control", "no-store, must-revalidate"),
@@ -1073,6 +1088,27 @@ async fn post_set_week(
         .parse()
         .unwrap_or_err(&format!("expected int but found '{}'", payload.week))?;
     let new_url = pages::post_set_week(state, week)?;
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Cache-Control",
+        "no-store, must-revalidate".parse().unwrap(),
+    );
+    headers.insert("Expires", "0".parse().unwrap());
+    headers.insert("Location", new_url.path().parse().unwrap());
+    Ok((StatusCode::SEE_OTHER, headers))
+}
+
+#[derive(Debug, Deserialize)]
+struct SetNotes {
+    notes: String,
+}
+
+async fn post_set_notes(
+    Extension(state): Extension<SharedState>,
+    Form(payload): Form<SetNotes>,
+) -> Result<impl IntoResponse, Error> {
+    let new_url = pages::post_set_notes(state, payload.notes)?;
 
     let mut headers = HeaderMap::new();
     headers.insert(

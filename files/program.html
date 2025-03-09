@@ -36,6 +36,7 @@
                         <li><a class="dropdown-item" href="/add-workout">Add Workout</a></li>
                         <li><a class="dropdown-item" href="/edit-blocks">Edit Blocks</a></li>
                         <li><a class="dropdown-item" href="/edit-program-name">Edit Name</a></li>
+                        <li><a class="dropdown-item" href="/edit-program-notes">Edit Notes</a></li>
                         <li><a class="dropdown-item" href="/edit-discrete-weights">Edit Discrete Weights</a></li>
                         <li><a class="dropdown-item" href="/edit-plate-weights">Edit Plate Weights</a></li>
                         <li><a class="dropdown-item" href="/edit-workouts">Edit Workouts</a></li>
@@ -79,6 +80,8 @@
             {{/each}}
         </tbody>
     </table>
+
+    <p class="p-1 fs-6 with_line_breaks">{{notes}}</p>
 
     <div class="d-flex justify-content-center">
         <p class="text-danger">{{error}}</p>

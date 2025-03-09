@@ -4,6 +4,7 @@ use crate::exercise::ExerciseName;
 use crate::pages::editor_builder::*;
 use axum::http::Uri;
 
+/// For exercise notes.
 pub fn get_edit_note(state: SharedState, workout: &str, exercise: &str) -> String {
     let post_url = format!("/set-note/{workout}/{exercise}");
     let revert_url = format!("/revert-note/{workout}/{exercise}");

@@ -34,6 +34,7 @@ pub struct Program {
     blocks: Vec<Block>,
     blocks_start: Option<DateTime<Local>>, // TODO user can set current week to adjust this
     workouts: Vec<Workout>,
+    pub notes: String,
 }
 
 impl Program {
@@ -44,6 +45,7 @@ impl Program {
             blocks: Vec::new(),
             blocks_start: None,
             workouts: Vec::new(),
+            notes: String::new(),
         }
     }
 
@@ -65,6 +67,7 @@ impl Program {
             blocks: blocks,
             blocks_start: None,
             workouts: Vec::new(),
+            notes: String::new(),
         };
         program.set_week(now, week);
         program
@@ -80,6 +83,10 @@ impl Program {
         // Backup by the week number.
         let delta = 7 * (week - 1) as i64;
         self.blocks_start = Some(week_start - Duration::days(delta));
+    }
+
+    pub fn set_notes(&mut self, notes: String) {
+        self.notes = notes;
     }
 
     pub fn try_set_workouts(

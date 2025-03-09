@@ -31,6 +31,7 @@ struct ProgramData {
     workouts: Vec<WorkoutData>,
     error: String,
     week_disabled: String,
+    notes: String,
 }
 
 impl ProgramData {
@@ -53,6 +54,7 @@ impl ProgramData {
         };
         ProgramData {
             name: program.name.clone(),
+            notes: program.notes.clone(),
             blocks,
             workouts,
             error,
