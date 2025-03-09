@@ -41,12 +41,15 @@ async fn main() {
 
     let t0 = tokio::task::spawn(async move { serve(3000).await });
     let t1 = tokio::task::spawn(async move { serve(3001).await });
-    let _ = tokio::join!(t0, t1);
+    let t2 = tokio::task::spawn(async move { serve(3002).await });
+    let _ = tokio::join!(t0, t1, t2);
 }
 
 async fn serve(port: u16) {
     let state = if port == 3001 {
         default::make_her_program()
+    } else if port == 3002 {
+        default::make_test_program()
     } else {
         default::make_my_program()
     };

@@ -98,6 +98,33 @@ pub fn make_her_program() -> AppState {
     }
 }
 
+pub fn make_test_program() -> AppState {
+    let pname = "Test Program".to_owned();
+    let default_program = Program::new(pname);
+
+    let mut user = match persist::load("test") {
+        Ok(u) => u,
+        Err(e) => {
+            let errors = vec![format!("load had error {}", e.kind())];
+            UserState {
+                notes: Notes::new(),
+                history: create_history(),
+                weights: creat_weight_sets(),
+                program: default_program,
+                errors,
+            }
+        }
+    };
+
+    user.program.fixup();
+
+    AppState {
+        handlebars: Handlebars::new(),
+        name: "test".to_string(),
+        user,
+    }
+}
+
 fn create_test() -> Workout {
     let mut workout = Workout::new("Test".to_owned(), Schedule::AnyDay);
 
