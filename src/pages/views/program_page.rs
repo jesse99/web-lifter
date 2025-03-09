@@ -83,12 +83,14 @@ impl WorkoutData {
 
 fn delta_to_label(delta: i64) -> String {
     if delta == 0 {
-        "today".to_owned()
+        "Today".to_owned()
+    } else if delta == 1 {
+        "Tomorrow".to_owned()
     } else if delta < 7 {
         let date = Local::now() + Duration::days(delta);
         date.weekday().to_string()
     } else {
-        format!("in {delta} days")
+        format!("In {delta} days")
     }
 }
 
