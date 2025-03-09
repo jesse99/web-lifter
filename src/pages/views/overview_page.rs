@@ -32,7 +32,7 @@ impl OverviewData {
     fn new(program: &Program) -> OverviewData {
         let mut text = String::new();
         text += &format!("<strong>{} Program</strong><br>", program.name);
-        if !program.blocks().count() > 0 {
+        if program.blocks().count() > 0 {
             text += "Blocks<br>";
             for block in program.blocks() {
                 text += &format!("{INDENT}{}<br>", block.name);
