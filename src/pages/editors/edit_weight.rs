@@ -9,15 +9,18 @@ pub fn get_edit_weight(state: SharedState, workout: &str, exercise: &str) -> Str
 
     let weights = &state.read().unwrap().user.weights;
     let program = &state.read().unwrap().user.program;
-    let workout = program.find(&workout).unwrap();
+    let workout = program.find(workout).unwrap();
     let exercise = workout.find(&ExerciseName(exercise.to_owned())).unwrap();
     let data = exercise.data();
 
     let mut active = "".to_string();
     let (items, weight_set) = if let Some(name) = &data.weightset {
         if let Some(current) = data.weight {
-            let min = weights.closest(&name, (current - 30.0).max(0.0)).value();
+            // println!("current: {current}");
+            let min = weights.closest(name, (current - 30.0).max(0.0)).value();
             let max = current + 30.0;
+            // println!("min: {min}");
+            // println!("max: {max}");
 
             let mut v = vec!["None".to_string()];
             let mut value = min;
@@ -29,7 +32,8 @@ pub fn get_edit_weight(state: SharedState, workout: &str, exercise: &str) -> Str
                     active = body.clone();
                 }
                 v.push(body);
-                let next = weights.advance(&name, value).value();
+                let next = weights.advance(name, value).value();
+                // println!("next: {next}");
                 if (next - value).abs() < 0.001 || next > max {
                     break;
                 }
@@ -38,10 +42,10 @@ pub fn get_edit_weight(state: SharedState, workout: &str, exercise: &str) -> Str
             (v, name.clone())
         } else {
             let mut v = vec!["None".to_string()];
-            let mut value = weights.closest(&name, 0.0).value();
+            let mut value = weights.closest(name, 0.0).value();
             loop {
                 v.push(weights::format_weight(value, " lbs"));
-                let next = weights.advance(&name, value).value();
+                let next = weights.advance(name, value).value();
                 if (next - value).abs() < 0.001 || v.len() > 20 {
                     break;
                 }
@@ -65,7 +69,9 @@ pub fn get_edit_weight(state: SharedState, workout: &str, exercise: &str) -> Str
     };
     let items: Vec<_> = items.iter().map(|b| (b.as_ref(), b.as_ref())).collect();
 
-    let help = format!("Using weights from the \"{weight_set}\" weight set.");
+    let help = format!(
+        "Using weights from the \"{weight_set}\" weight set. +/- 30 lbs from current weight."
+    );
 
     let widgets: Vec<Box<dyn Widget>> = vec![
         Box::new(Prolog::with_title("Edit Weight")),

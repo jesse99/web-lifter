@@ -22,3 +22,9 @@ pub struct AppState {
 
 /// [`AppState`] is shared across threaded handlers so we need to protect access.
 pub type SharedState = Arc<RwLock<AppState>>;
+
+impl UserState {
+    pub fn fixup(&mut self) {
+        self.weights.fixup();
+    }
+}

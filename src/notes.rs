@@ -4397,6 +4397,15 @@ vec![("Link", "https://www.greencroft.org/Library/docLib/2020/04/5-Minute-Stress
         ],
     );
 
+    add(t, "Sumo Squat",
+vec![
+        "Turn feet so toes are pointed outwards.",
+        "Stand with your feet double shoulder width.",
+        "Squat down keeping your feet flat on the ground.",
+        "Difficulty can be increased with dumbbells."],
+vec![("Link", "https://www.surreyphysio.co.uk/top-5/best-5-exercises-for-an-adductor-strain/")],
+);
+
     add(t, 
         "Swiss Ball Hip Internal Rotation",
         vec![

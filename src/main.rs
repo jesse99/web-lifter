@@ -42,7 +42,8 @@ async fn main() {
     let t0 = tokio::task::spawn(async move { serve(3000).await });
     let t1 = tokio::task::spawn(async move { serve(3001).await });
     let t2 = tokio::task::spawn(async move { serve(3002).await });
-    let _ = tokio::join!(t0, t1, t2);
+    let t3 = tokio::task::spawn(async move { serve(3010).await });
+    let _ = tokio::join!(t0, t1, t2, t3);
 }
 
 async fn serve(port: u16) {

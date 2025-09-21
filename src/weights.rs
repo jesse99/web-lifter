@@ -3,6 +3,7 @@ use crate::errors::Error;
 use crate::validation_err;
 use core::fmt;
 use serde::{Deserialize, Serialize};
+use std::collections::hash_map::Entry;
 use std::{
     collections::{HashMap, HashSet},
     fmt::Formatter,
@@ -11,7 +12,8 @@ use std::{
 // TODO Might want to support bumper plates though that would get quite annoying because
 // we'd want to use them whenever possible. For example, if we had [15 bumper x8, 20 x6]
 // and want 60 lbs we'd normally select 20 x3 (for single plates) but with bumpers we'd
-// want 15 bumper x4.
+// want 15 bumper x4. Though this is probably more doable now that we're enumerating
+// plates.
 
 pub fn format_weight(weight: f32, suffix: &str) -> String {
     let mut s = format!("{weight:.3}");
@@ -102,17 +104,27 @@ pub enum WeightSet {
 }
 
 /// Collections of weight sets that are shared across programs, e.g. there could be sets
-/// for dummbells, a cable machine, and plates for a barbell.
+/// for dummbells, a cable machine, plates for OHP, and plates for deadlifts.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Weights {
     sets: HashMap<String, WeightSet>,
+
+    // All non-duplicate combinations of DualPlates for every weight sorted by smallest
+    // weight to largest. Note that these are the plates added to one side of the bar.
+    #[serde(default)]
+    combos: HashMap<String, Vec<Vec<Plate>>>,
 }
 
 impl Weights {
     pub fn new() -> Weights {
         Weights {
             sets: HashMap::new(),
+            combos: HashMap::new(),
         }
+    }
+
+    pub fn fixup(&mut self) {
+        self.rebuild_combos()
     }
 
     // pub fn names(&self) -> impl Iterator<Item = &String> + '_ {
@@ -128,6 +140,11 @@ impl Weights {
     }
 
     pub fn add(&mut self, name: String, set: WeightSet) {
+        if let WeightSet::DualPlates(plates, _) = &set {
+            let old = self.combos.insert(name.clone(), enumerate_weights(plates));
+            assert!(old.is_none());
+        }
+
         let old = self.sets.insert(name, set);
         assert!(old.is_none());
     }
@@ -137,9 +154,10 @@ impl Weights {
         if let Some(set) = self.sets.get(name) {
             match set {
                 WeightSet::Discrete(weights) => Weight::discrete(closest_discrete(target, weights)),
-                WeightSet::DualPlates(plates, bar) => {
-                    Weight::plates(closest_dual(target, plates, bar))
-                }
+                WeightSet::DualPlates(_, bar) => match self.combos.get(name) {
+                    Some(enums) => Weight::plates(closest_dual(target, enums, bar)),
+                    None => Weight::error(format!("There is no combos named '{name}'"), target),
+                },
             }
         } else if name.is_empty() {
             Weight::discrete(target)
@@ -153,9 +171,10 @@ impl Weights {
         if let Some(set) = self.sets.get(name) {
             match set {
                 WeightSet::Discrete(weights) => Weight::discrete(find_discrete(target, weights).0),
-                WeightSet::DualPlates(plates, bar) => {
-                    Weight::plates(lower_dual(target, plates, bar))
-                }
+                WeightSet::DualPlates(_, bar) => match self.combos.get(name) {
+                    Some(enums) => Weight::plates(lower_dual(target, enums, bar)),
+                    None => Weight::error(format!("There is no combos named '{name}'"), target),
+                },
             }
         } else if name.is_empty() {
             Weight::discrete(target)
@@ -166,13 +185,15 @@ impl Weights {
 
     /// Return the next weight larger than target.
     pub fn advance(&self, name: &str, target: f32) -> Weight {
-        let target = target + 0.001;
         if let Some(set) = self.sets.get(name) {
             match set {
-                WeightSet::Discrete(weights) => Weight::discrete(find_discrete(target, weights).1),
-                WeightSet::DualPlates(plates, bar) => {
-                    Weight::plates(upper_dual(target, plates, bar))
+                WeightSet::Discrete(weights) => {
+                    Weight::discrete(find_discrete(target + 0.001, weights).1)
                 }
+                WeightSet::DualPlates(_, bar) => match self.combos.get(name) {
+                    Some(enums) => Weight::plates(upper_dual(target, enums, bar)),
+                    None => Weight::error(format!("There is no combos named '{name}'"), target),
+                },
             }
         } else {
             Weight::error(format!("There is no weight set named '{name}'"), target)
@@ -180,20 +201,14 @@ impl Weights {
     }
 
     pub fn try_set_discrete_weights(&mut self, sets: Vec<String>) -> Result<(), Error> {
-        let valid = |w: &WeightSet| match w {
-            WeightSet::Discrete(_) => true,
-            _ => false,
-        };
+        let valid = |w: &WeightSet| matches!(w, WeightSet::Discrete(_));
         self.validate_set_weight_sets(&sets, valid)?;
         self.do_set_weight_sets(sets, valid, default::default_discrete());
         Ok(())
     }
 
     pub fn try_set_plate_weights(&mut self, sets: Vec<String>) -> Result<(), Error> {
-        let valid = |w: &WeightSet| match w {
-            WeightSet::DualPlates(_, _) => true,
-            _ => false,
-        };
+        let valid = |w: &WeightSet| matches!(w, WeightSet::Discrete(_));
         self.validate_set_weight_sets(&sets, valid)?;
         self.do_set_weight_sets(sets, valid, default::default_plates());
         Ok(())
@@ -210,7 +225,7 @@ impl Weights {
         Ok(())
     }
 
-    fn validate_set_weight_sets<F>(&self, sets: &Vec<String>, valid: F) -> Result<(), Error>
+    fn validate_set_weight_sets<F>(&self, sets: &[String], valid: F) -> Result<(), Error>
     where
         F: Fn(&WeightSet) -> bool,
     {
@@ -265,6 +280,9 @@ impl Weights {
             let old = self.sets.insert(name, set);
             assert!(old.is_none(), "validation should have prevented this");
         }
+
+        self.combos.clear();
+        self.rebuild_combos();
     }
 
     fn validate_change_set(
@@ -273,7 +291,7 @@ impl Weights {
         new_name: &str,
         weights: &WeightSet,
     ) -> Result<(), Error> {
-        fn validate_discrete(weights: &Vec<f32>) -> Result<(), Error> {
+        fn validate_discrete(weights: &[f32]) -> Result<(), Error> {
             if weights.is_empty() {
                 return validation_err!("There should be at least one weight.");
             }
@@ -291,7 +309,7 @@ impl Weights {
             Ok(())
         }
 
-        fn validate_dual(plates: &Vec<Plate>, bar: &Option<f32>) -> Result<(), Error> {
+        fn validate_dual(plates: &[Plate], bar: &Option<f32>) -> Result<(), Error> {
             if plates.is_empty() {
                 return validation_err!("There should be at least one plate.");
             }
@@ -327,8 +345,8 @@ impl Weights {
         }
 
         match weights {
-            WeightSet::Discrete(weights) => validate_discrete(&weights)?,
-            WeightSet::DualPlates(plates, bar) => validate_dual(&plates, bar)?,
+            WeightSet::Discrete(weights) => validate_discrete(weights)?,
+            WeightSet::DualPlates(plates, bar) => validate_dual(plates, bar)?,
         }
 
         Ok(())
@@ -337,7 +355,21 @@ impl Weights {
     fn do_change_set(&mut self, _old_name: &str, new_name: &str, weights: WeightSet) {
         // Might make more sense to remove the old weightset but if we do that we'll
         // also need to change each exercise to use the new name.
+        if let WeightSet::DualPlates(plates, _) = &weights {
+            self.combos
+                .insert(new_name.to_string(), enumerate_weights(plates));
+        }
         self.sets.insert(new_name.to_string(), weights);
+    }
+
+    fn rebuild_combos(&mut self) {
+        for (name, set) in self.sets.iter() {
+            if let WeightSet::DualPlates(plates, _) = set {
+                if !self.combos.contains_key(name) {
+                    self.combos.insert(name.clone(), enumerate_weights(plates));
+                }
+            }
+        }
     }
 }
 
@@ -355,6 +387,16 @@ struct Plates {
     dual: bool, // if true plates are added two at a time and Display shows one side
 }
 
+impl PartialEq for Plate {
+    fn eq(&self, other: &Self) -> bool {
+        let a = (1000.0 * self.weight) as i32;
+        let b = (1000.0 * other.weight) as i32;
+        self.count == other.count && a == b
+    }
+}
+
+impl Eq for Plate {}
+
 impl Plates {
     fn new(plates: Vec<Plate>, bar: Option<f32>, dual: bool) -> Plates {
         let mut plates = Plates { plates, bar, dual };
@@ -369,73 +411,6 @@ impl Plates {
             .iter()
             .fold(0.0, |sum, p| sum + (p.weight * (p.count as f32)))
             + self.bar.unwrap_or(0.0)
-    }
-
-    fn bar(&self) -> f32 {
-        self.bar.unwrap_or(0.0)
-    }
-
-    fn smallest(&self) -> Option<&Plate> {
-        self.plates.last()
-    }
-
-    fn count(&self, weight: f32) -> i32 {
-        assert!(weight > 0.0);
-        if let Some(index) = self
-            .plates
-            .iter()
-            .position(|p| (p.weight - weight).abs() < 0.001)
-        {
-            self.plates[index].count
-        } else {
-            0
-        }
-    }
-
-    fn add(&mut self, plate: Plate) {
-        assert!(plate.weight > 0.0);
-        assert!(plate.count > 0);
-        assert!(!self.dual || plate.count % 2 == 0);
-
-        if let Some(old) = self
-            .plates
-            .iter_mut()
-            .find(|p| (p.weight - plate.weight).abs() < 0.001)
-        {
-            old.count += plate.count;
-        } else {
-            self.plates.push(plate);
-            self.plates
-                .sort_by(|a, b| b.weight.partial_cmp(&a.weight).unwrap());
-        }
-    }
-
-    fn remove(&mut self, weight: f32, count: i32) {
-        assert!(weight > 0.0);
-        assert!(count > 0);
-        assert!(!self.dual || count % 2 == 0);
-
-        if let Some(index) = self
-            .plates
-            .iter_mut()
-            .position(|p| (p.weight - weight).abs() < 0.001)
-        {
-            assert!(self.plates[index].count >= count);
-
-            if self.plates[index].count > count {
-                self.plates[index].count -= count;
-            } else {
-                self.plates.remove(index);
-            }
-        } else {
-            // Not really an error but shouldn't happen so we'll complain in debug.
-            assert!(false, "didn't find matching plate");
-        }
-    }
-
-    // Largest to smallest
-    fn iter(&self) -> impl DoubleEndedIterator<Item = &Plate> + '_ {
-        self.plates.iter()
     }
 }
 
@@ -465,7 +440,7 @@ impl fmt::Debug for Plates {
     }
 }
 
-fn closest_discrete(target: f32, weights: &Vec<f32>) -> f32 {
+fn closest_discrete(target: f32, weights: &[f32]) -> f32 {
     let (lower, upper) = find_discrete(target, weights);
     if target - lower <= upper - target {
         lower
@@ -474,180 +449,124 @@ fn closest_discrete(target: f32, weights: &Vec<f32>) -> f32 {
     }
 }
 
-fn too_small_target(
-    target: f32,
-    plates: &Plates,
-    bar: &Option<f32>,
-    use_upper: bool,
-) -> Option<Plates> {
-    // Degenerate case: target is smaller than smallest weight.
-    // println!("target: {target}");
-    if let Some(smallest) = plates.smallest() {
-        // println!(
-        //     "smallest: {} bar: {} sum: {}",
-        //     smallest.weight,
-        //     plates.bar(),
-        //     2.0 * smallest.weight + plates.bar()
-        // );
-        if target < 2.0 * smallest.weight + plates.bar() {
-            // println!("degenerate case");
-            let upper = find_dual_upper(target, &plates);
-            if plates.bar() > 0.0
-                && (target - plates.bar()).abs() < (target - upper.weight()).abs()
-                && !use_upper
-            {
-                return Some(Plates::new(Vec::new(), bar.clone(), plates.dual));
-            } else {
-                return Some(upper);
-            }
-        }
-    }
-    None
+fn make_dual(plates: &[Plate]) -> Vec<Plate> {
+    plates
+        .iter()
+        .map(|p| Plate {
+            weight: p.weight,
+            count: p.count * 2,
+        })
+        .collect()
 }
 
-fn closest_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
-    let plates = Plates::new(plates.clone(), bar.clone(), true);
-    if let Some(plates) = too_small_target(target, &plates, bar, false) {
-        plates
-    } else {
-        let lower = find_dual_lower(target, &plates);
-        let upper = find_dual_upper(target, &plates);
-        let (l, u) = (lower.weight(), upper.weight());
-        if target - l <= u - target {
-            lower
+fn summed_weight(plates: &[Plate]) -> f32 {
+    plates
+        .iter()
+        .fold(0.0, |sum, p| sum + (p.weight * (p.count as f32)))
+}
+
+fn closest_dual(target: f32, enums: &[Vec<Plate>], bar: &Option<f32>) -> Plates {
+    fn find_best(target: i32, lhs: &[Plate], rhs: &[Plate]) -> Vec<Plate> {
+        let l = (1000.0 * summed_weight(lhs)) as i32;
+        let r = (1000.0 * summed_weight(rhs)) as i32;
+        if i32::abs(target - l) < i32::abs(target - r) {
+            make_dual(lhs)
         } else {
-            upper
-        }
-    }
-}
-
-fn lower_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
-    let plates = Plates::new(plates.clone(), bar.clone(), true);
-    if let Some(plates) = too_small_target(target, &plates, bar, false) {
-        plates
-    } else {
-        find_dual_lower(target, &plates)
-    }
-}
-
-fn upper_dual(target: f32, plates: &Vec<Plate>, bar: &Option<f32>) -> Plates {
-    let plates = Plates::new(plates.clone(), bar.clone(), true);
-    if let Some(plates) = too_small_target(target, &plates, bar, true) {
-        plates
-    } else {
-        find_dual_upper(target, &plates)
-    }
-}
-
-fn find_dual_lower(target: f32, plates: &Plates) -> Plates {
-    fn add_plates(from: &Plate, lower: &mut Plates, target: f32) {
-        let mut count = 0;
-        loop {
-            let new = ((count + 2) as f32) * from.weight;
-            if count + 2 > from.count || lower.weight() + new > target {
-                break;
-            }
-            count += 2;
-        }
-        if count > 0 {
-            lower.add(Plate {
-                weight: from.weight,
-                count,
-            });
-            // println!("new lower: {lower}");
+            make_dual(rhs)
         }
     }
 
-    let mut lower = Plates::new(Vec::new(), plates.bar.clone(), plates.dual);
+    let target = target - bar.unwrap_or(0.0);
+    let target = target / 2.0; // because this is dual plates
+                               // println!("target: {target:.1} (adjusted)");
 
-    // Add as many plates as possible from largest to smallest.
-    for plate in plates.iter() {
-        // println!("lower candidate: {plate:?}");
-        add_plates(plate, &mut lower, target);
-    }
-    lower
-}
-
-fn find_dual_upper(target: f32, plates: &Plates) -> Plates {
-    fn add_large(from: &Plate, remaining: &mut Plates, upper: &mut Plates, target: f32) {
-        let mut count = 0;
-        loop {
-            let new = ((count + 2) as f32) * from.weight;
-            if count + 2 > from.count || upper.weight() + new > target {
-                break;
-            }
-            count += 2;
-        }
-        if count > 0 {
-            remaining.remove(from.weight, count);
-            upper.add(Plate {
-                weight: from.weight,
-                count,
-            });
-            // println!("new large upper: {upper}");
-        }
-    }
-
-    fn add_small(from: &Plate, remaining: &Plates, upper: &mut Plates) -> bool {
-        if from.count >= 2 {
-            if upper.count(from.weight) >= 2 && remaining.count(2.0 * from.weight) >= 2 {
-                upper.remove(from.weight, 2);
-                upper.add(Plate {
-                    weight: 2.0 * from.weight,
-                    count: 2,
-                });
+    let t = (1000.0 * target) as i32;
+    let i = enums.binary_search_by(|p| {
+        let w = (1000.0 * summed_weight(p)) as i32;
+        w.cmp(&t)
+    });
+    // println!("search: {i:?}");
+    match i {
+        Ok(i) => Plates::new(make_dual(&enums[i]), *bar, true), // exact match
+        Err(i) => {
+            if i > 0 {
+                let plates = find_best(t, &enums[i - 1], &enums[i]);
+                Plates::new(plates, *bar, true)
+            } else if !enums.is_empty() {
+                let plates = find_best(t, &Vec::new(), &enums[i]);
+                Plates::new(plates, *bar, true)
             } else {
-                upper.add(Plate {
-                    weight: from.weight,
-                    count: 2,
-                });
-            }
-            // println!("new large upper: {upper:?}");
-            true
-        } else {
-            false
-        }
-    }
-
-    let mut upper = Plates::new(Vec::new(), plates.bar.clone(), plates.dual);
-    let mut remaining = plates.clone();
-
-    // Add plates as long as the total is under target from largest to smallest.
-    for plate in plates.iter() {
-        // println!("upper large candidate: {plate:?}");
-        add_large(plate, &mut remaining, &mut upper, target);
-    }
-
-    // Then add the smallest plate we can to send us over the target.
-    if upper.weight() < target || upper.weight() == 0.0 {
-        for plate in remaining.iter().rev() {
-            // println!("upper small candidate: {plate:?}");
-            if add_small(plate, &remaining, &mut upper) {
-                break;
+                Plates::new(Vec::new(), *bar, true)
             }
         }
+    }
+}
 
-        // If we were forced to add a large plate then we may be able to get closer to
-        // target by dropping some smaller plates.
-        loop {
-            if let Some(smallest) = upper.smallest() {
-                let weight = upper.weight() - 2.0 * smallest.weight;
-                // println!("smallest: {smallest:?} weight: {weight}");
-                if weight >= target && target > 0.0 {
-                    upper.remove(smallest.weight, 2);
+fn lower_dual(target: f32, enums: &[Vec<Plate>], bar: &Option<f32>) -> Plates {
+    let target = target - bar.unwrap_or(0.0);
+    let target = target / 2.0; // because this is dual plates
+                               // println!("target: {target:.1} (adjusted)");
+
+    let t = (1000.0 * target) as i32;
+    let i = enums.binary_search_by(|p| {
+        let w = (1000.0 * summed_weight(p)) as i32;
+        w.cmp(&t)
+    });
+    // println!("search: {i:?}");
+    match i {
+        Ok(i) => Plates::new(make_dual(&enums[i]), *bar, true), // exact match
+        Err(i) => {
+            if i > 0 {
+                Plates::new(make_dual(&enums[i - 1]), *bar, true)
+            } else {
+                Plates::new(Vec::new(), *bar, true)
+            }
+        }
+    }
+}
+
+fn upper_dual(target: f32, enums: &[Vec<Plate>], bar: &Option<f32>) -> Plates {
+    // println!("target: {target:.1}");
+    let target = target - bar.unwrap_or(0.0);
+    let target = target / 2.0; // because this is dual plates
+                               // println!("target: {target:.1} (adjusted)");
+                               // println!("enums: {enums:?}");
+
+    let t = (1000.0 * target) as i32;
+    let i = enums.binary_search_by(|p| {
+        let w = (1000.0 * summed_weight(p)) as i32;
+        w.cmp(&t)
+    });
+    // println!("search: {i:?}");
+    match i {
+        Ok(i) => {
+            if i + 1 < enums.len() {
+                Plates::new(make_dual(&enums[i + 1]), *bar, true)
+            } else {
+                Plates::new(make_dual(&enums[i]), *bar, true)
+            }
+        }
+        Err(i) => {
+            if target < 0.0 {
+                if bar.is_some() || enums.is_empty() {
+                    Plates::new(Vec::new(), *bar, true)
                 } else {
-                    break;
+                    Plates::new(make_dual(&enums[0]), *bar, true)
+                }
+            } else if !enums.is_empty() {
+                if i < enums.len() {
+                    Plates::new(make_dual(&enums[i]), *bar, true)
+                } else {
+                    Plates::new(make_dual(&enums[i - 1]), *bar, true)
                 }
             } else {
-                break;
+                Plates::new(Vec::new(), *bar, true)
             }
         }
     }
-
-    upper
 }
 
-fn find_discrete(target: f32, weights: &Vec<f32>) -> (f32, f32) {
+fn find_discrete(target: f32, weights: &[f32]) -> (f32, f32) {
     let mut lower = weights.first().copied().unwrap_or(0.0);
     let mut upper = f32::MAX;
 
@@ -669,9 +588,196 @@ impl fmt::Debug for Plate {
     }
 }
 
+struct IterN {
+    n: u64,
+    i: usize,
+}
+
+impl IterN {
+    /// Takes an n representing the number of plates and returns (count, index) tuples
+    /// where count is the number of plates at index. Note that this does not verify that
+    /// the (count, index) is sane.
+    fn new(n: u64) -> Self {
+        let i = 0;
+        IterN { n, i }
+    }
+}
+
+impl Iterator for IterN {
+    type Item = (i32, usize);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.n > 0 {
+            let count = self.n % 10;
+            let index = self.i;
+
+            self.n /= 10;
+            self.i += 1;
+
+            Some((count as i32, index))
+        } else {
+            None
+        }
+    }
+}
+
+/// Returns all non-duplicate weight combinations of plates sorted from smallest total
+/// weight to largest. TODO probably want to make this a method on Weights
+fn enumerate_weights(plates: &[Plate]) -> Vec<Vec<Plate>> {
+    enum Status {
+        Valid,
+        Invalid,
+        Overflow,
+    }
+
+    // TODO: need to restrict max plate count to 9
+    fn is_valid(n: u64, plates: &[Plate]) -> Status {
+        for (count, index) in IterN::new(n) {
+            if index >= plates.len() {
+                return Status::Overflow;
+            } else if 2 * count > plates[index].count {
+                // 2* should only be done for dual plates
+                return Status::Invalid;
+            }
+        }
+        Status::Valid
+    }
+
+    fn increment(n: u64, plates: &[Plate]) -> Option<u64> {
+        let mut n = n;
+        loop {
+            n += 1;
+            match is_valid(n, plates) {
+                Status::Valid => return Some(n),
+                Status::Overflow => return None,
+                Status::Invalid => (),
+            }
+        }
+    }
+
+    fn get_candidate(n: u64, plates: &[Plate]) -> Vec<Plate> {
+        let mut possible = Vec::with_capacity(plates.len());
+        for (count, index) in IterN::new(n) {
+            assert!(count <= plates[index].count);
+            if count > 0 {
+                possible.push(Plate::new(plates[index].weight, count));
+            }
+        }
+        possible
+    }
+
+    // I expect that there are smarter ways to do this, but:
+    // 1) This is very fast even with lots of plate sizes and counts.
+    // 2) This will work even for those unfortunates with really weird collections of plates.
+    let mut n: u64 = 0; // where n = 2045 means 5 of the largest plate, 4 of the next largest, etc
+    let mut candidates: HashMap<i32, Vec<Plate>> = HashMap::new();
+    while let Some(new) = increment(n, plates) {
+        n = new;
+        let candidate = get_candidate(n, plates);
+
+        let weight = candidate
+            .iter()
+            .fold(0.0, |acc, e| acc + (e.count as f32) * e.weight);
+        let candidate_weight = 1000 * (weight as i32); // f32 isn't Hash
+        let candidate_count = candidate.iter().fold(0, |acc, e| acc + e.count);
+        match candidates.entry(candidate_weight) {
+            Entry::Occupied(mut occupied) => {
+                // Prefer solutions with the least number of plates.
+                let old_count = occupied.get().iter().fold(0, |acc, e| acc + e.count);
+                if candidate_count < old_count {
+                    occupied.insert(candidate);
+                }
+            }
+            Entry::Vacant(vacant) => _ = vacant.insert(candidate),
+        }
+    }
+    let mut result: Vec<Vec<Plate>> = candidates.drain().map(|(_, plates)| plates).collect();
+    result.sort_by(|a, b| {
+        // sort so smallest total weights are first
+        let a = a
+            .iter()
+            .fold(0.0, |acc, e| acc + (e.count as f32) * e.weight);
+        let b = b
+            .iter()
+            .fold(0.0, |acc, e| acc + (e.count as f32) * e.weight);
+        let a = (1000.0 * a) as i32;
+        let b = (1000.0 * b) as i32;
+        a.cmp(&b)
+    });
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn enumerate0() {
+        let plates = vec![];
+        let v = enumerate_weights(&plates);
+        assert_eq!(v.len(), 0);
+    }
+
+    #[test]
+    fn enumerate1() {
+        let plates = vec![Plate::new(45.0, 2)];
+        let v = enumerate_weights(&plates);
+        println!("{v:?}");
+        assert_eq!(v.len(), 1);
+        assert_eq!(v[0], vec![Plate::new(45.0, 1)]);
+    }
+
+    #[test]
+    fn enumerate2a() {
+        let plates = vec![Plate::new(45.0, 4)];
+        let v = enumerate_weights(&plates);
+        println!("{v:?}");
+        assert_eq!(v.len(), 2);
+        assert_eq!(v[0], vec![Plate::new(45.0, 1)]);
+        assert_eq!(v[1], vec![Plate::new(45.0, 2)]);
+    }
+
+    #[test]
+    fn enumerate2b() {
+        let plates = vec![Plate::new(45.0, 2), Plate::new(25.0, 2)];
+        let v = enumerate_weights(&plates);
+        println!("{v:?}");
+        assert_eq!(v.len(), 3);
+        assert_eq!(v[0], vec![Plate::new(25.0, 1)]);
+        assert_eq!(v[1], vec![Plate::new(45.0, 1)]);
+        assert_eq!(v[2], vec![Plate::new(45.0, 1), Plate::new(25.0, 1)]);
+    }
+
+    #[test]
+    fn enumerate4() {
+        let plates = vec![Plate::new(45.0, 4), Plate::new(25.0, 4)];
+        let v = enumerate_weights(&plates);
+        println!("{v:?}");
+        assert_eq!(v.len(), 8);
+        assert_eq!(v[0], vec![Plate::new(25.0, 1)]);
+        assert_eq!(v[1], vec![Plate::new(45.0, 1)]);
+        assert_eq!(v[2], vec![Plate::new(25.0, 2)]);
+        assert_eq!(v[3], vec![Plate::new(45.0, 1), Plate::new(25.0, 1)]);
+        assert_eq!(v[4], vec![Plate::new(45.0, 2)]);
+        assert_eq!(v[5], vec![Plate::new(45.0, 1), Plate::new(25.0, 2)]);
+        assert_eq!(v[6], vec![Plate::new(45.0, 2), Plate::new(25.0, 1)]);
+        assert_eq!(v[7], vec![Plate::new(45.0, 2), Plate::new(25.0, 2)]);
+    }
+
+    #[test]
+    fn enumerate_lots() {
+        let plates = vec![
+            Plate::new(100.0, 4), // 6074 before pruning
+            Plate::new(45.0, 4),
+            Plate::new(25.0, 2),
+            Plate::new(10.0, 2),
+            Plate::new(5.0, 2),
+            Plate::new(2.5, 2),
+            Plate::new(1.25, 2),
+        ];
+        let v = enumerate_weights(&plates);
+        assert_eq!(v.len(), 247);
+    }
 
     #[test]
     fn empty1() {
@@ -727,11 +833,21 @@ mod tests {
 
     fn check2(target: f32, lower: &str, upper: &str, plates: &Plates) {
         println!("-----------------------------------------------------");
-        let l = find_dual_lower(target, plates);
-        println!("-----------------------------------------------------");
-        let u = find_dual_upper(target, plates);
+        let enums = enumerate_weights(&plates.plates);
+        println!("target: {target:.1}");
+        println!("plates: {:?}", &plates.plates);
+        println!("bar: {:?}", plates.bar);
+        println!("enums: {enums:?}");
 
-        assert!(l.weight() <= target);
+        println!("-----------------------");
+        let l = lower_dual(target, &enums, &plates.bar);
+        println!("-----------------------");
+        let u = upper_dual(target, &enums, &plates.bar);
+
+        println!("l: {l:?}");
+        println!("u: {u:?}");
+
+        assert!(summed_weight(&l.plates) <= target);
         // Note that upper may be < target if run out of weights
 
         let l = format!("{}", l);
@@ -769,33 +885,38 @@ mod tests {
         check2(11.0, "5", "10", &plates); // on one side
         check2(14.0, "5", "10", &plates);
         check2(18.0, "5", "10", &plates);
-        check2(20.0, "10", "10", &plates);
+        check2(20.0, "10", "10 + 5", &plates);
         check2(21.0, "10", "10 + 5", &plates);
-        check2(30.0, "10 + 5", "10 + 5", &plates);
-        check2(40.0, "10 x2", "10 x2", &plates);
-        check2(50.0, "25", "25", &plates);
-        check2(103.0, "45 + 5", "45 + 10", &plates);
-        check2(120.0, "45 + 10 + 5", "45 + 10 + 5", &plates);
-        check2(130.0, "45 + 10 x2", "45 + 10 x2", &plates);
-        check2(135.0, "45 + 10 x2", "45 + 10 x2 + 5", &plates);
-        check2(160.0, "45 + 25 + 10", "45 + 25 + 10", &plates);
-        check2(205.0, "45 x2 + 10", "45 x2 + 10 + 5", &plates);
-        check2(230.0, "45 x2 + 25", "45 x2 + 25", &plates);
-        check2(240.0, "45 x2 + 25 + 5", "45 x2 + 25 + 5", &plates);
-        check2(250.0, "45 x2 + 25 + 10", "45 x2 + 25 + 10", &plates);
-        check2(260.0, "45 x2 + 25 + 10 + 5", "45 x2 + 25 + 10 + 5", &plates);
-        check2(270.0, "45 x2 + 25 + 10 x2", "45 x2 + 25 + 10 x2", &plates);
-        check2(300.0, "45 x2 + 25 x2 + 10", "45 x2 + 25 x2 + 10", &plates);
+        check2(30.0, "10 + 5", "10 x2", &plates);
+        check2(40.0, "10 x2", "25", &plates);
+        check2(50.0, "25", "25 + 5", &plates);
+        check2(103.0, "25 x2", "45 + 10", &plates);
+        check2(120.0, "25 x2 + 10", "45 + 10 x2", &plates);
+        check2(130.0, "45 + 10 x2", "45 + 25", &plates);
+        check2(135.0, "45 + 10 x2", "45 + 25", &plates);
+        check2(160.0, "45 + 25 + 10", "45 + 25 + 10 + 5", &plates);
+        check2(205.0, "45 x2 + 10", "45 + 25 x2 + 10", &plates);
+        check2(230.0, "45 x2 + 25", "45 x2 + 25 + 5", &plates);
+        check2(240.0, "45 x2 + 25 + 5", "45 x2 + 25 + 10", &plates);
+        check2(250.0, "45 x2 + 25 + 10", "45 x2 + 25 + 10 + 5", &plates);
+        check2(260.0, "45 x2 + 25 + 10 + 5", "45 x2 + 25 + 10 x2", &plates);
+        check2(270.0, "45 x2 + 25 + 10 x2", "45 x2 + 25 x2", &plates);
+        check2(
+            300.0,
+            "45 x2 + 25 x2 + 10",
+            "45 x2 + 25 x2 + 10 + 5",
+            &plates,
+        );
         check2(
             320.0,
             "45 x2 + 25 x2 + 10 x2",
-            "45 x2 + 25 x2 + 10 x2",
+            "45 x2 + 25 x2 + 10 x2 + 5",
             &plates,
         );
         check2(
             340.0,
             "45 x2 + 25 x2 + 10 x3",
-            "45 x2 + 25 x2 + 10 x3",
+            "45 x2 + 25 x2 + 10 x3 + 5",
             &plates,
         );
         check2(
@@ -832,10 +953,10 @@ mod tests {
         check2(80.0, "10 + 5", "25", &plates); // can only add a max of 2 10's
         check2(90.0, "10 + 5", "25", &plates);
         check2(120.0, "25 + 10", "25 + 10 + 5", &plates);
-        check2(150.0, "45 + 5", "45 + 10", &plates);
-        check2(180.0, "45 + 10 + 5", "45 + 25", &plates);
-        check2(200.0, "45 + 25 + 5", "45 + 25 + 10", &plates);
-        check2(230.0, "45 + 25 + 10 + 5", "45 + 25 x2", &plates);
+        check2(150.0, "25 x2", "45 + 10", &plates);
+        check2(180.0, "25 x2 + 10 + 5", "45 + 25", &plates);
+        check2(200.0, "25 x3", "45 + 25 + 10", &plates);
+        check2(230.0, "25 x3 + 10 + 5", "45 + 25 x2", &plates);
         check2(260.0, "45 + 25 x2 + 10", "45 + 25 x2 + 10 + 5", &plates);
         check2(290.0, "45 + 25 x3", "45 + 25 x3 + 5", &plates);
         check2(320.0, "45 + 25 x3 + 10 + 5", "45 + 25 x3 + 10 + 5", &plates);
@@ -843,9 +964,15 @@ mod tests {
 
     #[test]
     fn closest_dual_test() {
-        fn check(target: f32, expected: &str, plates: &Vec<Plate>, bar: Option<f32>) {
+        fn check(target: f32, expected: &str, plates: &[Plate], bar: Option<f32>) {
             println!("-----------------------------------------------------");
-            let actual = closest_dual(target, plates, &bar);
+            let enums = enumerate_weights(plates);
+            println!("target: {target:.1}");
+            println!("plates: {plates:?}");
+            println!("bar: {bar:?}");
+            println!("enums: {enums:?}");
+            let actual = closest_dual(target, &enums, &bar);
+            println!("actual: {actual:?}");
 
             let actual = format!("{}", actual);
             assert!(
@@ -872,8 +999,8 @@ mod tests {
         };
         let plates = vec![plate1, plate2, plate3, plate4];
 
-        check(0.0, "5", &plates, None); // degenerate case
-        check(4.0, "5", &plates, None);
+        check(0.0, "", &plates, None); // degenerate case
+        check(4.0, "", &plates, None);
         check(8.0, "5", &plates, None);
         check(0.0, "", &plates, Some(45.0));
         check(40.0, "", &plates, Some(45.0));
@@ -882,7 +1009,7 @@ mod tests {
         check(47.0, "", &plates, Some(45.0));
         check(58.0, "5", &plates, Some(45.0)); // 5 == 55, 10 == 65
 
-        check(97.0, "45 + 5", &plates, None); // upper is best
+        check(97.0, "25 x2", &plates, None); // upper is best
         check(63.0, "10", &plates, Some(45.0));
     }
 

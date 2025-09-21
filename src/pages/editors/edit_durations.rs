@@ -32,7 +32,7 @@ pub fn get_edit_durations(state: SharedState, workout: &str, exercise: &str) -> 
                 &durations,
                 "Space separated amount of time to wait for each set.",
             )
-            .with_pattern(r#"\s*\d+(\.\d+)?(\s+\d+(\.\d+)?)*"#)
+            .with_pattern(r#"\s*\d+(\.\d+)?(\s+\d+(\.\d+)?)*\s*"#)
             .with_required(),
         ),
         Box::new(

@@ -62,6 +62,7 @@ pub fn make_my_program() -> AppState {
         }
     };
 
+    user.fixup();
     user.program.fixup();
 
     AppState {
@@ -89,6 +90,7 @@ pub fn make_her_program() -> AppState {
         }
     };
 
+    user.fixup();
     user.program.fixup();
 
     AppState {
@@ -116,6 +118,7 @@ pub fn make_test_program() -> AppState {
         }
     };
 
+    user.fixup();
     user.program.fixup();
 
     AppState {

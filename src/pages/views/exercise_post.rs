@@ -31,9 +31,10 @@ pub fn post_next_exercise(
     };
 
     if finished {
-        let name = &state.write().unwrap().name;
+        let name = state.write().unwrap().name.clone();
         let user = &mut state.write().unwrap().user;
-        if let Err(e) = crate::persist::save(name, user) {
+        if let Err(e) = crate::persist::save(&name, user) {
+            println!("error saving: {e}");
             user.errors.push(format!("{e}"));
         }
     };
